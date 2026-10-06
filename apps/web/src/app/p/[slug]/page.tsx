@@ -29,7 +29,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card p-5">
-          <h2 className="section-title mb-3">Product ki details 📋</h2>
+          <h2 className="section-title mb-3">Product Description</h2>
           <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700">{product.description}</p>
           <h3 className="mb-2 mt-6 text-base font-bold">Specifications</h3>
           <dl className="overflow-hidden rounded-md border border-gray-100 text-sm">
@@ -55,7 +55,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
 
         <section id="reviews" className="card p-5">
-          <h2 className="section-title mb-4">Log kya bol rahe hain 💬</h2>
+          <h2 className="section-title mb-4">Ratings & Reviews</h2>
           {product.ratingCount > 0 ? (
             <>
               <div className="flex items-center gap-8 border-b border-gray-100 pb-5">
@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
       </div>
 
-      <ProductRail title="Ye bhi pasand aayega 😍" products={product.related} />
+      <ProductRail title="Similar Products" products={product.related} />
       <RecentlyViewed excludeId={product.id} />
     </div>
   );

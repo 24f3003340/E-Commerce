@@ -6,12 +6,12 @@ import { cn, inr } from '@/lib/format';
 import type { Facets } from '@/lib/types';
 
 const SORTS = [
-  { value: 'popular', label: 'Popular 🔥' },
-  { value: 'newest', label: 'Newest ✨' },
+  { value: 'popular', label: 'Popularity' },
+  { value: 'newest', label: 'Newest first' },
   { value: 'price_asc', label: 'Price: low to high' },
   { value: 'price_desc', label: 'Price: high to low' },
   { value: 'rating', label: 'Customer rating' },
-  { value: 'discount', label: 'Biggest discount 💸' },
+  { value: 'discount', label: 'Better discount' },
 ];
 
 const PRICE_BUCKETS = [
@@ -44,15 +44,15 @@ export function SortSelect() {
   const current = params.get('sort') ?? 'popular';
   return (
     <div className="flex items-center gap-1 overflow-x-auto text-sm scrollbar-none">
-      <span className="mr-2 shrink-0 font-extrabold text-black">Sort:</span>
+      <span className="mr-2 shrink-0 font-semibold text-gray-800">Sort By</span>
       {SORTS.map((s) => (
         <button
           key={s.value}
           onClick={() => update({ sort: s.value })}
           aria-pressed={current === s.value}
           className={cn(
-            'shrink-0 border-b-2 px-2.5 py-1 transition',
-            current === s.value ? 'rounded-lg border-2 border-black bg-accent-400 font-extrabold text-black' : 'border-transparent font-semibold text-gray-700 hover:text-black',
+            'shrink-0 border-b-2 px-2 py-1.5 transition',
+            current === s.value ? 'border-brand-600 font-semibold text-brand-700' : 'border-transparent text-gray-600 hover:text-gray-900',
           )}
         >
           {s.label}
@@ -86,7 +86,7 @@ export function ActiveFilters() {
   return (
     <div className="flex flex-wrap gap-2">
       {chips.map((c) => (
-        <button key={c.label} onClick={c.remove} className="inline-flex items-center gap-1 rounded-full border-2 border-black bg-brand-100 px-3 py-1 text-xs font-bold text-black hover:bg-brand-200">
+        <button key={c.label} onClick={c.remove} className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-gray-500">
           {c.label}
           <span aria-hidden>✕</span>
           <span className="sr-only">Remove filter</span>
@@ -106,7 +106,7 @@ function toggleCsv(current: string | null, value: string) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-b border-gray-200 py-4">
-      <h3 className="mb-3 font-display text-sm font-extrabold uppercase tracking-wider text-black">{title}</h3>
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-900">{title}</h3>
       {children}
     </div>
   );
@@ -124,7 +124,7 @@ export function Filters({ facets }: { facets: Facets }) {
   const body = (
     <div>
       <div className="flex items-center justify-between pb-2">
-        <span className="font-display text-lg font-extrabold">Filters 🎛️</span>
+        <span className="text-sm font-bold">Filters</span>
         {activeCount > 0 && (
           <button
             className="text-xs font-semibold text-brand-700"
@@ -143,7 +143,7 @@ export function Filters({ facets }: { facets: Facets }) {
                 key={s}
                 onClick={() => update({ size: toggleCsv(params.get('size'), s) })}
                 aria-pressed={sizes.has(s)}
-                className={cn('min-w-[2.5rem] rounded-lg border-2 px-2 py-1 text-xs font-bold', sizes.has(s) ? 'border-black bg-accent-400 font-extrabold text-black' : 'border-black hover:bg-accent-100')}
+                className={cn('min-w-[2.5rem] rounded-md border px-2 py-1 text-xs font-medium', sizes.has(s) ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-gray-300 hover:border-gray-900')}
               >
                 {s}
               </button>

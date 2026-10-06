@@ -1,74 +1,50 @@
 import type { Config } from 'tailwindcss';
 
-// StyleKart Gen-Z: electric violet + neon lime + hot pink, chunky type,
-// thick black outlines and hard "sticker" shadows.
 export default {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['var(--font-display)', 'var(--font-sans)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
-        // Electric violet — primary brand
+        // Primary (links, selection, focus)
         brand: {
-          50: '#f4f0ff',
-          100: '#e9e1ff',
-          200: '#d4c5ff',
-          300: '#b59bff',
-          400: '#9468ff',
-          500: '#7c3aed',
-          600: '#6d28d9',
-          700: '#5b21b6',
-          900: '#2e1065',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          900: '#1e3a8a',
         },
-        // Neon lime — highlights & main CTA
+        // Header / footer
+        navy: {
+          700: '#16325c',
+          800: '#0f2747',
+          900: '#0a1c36',
+          950: '#06132a',
+        },
+        // Call to action
         accent: {
-          100: '#f3ffc9',
-          300: '#e2ff7a',
-          400: '#d4ff3f',
-          500: '#c2f01c',
-          600: '#9ccc00',
-        },
-        // Hot pink — discounts, hearts, "steal" stickers
-        hot: {
-          100: '#ffe1f0',
-          400: '#ff5cad',
-          500: '#ff2e93',
-          600: '#e0157a',
-        },
-        sky: {
-          100: '#dff3ff',
-          400: '#4cc3ff',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
         },
         buy: {
-          500: '#111111',
-          600: '#000000',
+          500: '#f97316',
+          600: '#ea580c',
         },
-        navy: {
-          700: '#2b2440',
-          800: '#1c1730',
-          900: '#130f22',
-          950: '#0b0815',
-        },
-        page: '#fbf8ff',
+        page: '#f1f3f6',
       },
       boxShadow: {
-        card: '4px 4px 0 0 #111',
-        brutal: '4px 4px 0 0 #111',
-        'brutal-sm': '2px 2px 0 0 #111',
-        'brutal-lg': '6px 6px 0 0 #111',
-        lift: '6px 6px 0 0 #111',
+        card: '0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08)',
+        lift: '0 8px 24px rgba(15, 23, 42, 0.12)',
       },
       container: { center: true, padding: '1rem', screens: { '2xl': '1360px' } },
       keyframes: {
-        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
-        wiggle: { '0%,100%': { transform: 'rotate(-3deg)' }, '50%': { transform: 'rotate(3deg)' } },
-      },
-      animation: {
-        marquee: 'marquee 28s linear infinite',
-        wiggle: 'wiggle 1.6s ease-in-out infinite',
+        shimmer: { '100%': { transform: 'translateX(100%)' } },
       },
     },
   },

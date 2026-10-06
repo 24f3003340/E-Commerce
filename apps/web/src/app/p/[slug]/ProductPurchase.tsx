@@ -126,10 +126,10 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
   const actionButtons = (
     <>
       <button className="btn-cart flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(false)}>
-        {unavailable ? 'Sold out 😢' : 'Add to Bag 🛍️'}
+        <Icon name="cart" /> {unavailable ? 'Out of stock' : 'Add to Cart'}
       </button>
       <button className="btn-buy flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(true)}>
-        Buy Now ⚡
+        <Icon name="zap" /> Buy Now
       </button>
     </>
   );
@@ -146,7 +146,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 onMouseEnter={() => setImageIndex(i)}
                 onClick={() => setImageIndex(i)}
                 aria-label={`Show image ${i + 1}`}
-                className={cn('h-20 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-brand-50', i === imageIndex ? 'border-black shadow-brutal-sm' : 'border-gray-200 hover:border-gray-400')}
+                className={cn('h-20 w-16 shrink-0 overflow-hidden rounded border-2 bg-gray-50', i === imageIndex ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400')}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="" className="h-full w-full object-cover" />
@@ -154,7 +154,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
             ))}
           </div>
           <div
-            className="relative aspect-[4/5] flex-1 cursor-zoom-in overflow-hidden rounded-2xl border-2 border-black bg-brand-50"
+            className="relative aspect-[4/5] flex-1 cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
             onMouseMove={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
               setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
@@ -185,8 +185,8 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
 
       {/* Details */}
       <div className="min-w-0">
-        {product.brand && <p className="sticker w-fit -rotate-1 bg-brand-500 text-white">{product.brand}</p>}
-        <h1 className="mt-3 font-display text-2xl font-extrabold leading-tight text-black sm:text-3xl">{product.name}</h1>
+        {product.brand && <p className="text-sm font-bold uppercase tracking-wide text-brand-700">{product.brand}</p>}
+        <h1 className="mt-1 text-xl font-medium leading-snug text-gray-900 sm:text-2xl">{product.name}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           {product.ratingCount > 0 ? (
             <a href="#reviews" className="flex items-center gap-2">
@@ -196,23 +196,23 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
               </span>
             </a>
           ) : (
-            <span className="font-semibold text-gray-600">Abhi tak koi review nahi — pehle tum! ✍️</span>
+            <span className="text-gray-500">Be the first to review</span>
           )}
         </div>
 
         <div className="mt-4 border-t border-gray-100 pt-4">
-          {mrp > price && <p className="sticker mb-2 w-fit rotate-1 bg-hot-500 text-white">Loot price 🔥</p>}
+          {mrp > price && <p className="text-sm font-semibold text-emerald-600">Special price</p>}
           <Price price={price} mrp={mrp} size="lg" />
           <p className="mt-1 text-xs text-gray-500">Inclusive of all taxes · {price >= 99900 ? 'Free delivery' : 'Free delivery on orders above ₹999'}</p>
         </div>
 
         {coupons.length > 0 && (
           <div className="mt-5">
-            <p className="mb-2 text-sm font-extrabold">Coupons for you 🎟️</p>
+            <p className="mb-2 text-sm font-bold">Available offers</p>
             <ul className="space-y-2 text-sm">
               {coupons.slice(0, 4).map((c) => (
                 <li key={c.code} className="flex gap-2">
-                  <span aria-hidden>🏷️</span>
+                  <Icon name="tag" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                   <span>
                     <span className="font-semibold">Coupon {c.code}</span> — {c.description}
                     {c.minOrderValue > 0 && <span className="text-gray-500"> (min. order {inr(c.minOrderValue)})</span>}
@@ -242,7 +242,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                       setColor(name);
                       setImageIndex(0);
                     }}
-                    className={cn('relative h-16 w-14 overflow-hidden rounded-xl border-2 bg-brand-50 transition', color === name ? 'border-black shadow-brutal-sm' : 'border-gray-200 hover:border-gray-400', !anyStock && 'opacity-50')}
+                    className={cn('relative h-16 w-14 overflow-hidden rounded-md border-2 bg-gray-50 transition', color === name ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400', !anyStock && 'opacity-50')}
                   >
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -260,9 +260,9 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
         {sizes.length > 0 && (
           <div className="mt-6" id="size-picker">
             <div className="mb-2 flex items-center gap-4">
-              <p className={cn('text-sm font-bold', sizeError && 'text-red-600')}>{sizeError ? 'Arre, size toh choose karo! 👆' : 'Apna size chuno'}</p>
+              <p className={cn('text-sm font-bold', sizeError && 'text-red-600')}>{sizeError ? 'Please select a size' : 'Select size'}</p>
               {product.sizeChart && (
-                <button onClick={() => setShowChart(true)} className="flex items-center gap-1 text-sm font-bold text-brand-600 underline">
+                <button onClick={() => setShowChart(true)} className="flex items-center gap-1 text-sm font-semibold text-brand-700">
                   <Icon name="ruler" className="h-4 w-4" /> Size chart
                 </button>
               )}
@@ -280,8 +280,8 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                       setSizeError(false);
                     }}
                     className={cn(
-                      'min-w-[3.25rem] rounded-xl border-2 px-3 py-2 text-sm font-extrabold transition',
-                      size === s ? 'border-black bg-accent-400 text-black shadow-brutal-sm' : 'border-black bg-white hover:bg-accent-100',
+                      'min-w-[3.25rem] rounded-md border px-3 py-2 text-sm font-semibold transition',
+                      size === s ? 'border-brand-600 bg-brand-600 text-white' : 'border-gray-300 bg-white hover:border-brand-600',
                       !available && 'cursor-not-allowed border-dashed bg-gray-50 text-gray-300 line-through hover:border-gray-300',
                     )}
                   >
@@ -290,17 +290,17 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 );
               })}
             </div>
-            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-sm font-extrabold text-hot-600">Jaldi karo, sirf {variant.stock} bache hain! ⏳</p>}
+            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-sm font-semibold text-red-600">Hurry, only {variant.stock} left!</p>}
           </div>
         )}
 
-        <div className="mt-6 grid gap-4 rounded-2xl border-2 border-black bg-sky-100 p-4 sm:grid-cols-[auto_1fr]">
+        <div className="mt-6 grid gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-[auto_1fr]">
           <p className="flex items-center gap-2 text-sm font-bold text-gray-700">
             <Icon name="pin" className="h-4 w-4" /> Delivery
           </p>
           <div>
             <form
-              className="flex max-w-sm rounded-xl border-2 border-black bg-white pl-3"
+              className="flex max-w-sm border-b-2 border-brand-600"
               onSubmit={(e) => {
                 e.preventDefault();
                 void checkPincode(pincode);
@@ -314,7 +314,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 className="w-full bg-transparent py-1.5 text-sm font-medium outline-none"
                 aria-label="Pincode"
               />
-              <button className="rounded-r-[10px] border-l-2 border-black bg-accent-400 px-3 text-sm font-extrabold">Check</button>
+              <button className="px-2 text-sm font-bold text-brand-700">Check</button>
             </form>
             {svc ? (
               svc.serviceable && svc.estimatedDelivery ? (
@@ -340,11 +340,11 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
             [
               ['returns', product.returnPolicy.isReturnable ? `${product.returnPolicy.returnWindowDays}-day return` : 'No returns'],
               ['card', 'Cash on Delivery'],
-              ['shield', '100% Original'],
+              ['shield', 'Original product'],
             ] as const
           ).map(([icon, label]) => (
-            <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border-2 border-black bg-white px-2 py-3 font-bold">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-black bg-accent-400 text-black">
+            <div key={label} className="flex flex-col items-center gap-1.5 rounded-md bg-gray-50 px-2 py-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-card">
                 <Icon name={icon} className="h-4 w-4" />
               </span>
               {label}
@@ -352,10 +352,13 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
           ))}
         </div>
 
+        <p className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <Icon name="store" className="h-4 w-4" /> Sold by <span className="font-semibold text-brand-700">{process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart'} Retail</span>
+        </p>
 
         {product.specifications && Object.keys(product.specifications).length > 0 && (
           <div className="mt-6 border-t border-gray-100 pt-5">
-            <p className="mb-2 text-sm font-extrabold">Kyun lena chahiye ✅</p>
+            <p className="mb-2 text-sm font-bold">Highlights</p>
             <ul className="grid list-disc gap-x-8 gap-y-1.5 pl-5 text-sm text-gray-700 sm:grid-cols-2">
               {product.material && <li>{product.material}</li>}
               {Object.entries(product.specifications).slice(0, 7).map(([k, v]) => (

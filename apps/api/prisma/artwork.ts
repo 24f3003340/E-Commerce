@@ -162,7 +162,7 @@ function garment(shape: Shape, c: string): string {
 }
 
 const DEFS = `<defs>
-  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eeeef1"/></radialGradient>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
   <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
     <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
     <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
@@ -189,13 +189,8 @@ ${scene}
 }
 
 /** Wide promotional banner with product silhouettes on the right. */
-export function bannerSvg(
-  _label: string,
-  from: string,
-  to: string,
-  shapes: Shape[] = ['tshirt', 'dress', 'shoe'],
-  palette: string[] = ['#1f1b16', '#ea6547', '#6b8f71'],
-): string {
+export function bannerSvg(label: string, from: string, to: string, shapes: Shape[] = ['tshirt', 'dress', 'shoe']): string {
+  const palette = ['#ffffff', '#fde68a', '#fbcfe8'];
   const items = shapes
     .map((s, i) => {
       const x = 880 + i * 200;
@@ -206,11 +201,12 @@ export function bannerSvg(
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" width="1600" height="500">
 ${DEFS}
 <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient>
-<pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#ffffff" opacity="0.08"/></pattern></defs>
+<pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#ffffff" opacity="0.12"/></pattern></defs>
 <rect width="1600" height="500" fill="url(#g)"/>
 <rect width="1600" height="500" fill="url(#dots)"/>
 <circle cx="1180" cy="250" r="260" fill="#ffffff" opacity="0.08"/>
 <circle cx="1180" cy="250" r="190" fill="#ffffff" opacity="0.07"/>
 ${items}
+<text x="1560" y="470" text-anchor="end" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="6" fill="#ffffff" opacity="0.35">${label}</text>
 </svg>`;
 }

@@ -14,19 +14,19 @@ export function ProductRail({ title, href, products, aside }: { title: string; h
 
   return (
     <section className="card relative overflow-hidden">
-      <div className="flex items-center justify-between gap-4 border-b-2 border-black bg-white px-4 py-3 sm:px-5">
+      <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <h2 className="section-title">{title}</h2>
           {aside}
         </div>
         {href && (
-          <Link href={href} className="btn-cart shrink-0 px-3.5 py-1.5 text-xs">
-            Sab dekho <Icon name="chevronRight" className="h-3.5 w-3.5" />
+          <Link href={href} className="btn-primary shrink-0 rounded-full px-4 py-1.5 text-xs">
+            View all <Icon name="chevronRight" className="h-3.5 w-3.5" />
           </Link>
         )}
       </div>
       <div className="relative">
-        <div ref={scroller} className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-4 pt-3 scrollbar-none">
+        <div ref={scroller} className="flex snap-x snap-mandatory gap-1 overflow-x-auto px-2 py-2 scrollbar-none">
           {products.map((p) => (
             <div key={p.id} className="w-[46%] shrink-0 snap-start sm:w-[31%] md:w-[23%] lg:w-[18.5%] xl:w-[15.6%]">
               <ProductCard product={p} compact />
@@ -35,10 +35,10 @@ export function ProductRail({ title, href, products, aside }: { title: string; h
         </div>
         {products.length > 4 && (
           <>
-            <button onClick={() => scroll(-1)} aria-label="Scroll left" className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-2 border-black bg-accent-400 shadow-brutal-sm hover:bg-accent-300 md:flex">
+            <button onClick={() => scroll(-1)} aria-label="Scroll left" className="absolute left-0 top-1/2 hidden h-24 w-10 -translate-y-1/2 items-center justify-center rounded-r-md bg-white/95 shadow-lift hover:bg-white md:flex">
               <Icon name="chevronLeft" />
             </button>
-            <button onClick={() => scroll(1)} aria-label="Scroll right" className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-2 border-black bg-accent-400 shadow-brutal-sm hover:bg-accent-300 md:flex">
+            <button onClick={() => scroll(1)} aria-label="Scroll right" className="absolute right-0 top-1/2 hidden h-24 w-10 -translate-y-1/2 items-center justify-center rounded-l-md bg-white/95 shadow-lift hover:bg-white md:flex">
               <Icon name="chevronRight" />
             </button>
           </>
@@ -71,9 +71,10 @@ export function DealCountdown() {
   const s = Math.floor((left % 60_000) / 1000);
   const pad = (n: number) => String(n).padStart(2, '0');
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-black" aria-live="off">
-      ⏰ Khatam in
-      <span className="rounded-md border-2 border-black bg-hot-500 px-1.5 py-0.5 font-mono text-xs font-extrabold text-white">
+    <span className="inline-flex items-center gap-1.5 text-sm text-gray-600" aria-live="off">
+      <Icon name="clock" className="h-4 w-4 text-red-600" />
+      Ends in
+      <span className="rounded bg-red-600 px-1.5 py-0.5 font-mono text-xs font-bold text-white">
         {pad(h)}:{pad(m)}:{pad(s)}
       </span>
     </span>

@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy-950 via-brand-900 to-brand-600 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-brand-900 p-4">
       <form
         className="w-full max-w-sm rounded-lg bg-white p-8 shadow-xl"
         onSubmit={async (e) => {
@@ -32,7 +32,7 @@ export default function LoginPage() {
           }
         }}
       >
-        <p className="text-2xl font-extrabold tracking-tight text-gray-900">style<span className="text-brand-600">kart</span></p>
+        <p className="text-2xl font-extrabold italic tracking-tight text-navy-900">StyleKart</p>
         <h1 className="mt-1 text-sm font-semibold uppercase tracking-widest text-brand-600">Seller Admin</h1>
         <p className="mt-1 text-sm text-gray-500">Sign in to manage your store</p>
         {error && <p className="mt-4 rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>}
