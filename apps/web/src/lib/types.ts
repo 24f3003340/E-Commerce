@@ -20,6 +20,7 @@ export interface ListingProduct {
   discountPct: number;
   ratingAvg: number;
   ratingCount: number;
+  isFeatured?: boolean;
   images: { url: string; alt: string | null }[];
   colors: { name: string; hex: string | null }[];
   sizes: string[];

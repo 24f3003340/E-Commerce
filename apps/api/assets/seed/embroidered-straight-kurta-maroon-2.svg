@@ -1,7 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#e5e7eb"/>
-<g transform="translate(0,50) scale(-1,1) translate(-300,0)">
-<path d="M80 35 L125 25 L150 55 L175 25 L220 35 L255 120 L220 130 L220 275 L80 275 L80 130 L45 120 Z" fill="#881337" stroke="#60000f" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<g transform="translate(150 150) scale(1.45) translate(-150 -140)">
+<clipPath id="clip53"><path d="M96 64 L128 54 L150 64 L172 54 L204 64 L246 128 L228 170 L210 148 L214 330 Q150 336 86 330 L90 148 L72 170 L54 128 Z"/></clipPath>
+<path d="M96 64 L128 54 L150 64 L172 54 L204 64 L246 128 L228 170 L210 148 L214 330 Q150 336 86 330 L90 148 L72 170 L54 128 Z" fill="#881337"/>
+<g clip-path="url(#clip53)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  
+        <circle cx="112.0" cy="96.0" r="2.6" fill="#e7b53a"/><circle cx="119.6" cy="104.0" r="2.6" fill="#e7b53a"/><circle cx="127.2" cy="111.3" r="2.6" fill="#e7b53a"/><circle cx="134.8" cy="117.0" r="2.6" fill="#e7b53a"/><circle cx="142.4" cy="120.7" r="2.6" fill="#e7b53a"/><circle cx="150.0" cy="122.0" r="2.6" fill="#e7b53a"/><circle cx="157.6" cy="120.7" r="2.6" fill="#e7b53a"/><circle cx="165.2" cy="117.0" r="2.6" fill="#e7b53a"/><circle cx="172.8" cy="111.3" r="2.6" fill="#e7b53a"/><circle cx="180.4" cy="104.0" r="2.6" fill="#e7b53a"/><circle cx="188.0" cy="96.0" r="2.6" fill="#e7b53a"/>
+        <rect x="80" y="306" width="140" height="28" fill="#6c001b"/><path d="M92 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M101.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M111 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M120.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M130 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M139.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M149 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M158.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M168 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M177.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M187 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M196.5 316 l4 -6 l4 6 z" fill="#e7b53a"/><path d="M206 316 l4 -6 l4 6 z" fill="#e7b53a"/>
+        <path d="M115 170 Q122 240 112 300" fill="none" stroke="#4c0000" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M185 170 Q178 240 188 300" fill="none" stroke="#4c0000" stroke-width="3" stroke-linecap="round" opacity="0.22"/>
+        <path d="M150 64 L150 118" stroke="#6c001b" stroke-width="2"/><path d="M64 150 L232 150" fill="none" stroke="#ce597d" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Rangrez · Maroon</text>
+<path d="M96 64 L128 54 L150 64 L172 54 L204 64 L246 128 L228 170 L210 148 L214 330 Q150 336 86 330 L90 148 L72 170 L54 128 Z" fill="none" stroke="#650014" stroke-width="1.6" stroke-linejoin="round"/><path d="M128 54 Q150 70 172 54" fill="none" stroke="#e7b53a" stroke-width="3"/></g>
 </svg>

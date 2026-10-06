@@ -1,7 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#f3f4f6"/>
-<g transform="translate(0,50) ">
-<path d="M70 110 L230 110 L245 265 L55 265 Z M110 110 Q110 50 150 50 Q190 50 190 110" fill="#1f2937" stroke="#00010f" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<ellipse cx="150" cy="338" rx="110" ry="12" fill="url(#floor)"/><path d="M100 142 C100 70 136 70 136 142 M164 142 C164 70 200 70 200 142" fill="none" stroke="#00010f" stroke-width="9" stroke-linecap="round"/>
+<clipPath id="clip74"><path d="M66 142 L234 142 L250 318 L50 318 Z"/></clipPath>
+<path d="M66 142 L234 142 L250 318 L50 318 Z" fill="#1f2937"/>
+<g clip-path="url(#clip74)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  
+          <rect x="60" y="142" width="180" height="18" fill="#030d1b"/>
+          <path d="M72 168 L228 168 L240 306 L60 306 Z" fill="none" stroke="#656f7d" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+          <rect x="112" y="200" width="76" height="56" rx="3" fill="none" stroke="#030d1b" stroke-width="1.6"/>
+          <path d="M95 180 Q102 250 90 312" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" opacity="0.15"/><path d="M205 180 Q198 250 210 312" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" opacity="0.15"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Carry · Black</text>
+<path d="M66 142 L234 142 L250 318 L50 318 Z" fill="none" stroke="#000614" stroke-width="1.6" stroke-linejoin="round"/>
 </svg>

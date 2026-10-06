@@ -5,12 +5,12 @@ import { cn, inr } from '@/lib/format';
 export function Price({ price, mrp, size = 'md' }: { price: number; mrp: number; size?: 'sm' | 'md' | 'lg' }) {
   const off = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2">
-      <span className={cn('font-semibold', size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-sm' : 'text-base')}>{inr(price)}</span>
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <span className={cn('font-bold text-gray-900', size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-base' : 'text-lg')}>{inr(price)}</span>
       {off > 0 && (
         <>
           <span className={cn('text-gray-500 line-through', size === 'lg' ? 'text-base' : 'text-xs')}>{inr(mrp)}</span>
-          <span className={cn('font-semibold text-orange-600', size === 'lg' ? 'text-base' : 'text-xs')}>{off}% off</span>
+          <span className={cn('font-semibold text-emerald-600', size === 'lg' ? 'text-base' : 'text-xs')}>{off}% off</span>
         </>
       )}
     </div>
@@ -20,11 +20,14 @@ export function Price({ price, mrp, size = 'md' }: { price: number; mrp: number;
 export function Stars({ value, count, small }: { value: number; count?: number; small?: boolean }) {
   if (!value && !count) return null;
   return (
-    <span className={cn('inline-flex items-center gap-1', small ? 'text-xs' : 'text-sm')}>
-      <span className="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-1.5 py-0.5 font-semibold text-white">
-        {value.toFixed(1)} <span aria-hidden>★</span>
+    <span className={cn('inline-flex items-center gap-1.5', small ? 'text-xs' : 'text-sm')}>
+      <span className={cn('inline-flex items-center gap-0.5 rounded px-1.5 font-semibold text-white', value >= 3 ? 'bg-emerald-600' : 'bg-amber-500', small ? 'py-px text-[11px]' : 'py-0.5')}>
+        {value.toFixed(1)}
+        <svg viewBox="0 0 24 24" className={small ? 'h-2.5 w-2.5' : 'h-3 w-3'} fill="currentColor" aria-hidden>
+          <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1L12 2Z" />
+        </svg>
       </span>
-      {count !== undefined && <span className="text-gray-500">({count})</span>}
+      {count !== undefined && <span className="font-medium text-gray-500">({count.toLocaleString('en-IN')})</span>}
     </span>
   );
 }

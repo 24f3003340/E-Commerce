@@ -6,23 +6,24 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { canAccess, getAuth, logout } from '@/lib/api';
 import { cn } from '@/lib/format';
 import type { AdminUser } from '@/lib/types';
+import { Icon, type IconName } from './icons';
 import { Spinner } from './ui';
 
-const NAV = [
-  { href: '/', label: 'Dashboard', section: 'dashboard', icon: '▦' },
-  { href: '/orders', label: 'Orders', section: 'orders', icon: '🧾' },
-  { href: '/returns', label: 'Returns & refunds', section: 'returns', icon: '↩' },
-  { href: '/products', label: 'Products', section: 'products', icon: '👕' },
-  { href: '/categories', label: 'Categories', section: 'categories', icon: '🗂' },
-  { href: '/inventory', label: 'Inventory', section: 'inventory', icon: '📦' },
-  { href: '/customers', label: 'Customers', section: 'customers', icon: '👥' },
-  { href: '/coupons', label: 'Coupons', section: 'coupons', icon: '🏷' },
-  { href: '/banners', label: 'Banners', section: 'banners', icon: '🖼' },
-  { href: '/reviews', label: 'Reviews', section: 'reviews', icon: '★' },
-  { href: '/reports', label: 'Reports', section: 'reports', icon: '📈' },
-  { href: '/settings', label: 'Settings', section: 'settings', icon: '⚙' },
-  { href: '/admins', label: 'Admin users', section: 'admins', icon: '🛡' },
-  { href: '/audit-logs', label: 'Audit logs', section: 'audit-logs', icon: '📜' },
+const NAV: { href: string; label: string; section: string; icon: IconName }[] = [
+  { href: '/', label: 'Dashboard', section: 'dashboard', icon: 'dashboard' },
+  { href: '/orders', label: 'Orders', section: 'orders', icon: 'receipt' },
+  { href: '/returns', label: 'Returns & refunds', section: 'returns', icon: 'returns' },
+  { href: '/products', label: 'Products', section: 'products', icon: 'shirt' },
+  { href: '/categories', label: 'Categories', section: 'categories', icon: 'folder' },
+  { href: '/inventory', label: 'Inventory', section: 'inventory', icon: 'package' },
+  { href: '/customers', label: 'Customers', section: 'customers', icon: 'users' },
+  { href: '/coupons', label: 'Coupons', section: 'coupons', icon: 'tag' },
+  { href: '/banners', label: 'Banners', section: 'banners', icon: 'image' },
+  { href: '/reviews', label: 'Reviews', section: 'reviews', icon: 'star' },
+  { href: '/reports', label: 'Reports', section: 'reports', icon: 'chart' },
+  { href: '/settings', label: 'Settings', section: 'settings', icon: 'settings' },
+  { href: '/admins', label: 'Admin users', section: 'admins', icon: 'shield' },
+  { href: '/audit-logs', label: 'Audit logs', section: 'audit-logs', icon: 'file' },
 ];
 
 interface ToastItem {
@@ -68,17 +69,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <AdminContext.Provider value={{ admin, toast }}>
-      <div className="flex min-h-screen bg-gray-50">
-        <aside className={cn('fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-gray-900 text-gray-300 transition-transform lg:static lg:translate-x-0', navOpen ? 'translate-x-0' : '-translate-x-full')}>
-          <div className="px-5 py-5 text-lg font-extrabold text-white">Store Admin</div>
+      <div className="flex min-h-screen bg-page">
+        <aside className={cn('fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-navy-900 text-gray-300 transition-transform lg:static lg:translate-x-0', navOpen ? 'translate-x-0' : '-translate-x-full')}>
+          <div className="px-5 py-5"><p className="text-xl font-extrabold italic tracking-tight text-white">StyleKart</p><p className="text-[11px] font-semibold uppercase tracking-widest text-accent-300">Seller Admin</p></div>
           <nav className="space-y-0.5 px-3 pb-6">
             {NAV.filter((n) => canAccess(admin.role, n.section)).map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
               return (
-                <Link key={n.href} href={n.href} className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm', active ? 'bg-white/10 font-semibold text-white' : 'hover:bg-white/5 hover:text-white')}>
-                  <span className="w-5 text-center" aria-hidden>
-                    {n.icon}
-                  </span>
+                <Link key={n.href} href={n.href} className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm', active ? 'bg-brand-600 font-semibold text-white shadow-sm' : 'hover:bg-white/5 hover:text-white')}>
+                  <Icon name={n.icon} className="h-[18px] w-[18px] shrink-0 opacity-80" />
                   {n.label}
                 </Link>
               );
@@ -88,8 +87,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         {navOpen && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setNavOpen(false)} />}
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-8">
-            <button className="text-xl lg:hidden" onClick={() => setNavOpen(true)} aria-label="Open menu">
-              ☰
+            <button className="lg:hidden" onClick={() => setNavOpen(true)} aria-label="Open menu">
+              <Icon name="menu" className="h-6 w-6" />
             </button>
             <span className="hidden text-sm text-gray-500 lg:block">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
             <div className="flex items-center gap-3 text-sm">

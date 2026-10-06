@@ -41,17 +41,58 @@ function useQueryUpdater() {
 
 export function SortSelect() {
   const { params, update } = useQueryUpdater();
+  const current = params.get('sort') ?? 'popular';
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="text-gray-500">Sort by</span>
-      <select value={params.get('sort') ?? 'popular'} onChange={(e) => update({ sort: e.target.value })} className="rounded-md border border-gray-300 px-2 py-1.5 text-sm">
-        {SORTS.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className="flex items-center gap-1 overflow-x-auto text-sm scrollbar-none">
+      <span className="mr-2 shrink-0 font-semibold text-gray-800">Sort By</span>
+      {SORTS.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => update({ sort: s.value })}
+          aria-pressed={current === s.value}
+          className={cn(
+            'shrink-0 border-b-2 px-2 py-1.5 transition',
+            current === s.value ? 'border-brand-600 font-semibold text-brand-700' : 'border-transparent text-gray-600 hover:text-gray-900',
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Removable chips for the filters currently applied. */
+export function ActiveFilters() {
+  const { params, update } = useQueryUpdater();
+  const chips: { label: string; remove: () => void }[] = [];
+  for (const key of ['size', 'color', 'brand']) {
+    for (const v of (params.get(key) ?? '').split(',').filter(Boolean)) {
+      chips.push({ label: v, remove: () => update({ [key]: toggleCsv(params.get(key), v) }) });
+    }
+  }
+  if (params.get('minPrice') || params.get('maxPrice')) {
+    const min = params.get('minPrice');
+    const max = params.get('maxPrice');
+    chips.push({
+      label: min && max ? `${inr(Number(min))} – ${inr(Number(max) + 1)}` : min ? `Above ${inr(Number(min))}` : `Under ${inr(Number(max) + 1)}`,
+      remove: () => update({ minPrice: undefined, maxPrice: undefined }),
+    });
+  }
+  if (params.get('rating')) chips.push({ label: `${params.get('rating')}★ & above`, remove: () => update({ rating: undefined }) });
+  if (params.get('discount')) chips.push({ label: `${params.get('discount')}% or more off`, remove: () => update({ discount: undefined }) });
+  if (params.get('inStock')) chips.push({ label: 'In stock', remove: () => update({ inStock: undefined }) });
+  if (!chips.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {chips.map((c) => (
+        <button key={c.label} onClick={c.remove} className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-gray-500">
+          {c.label}
+          <span aria-hidden>✕</span>
+          <span className="sr-only">Remove filter</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -194,7 +235,7 @@ export function Filters({ facets }: { facets: Facets }) {
       <button className="btn-outline w-full lg:hidden" onClick={() => setOpen(true)}>
         Filters {activeCount > 0 && `(${activeCount})`}
       </button>
-      <aside className="hidden lg:block">{body}</aside>
+      <aside className="card hidden h-fit p-4 lg:sticky lg:top-32 lg:block">{body}</aside>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />

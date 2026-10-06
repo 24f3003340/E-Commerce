@@ -7,7 +7,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q : '';
   return (
-    <div className="container py-6">
+    <div className="container py-4">
       <ProductListing searchParams={params} title={q ? `Results for “${q}”` : 'All products'} />
     </div>
   );

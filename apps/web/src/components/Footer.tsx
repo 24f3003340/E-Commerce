@@ -1,59 +1,96 @@
+'use client';
+
 import Link from 'next/link';
 import type { Category } from '@/lib/types';
+import { Icon } from './icons';
+import { Logo } from './Header';
 
 const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const PAYMENT_METHODS = ['UPI', 'Visa', 'Mastercard', 'RuPay', 'Net Banking', 'Wallets', 'Cash on Delivery'];
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-gray-50">
-      <div className="container grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <p className="text-lg font-extrabold text-brand-700">{STORE_NAME}</p>
-          <p className="mt-2 text-sm text-gray-600">Fashion for everyone. Easy returns, secure payments and fast delivery across India.</p>
-        </div>
-        <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-900">Shop</p>
-          <ul className="space-y-2 text-sm text-gray-600">
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link href={`/c/${c.slug}`} className="hover:text-gray-900">
-                  {c.name}
+    <footer className="mt-12">
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="block w-full bg-navy-700 py-3.5 text-center text-sm font-medium text-white hover:bg-navy-700/90"
+      >
+        Back to top
+      </button>
+
+      <div className="bg-navy-900 text-gray-300">
+        <div className="container grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <Logo />
+            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
+              India&apos;s fashion destination for men, women and kids. Original products, easy returns and fast delivery across India.
+            </p>
+            <div className="mt-5 grid max-w-sm grid-cols-3 gap-3 text-center text-xs">
+              {(
+                [
+                  ['truck', 'Fast delivery'],
+                  ['returns', 'Easy returns'],
+                  ['shield', 'Secure payments'],
+                ] as const
+              ).map(([icon, label]) => (
+                <div key={label} className="rounded-md bg-white/5 px-2 py-3">
+                  <Icon name={icon} className="mx-auto h-5 w-5 text-accent-400" />
+                  <p className="mt-1.5 text-gray-300">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Shop</p>
+            <ul className="space-y-2.5 text-sm">
+              {categories.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/c/${c.slug}`} className="hover:text-white hover:underline">
+                    {c.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link href="/search?sort=discount" className="hover:text-white hover:underline">
+                  Today&apos;s Deals
                 </Link>
               </li>
-            ))}
-          </ul>
+            </ul>
+          </div>
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Help</p>
+            <ul className="space-y-2.5 text-sm">
+              <li><Link href="/track" className="hover:text-white hover:underline">Track your order</Link></li>
+              <li><Link href="/account/orders" className="hover:text-white hover:underline">Your orders</Link></li>
+              <li><Link href="/account/returns" className="hover:text-white hover:underline">Returns & refunds</Link></li>
+              <li><Link href="/account" className="hover:text-white hover:underline">Your account</Link></li>
+              <li><Link href="/wishlist" className="hover:text-white hover:underline">Wishlist</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Policies</p>
+            <ul className="space-y-2.5 text-sm text-gray-400">
+              <li>7-day return policy</li>
+              <li>Free shipping over ₹999</li>
+              <li>Cash on delivery available</li>
+              <li>Secure checkout</li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-900">Help</p>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li>
-              <Link href="/track" className="hover:text-gray-900">
-                Track your order
-              </Link>
-            </li>
-            <li>
-              <Link href="/account/orders" className="hover:text-gray-900">
-                My orders
-              </Link>
-            </li>
-            <li>
-              <Link href="/account/returns" className="hover:text-gray-900">
-                Returns & refunds
-              </Link>
-            </li>
-          </ul>
+
+        <div className="border-t border-white/10">
+          <div className="container flex flex-col items-center justify-between gap-4 py-5 text-xs text-gray-400 md:flex-row">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="mr-1">We accept</span>
+              {PAYMENT_METHODS.map((m) => (
+                <span key={m} className="rounded border border-white/15 bg-white/5 px-2 py-1 font-semibold text-gray-200">
+                  {m}
+                </span>
+              ))}
+            </div>
+            <p>© {new Date().getFullYear()} {STORE_NAME}. All rights reserved.</p>
+          </div>
         </div>
-        <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-900">Our promise</p>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li>✓ 100% original products</li>
-            <li>✓ Easy returns within 7 days</li>
-            <li>✓ Secure payments — UPI, cards, net banking, COD</li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-gray-200 py-4 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} {STORE_NAME}. All rights reserved.
       </div>
     </footer>
   );

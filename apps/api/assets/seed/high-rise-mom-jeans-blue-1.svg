@@ -1,7 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#f3f4f6"/>
-<g transform="translate(0,50) ">
-<path d="M85 30 L215 30 L230 270 L165 270 L150 110 L135 270 L70 270 Z" fill="#2563eb" stroke="#003bc3" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<ellipse cx="150" cy="338" rx="110" ry="12" fill="url(#floor)"/>
+<clipPath id="clip56"><path d="M90 56 L210 56 L224 322 L166 322 L150 142 L134 322 L76 322 Z"/></clipPath>
+<path d="M90 56 L210 56 L224 322 L166 322 L150 142 L134 322 L76 322 Z" fill="#2563eb"/>
+<g clip-path="url(#clip56)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  
+        <path d="M89 56 L211 56 L212 74 L88 74 Z" fill="#0947cf"/>
+        <rect x="104" y="54" width="6" height="22" rx="1.5" fill="#1654dc" stroke="#0036be" stroke-width="0.8"/><rect x="130" y="54" width="6" height="22" rx="1.5" fill="#1654dc" stroke="#0036be" stroke-width="0.8"/><rect x="170" y="54" width="6" height="22" rx="1.5" fill="#1654dc" stroke="#0036be" stroke-width="0.8"/><rect x="196" y="54" width="6" height="22" rx="1.5" fill="#1654dc" stroke="#0036be" stroke-width="0.8"/>
+        <path d="M92 76 Q116 104 130 76" fill="none" stroke="#003bc3" stroke-width="1.6"/>
+        <path d="M208 76 Q184 104 170 76" fill="none" stroke="#003bc3" stroke-width="1.6"/>
+        <path d="M150 74 L150 118 Q148 132 140 136" fill="none" stroke="#6ba9ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+        <path d="M105 180 Q112 250 100 312" fill="none" stroke="#0027af" stroke-width="3" stroke-linecap="round" opacity="0.18"/><path d="M195 180 Q188 250 200 312" fill="none" stroke="#0027af" stroke-width="3" stroke-linecap="round" opacity="0.18"/>
+        <path d="M120 140 Q128 150 136 146" fill="none" stroke="#0027af" stroke-width="3" stroke-linecap="round" opacity="0.2"/><path d="M180 140 Q172 150 164 146" fill="none" stroke="#0027af" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <path d="M78 312 L133 312" fill="none" stroke="#6ba9ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M167 312 L222 312" fill="none" stroke="#6ba9ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+        <circle cx="130" cy="79" r="2.2" fill="#c9a227"/><circle cx="170" cy="79" r="2.2" fill="#c9a227"/><circle cx="150" cy="65" r="4" fill="#c9a227"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">DenimCo · Blue</text>
+<path d="M90 56 L210 56 L224 322 L166 322 L150 142 L134 322 L76 322 Z" fill="none" stroke="#0240c8" stroke-width="1.6" stroke-linejoin="round"/>
 </svg>

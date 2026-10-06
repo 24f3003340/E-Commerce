@@ -55,7 +55,7 @@ function GuestCart() {
           <span>{inr(subtotal)}</span>
         </div>
         <p className="mt-1 text-xs text-gray-500">Shipping and coupons are applied at checkout.</p>
-        <button className="btn-primary mt-4 w-full" onClick={() => router.push('/login?next=/checkout')}>
+        <button className="btn-buy mt-4 w-full py-3" onClick={() => router.push('/login?next=/checkout')}>
           Login to checkout
         </button>
       </div>
@@ -146,8 +146,8 @@ function AccountCart() {
           <span>{inr(s.total)}</span>
         </div>
         {toFree > 0 && <p className="rounded bg-amber-50 p-2 text-xs text-amber-800">Add {inr(toFree)} more for FREE delivery</p>}
-        <button className="btn-primary mt-3 w-full" disabled={cart.hasIssues} onClick={() => router.push('/checkout')}>
-          Proceed to checkout
+        <button className="btn-buy mt-3 w-full py-3 text-base" disabled={cart.hasIssues} onClick={() => router.push('/checkout')}>
+          Place Order
         </button>
         {cart.hasIssues && <p className="text-xs text-red-600">Remove unavailable items to continue.</p>}
       </div>

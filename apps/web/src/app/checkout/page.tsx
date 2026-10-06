@@ -261,7 +261,7 @@ export default function CheckoutPage() {
           {s.productDiscount + s.couponDiscount > 0 && (
             <p className="text-xs font-semibold text-emerald-700">You save {inr(s.productDiscount + s.couponDiscount)} on this order</p>
           )}
-          <button className="btn-primary mt-3 w-full py-3" disabled={placing || !addressId || quote.hasIssues} onClick={() => void placeOrder()}>
+          <button className="btn-buy mt-3 w-full py-3 text-base" disabled={placing || !addressId || quote.hasIssues} onClick={() => void placeOrder()}>
             {placing ? 'Placing order…' : paymentMethod === 'COD' ? 'Place order' : `Pay ${inr(s.total)}`}
           </button>
           <p className="text-center text-xs text-gray-500">🔒 Payments are processed securely</p>

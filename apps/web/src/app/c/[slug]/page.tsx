@@ -27,7 +27,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     href: i < category.breadcrumbs.length - 1 ? `/c/${b.slug}` : undefined,
   }));
   return (
-    <div className="container py-6">
+    <div className="container py-4">
       <Breadcrumbs items={crumbs} />
       {category.children.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">

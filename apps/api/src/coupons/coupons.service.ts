@@ -62,7 +62,7 @@ export class CouponsService {
         OR: [{ startsAt: null }, { startsAt: { lte: now } }],
         AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
       },
-      select: { code: true, description: true, type: true, value: true, maxDiscount: true, minOrderValue: true, endsAt: true },
+      select: { code: true, description: true, type: true, value: true, maxDiscount: true, minOrderValue: true, endsAt: true, applicableCategoryIds: true },
       orderBy: { createdAt: 'desc' },
       take: 10,
     });

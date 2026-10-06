@@ -1,7 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#e5e7eb"/>
-<g transform="translate(0,50) scale(-1,1) translate(-300,0)">
-<path d="M70 40 L110 25 Q150 45 190 25 L230 40 L270 95 L230 115 L215 95 L215 260 L85 260 L85 95 L70 115 L30 95 Z" fill="#f9fafb" stroke="#d1d2d3" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<g transform="translate(150 150) scale(1.45) translate(-150 -140)">
+<clipPath id="clip9"><path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z"/></clipPath>
+<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="#f9fafb"/>
+<g clip-path="url(#clip9)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  
+        <path d="M112 165 Q120 230 113 290" fill="none" stroke="#bdbebf" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M188 170 Q180 235 189 292" fill="none" stroke="#bdbebf" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M140 260 Q150 280 160 300" fill="none" stroke="#bdbebf" stroke-width="3" stroke-linecap="round" opacity="0.15"/>
+        <path d="M93 292 Q150 299 209 292" fill="none" stroke="#b3b4b5" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M72 134 L52 113" fill="none" stroke="#b3b4b5" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M228 134 L248 113" fill="none" stroke="#b3b4b5" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Urban Basics · White</text>
+<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="none" stroke="#cccdce" stroke-width="1.6" stroke-linejoin="round"/><path d="M126 58 Q150 80 174 58" fill="none" stroke="#dddedf" stroke-width="6" stroke-linecap="round"/></g>
 </svg>

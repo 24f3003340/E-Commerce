@@ -1,7 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#e5e7eb"/>
-<g transform="translate(0,50) scale(-1,1) translate(-300,0)">
-<path d="M90 50 L130 30 Q150 45 170 30 L210 50 L225 120 L205 125 L205 230 L95 230 L95 125 L75 120 Z" fill="#d6c7a1" stroke="#ae9f79" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<g transform="translate(150 150) scale(1.45) translate(-150 -140)">
+<clipPath id="clip45"><path d="M100 82 Q150 92 200 82 L232 100 L246 140 L222 150 L210 130 L214 268 Q150 276 86 268 L90 130 L78 150 L54 140 L68 100 Z"/></clipPath>
+<path d="M100 82 Q150 92 200 82 L232 100 L246 140 L222 150 L210 130 L214 268 Q150 276 86 268 L90 130 L78 150 L54 140 L68 100 Z" fill="#d6c7a1"/>
+<g clip-path="url(#clip45)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  <path d="M118 160 Q126 215 118 262" fill="none" stroke="#9a8b65" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M182 165 Q175 215 184 264" fill="none" stroke="#9a8b65" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M89 259 Q150 266 211 259" fill="none" stroke="#90815b" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Aura · Beige</text>
+<path d="M100 82 Q150 92 200 82 L232 100 L246 140 L222 150 L210 130 L214 268 Q150 276 86 268 L90 130 L78 150 L54 140 L68 100 Z" fill="none" stroke="#b3a47e" stroke-width="1.6" stroke-linejoin="round"/><path d="M100 82 Q150 96 200 82" fill="none" stroke="#baab85" stroke-width="5" stroke-linecap="round"/></g>
 </svg>

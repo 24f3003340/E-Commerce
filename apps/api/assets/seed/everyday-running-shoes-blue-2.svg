@@ -1,7 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="#e5e7eb"/>
-<g transform="translate(0,50) scale(-1,1) translate(-300,0)">
-<path d="M40 190 L60 130 Q110 140 150 120 L180 150 Q240 160 265 190 L265 215 L40 215 Z" fill="#2563eb" stroke="#003bc3" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eceef1"/></radialGradient>
+  <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset="0.5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+  <radialGradient id="floor" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#000" stop-opacity="0.18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="300" height="375" fill="url(#bg)"/>
+<g transform="translate(150 150) scale(1.45) translate(-150 -235)">
+<clipPath id="clip71"><path d="M50 252 L54 204 Q62 180 94 178 L122 182 Q150 150 178 168 L214 204 Q250 216 264 238 L264 254 Z"/></clipPath>
+<path d="M50 252 L54 204 Q62 180 94 178 L122 182 Q150 150 178 168 L214 204 Q250 216 264 238 L264 254 Z" fill="#2563eb"/>
+<g clip-path="url(#clip71)">
+  <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
+  
+        <path d="M50 252 L50 205 L64 200 L66 252 Z" fill="#0947cf"/>
+        <path d="M108 238 Q160 212 220 230" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.75"/>
+        <path d="M70 246 L258 246" fill="none" stroke="#6ba9ff" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M200 210 Q230 222 250 236" fill="none" stroke="#0027af" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
 </g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Stride · Blue</text>
+<path d="M50 252 L54 204 Q62 180 94 178 L122 182 Q150 150 178 168 L214 204 Q250 216 264 238 L264 254 Z" fill="none" stroke="#0240c8" stroke-width="1.6" stroke-linejoin="round"/><path d="M94 178 Q108 166 122 182" fill="none" stroke="#0031b9" stroke-width="4" stroke-linecap="round"/>
+        <g stroke="#f8fafc" stroke-width="3.2" stroke-linecap="round"><path d="M128 188 L146 176"/><path d="M138 198 L158 186"/><path d="M150 208 L170 196"/></g>
+        <path d="M44 254 L266 254 Q272 270 258 280 L62 284 Q40 280 44 254 Z" fill="#f5f5f4" stroke="#d6d3d1" stroke-width="1.6"/>
+        <path d="M52 272 L262 270" stroke="#d6d3d1" stroke-width="2"/></g>
 </svg>

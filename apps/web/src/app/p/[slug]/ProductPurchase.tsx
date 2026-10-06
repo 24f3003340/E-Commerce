@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '@/components/icons';
 import { Price, Stars } from '@/components/ui';
 import { useStore } from '@/context/StoreProvider';
 import { api, ApiError } from '@/lib/api';
-import { cn, formatDate } from '@/lib/format';
+import { cn, formatDate, inr } from '@/lib/format';
 import type { ProductDetail } from '@/lib/types';
+import { usePincode } from '@/lib/usePincode';
 
 interface Serviceability {
   serviceable: boolean;
@@ -14,9 +16,17 @@ interface Serviceability {
   estimatedDelivery?: { from: string; to: string };
 }
 
+interface PublicCoupon {
+  code: string;
+  description: string | null;
+  minOrderValue: number;
+  applicableCategoryIds?: string[];
+}
+
 export function ProductPurchase({ product }: { product: ProductDetail }) {
   const router = useRouter();
   const { addToCart, toast, wishlist, toggleWishlist } = useStore();
+  const { pincode: savedPincode, setPincode: savePincode } = usePincode();
   const colors = useMemo(() => {
     const map = new Map<string, string | null>();
     for (const v of product.variants) if (v.color && !map.has(v.color)) map.set(v.color, v.colorHex);
@@ -28,25 +38,62 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
   const [color, setColor] = useState<string | null>(firstInStock?.color ?? null);
   const [size, setSize] = useState<string | null>(sizes.length <= 1 ? (sizes[0] ?? null) : null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [sizeError, setSizeError] = useState(false);
-  const [pincode, setPincode] = useState('');
+  const [pincode, setPincodeInput] = useState('');
   const [svc, setSvc] = useState<Serviceability | null>(null);
   const [showChart, setShowChart] = useState(false);
+  const [coupons, setCoupons] = useState<PublicCoupon[]>([]);
 
-  const images = useMemo(() => {
-    const forColor = product.images.filter((i) => i.color === color);
+  useEffect(() => {
+    // Only show coupons that can apply to this product (category-restricted ones must match its category tree)
+    const trail = new Set(product.breadcrumbs.map((b) => b.id));
+    api<PublicCoupon[]>('/coupons', { auth: false })
+      .then((list) => setCoupons(list.filter((c) => !c.applicableCategoryIds?.length || c.applicableCategoryIds.some((id) => trail.has(id)))))
+      .catch(() => undefined);
+  }, [product.breadcrumbs]);
+
+  const checkPincode = async (code: string, quiet = false) => {
+    if (!/^\d{6}$/.test(code)) {
+      if (!quiet) toast('Enter a valid 6 digit pincode', 'error');
+      return;
+    }
+    try {
+      setSvc(await api<Serviceability>(`/serviceability?pincode=${code}`, { auth: false }));
+      savePincode(code);
+    } catch {
+      setSvc({ serviceable: false, codAvailable: false });
+    }
+  };
+
+  useEffect(() => {
+    if (savedPincode && !pincode) {
+      setPincodeInput(savedPincode);
+      void checkPincode(savedPincode, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedPincode]);
+
+  const imagesFor = (c: string | null) => {
+    const forColor = product.images.filter((i) => i.color === c);
     return forColor.length ? forColor : product.images;
-  }, [product.images, color]);
+  };
+  const images = imagesFor(color);
 
-  const variant = product.variants.find((v) => v.color === color && v.size === size) ??
+  const variant =
+    product.variants.find((v) => v.color === color && v.size === size) ??
     (sizes.length === 0 ? product.variants.find((v) => v.color === color) : undefined);
   const sizeAvailable = (s: string) => product.variants.some((v) => v.size === s && v.color === color && v.inStock);
   const wished = wishlist.has(product.id);
+  const unavailable = variant ? !variant.inStock : !product.variants.some((v) => v.inStock);
+  const price = variant?.price ?? product.price;
+  const mrp = variant?.mrp ?? product.mrp;
 
   const add = async (buyNow: boolean) => {
     if (!variant) {
       setSizeError(true);
+      document.getElementById('size-picker')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     setBusy(true);
@@ -70,86 +117,147 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
     }
   };
 
-  const checkPincode = async () => {
-    if (!/^\d{6}$/.test(pincode)) return toast('Enter a valid 6 digit pincode', 'error');
-    try {
-      setSvc(await api<Serviceability>(`/serviceability?pincode=${pincode}`, { auth: false }));
-    } catch {
-      setSvc({ serviceable: false, codAvailable: false });
-    }
-  };
+  const actionButtons = (
+    <>
+      <button className="btn-cart flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(false)}>
+        <Icon name="cart" /> {unavailable ? 'Out of stock' : 'Add to Cart'}
+      </button>
+      <button className="btn-buy flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(true)}>
+        <Icon name="zap" /> Buy Now
+      </button>
+    </>
+  );
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div className="card grid gap-6 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:p-6">
       {/* Gallery */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row">
-        <div className="flex gap-2 sm:flex-col">
-          {images.map((img, i) => (
+      <div className="lg:sticky lg:top-32 lg:self-start">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none sm:flex-col">
+            {images.map((img, i) => (
+              <button
+                key={img.url}
+                onMouseEnter={() => setImageIndex(i)}
+                onClick={() => setImageIndex(i)}
+                aria-label={`Show image ${i + 1}`}
+                className={cn('h-20 w-16 shrink-0 overflow-hidden rounded border-2 bg-gray-50', i === imageIndex ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400')}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+          <div
+            className="relative aspect-[4/5] flex-1 cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
+            onMouseMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+            }}
+            onMouseLeave={() => setZoom(null)}
+          >
+            {images[imageIndex] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={images[imageIndex].url}
+                alt={images[imageIndex].alt ?? product.name}
+                className="h-full w-full object-cover transition-transform duration-150"
+                style={zoom ? { transform: 'scale(2)', transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
+              />
+            )}
             <button
-              key={img.url}
-              onClick={() => setImageIndex(i)}
-              aria-label={`Show image ${i + 1}`}
-              className={cn('h-20 w-16 overflow-hidden rounded border-2', i === imageIndex ? 'border-brand-600' : 'border-transparent')}
+              onClick={() => void toggleWishlist(product.id)}
+              aria-pressed={wished}
+              aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card transition hover:scale-110"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="h-full w-full object-cover" />
+              <Icon name="heart" filled={wished} className={cn('h-5 w-5', wished ? 'text-rose-500' : 'text-gray-400')} />
             </button>
-          ))}
+          </div>
         </div>
-        <div className="relative aspect-[3/4] flex-1 overflow-hidden rounded-lg bg-gray-100">
-          {images[imageIndex] && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={images[imageIndex].url} alt={images[imageIndex].alt ?? product.name} className="h-full w-full object-cover" />
-          )}
-        </div>
+        <div className="mt-4 hidden gap-3 lg:flex">{actionButtons}</div>
       </div>
 
-      {/* Info */}
-      <div>
-        {product.brand && <p className="text-sm font-bold uppercase tracking-wide text-gray-500">{product.brand}</p>}
-        <h1 className="mt-1 text-2xl font-semibold">{product.name}</h1>
-        {product.ratingCount > 0 && (
-          <a href="#reviews" className="mt-2 inline-block">
-            <Stars value={product.ratingAvg} count={product.ratingCount} />
-          </a>
-        )}
-        <div className="mt-4 border-t pt-4">
-          <Price price={variant?.price ?? product.price} mrp={variant?.mrp ?? product.mrp} size="lg" />
-          <p className="mt-1 text-xs text-emerald-700">Inclusive of all taxes</p>
+      {/* Details */}
+      <div className="min-w-0">
+        {product.brand && <p className="text-sm font-bold uppercase tracking-wide text-brand-700">{product.brand}</p>}
+        <h1 className="mt-1 text-xl font-medium leading-snug text-gray-900 sm:text-2xl">{product.name}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+          {product.ratingCount > 0 ? (
+            <a href="#reviews" className="flex items-center gap-2">
+              <Stars value={product.ratingAvg} />
+              <span className="font-medium text-gray-500">
+                {product.ratingCount} rating{product.ratingCount === 1 ? '' : 's'} & reviews
+              </span>
+            </a>
+          ) : (
+            <span className="text-gray-500">Be the first to review</span>
+          )}
         </div>
+
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          {mrp > price && <p className="text-sm font-semibold text-emerald-600">Special price</p>}
+          <Price price={price} mrp={mrp} size="lg" />
+          <p className="mt-1 text-xs text-gray-500">Inclusive of all taxes · {price >= 99900 ? 'Free delivery' : 'Free delivery on orders above ₹999'}</p>
+        </div>
+
+        {coupons.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2 text-sm font-bold">Available offers</p>
+            <ul className="space-y-2 text-sm">
+              {coupons.slice(0, 4).map((c) => (
+                <li key={c.code} className="flex gap-2">
+                  <Icon name="tag" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>
+                    <span className="font-semibold">Coupon {c.code}</span> — {c.description}
+                    {c.minOrderValue > 0 && <span className="text-gray-500"> (min. order {inr(c.minOrderValue)})</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {colors.length > 0 && (
           <div className="mt-6">
-            <p className="mb-2 text-sm font-semibold">
-              Color: <span className="font-normal text-gray-600">{color}</span>
+            <p className="mb-2 text-sm">
+              <span className="font-bold">Colour:</span> <span className="text-gray-700">{color}</span>
             </p>
             <div className="flex flex-wrap gap-2">
-              {colors.map(([name, hex]) => (
-                <button
-                  key={name}
-                  title={name}
-                  aria-label={name}
-                  aria-pressed={color === name}
-                  onClick={() => {
-                    setColor(name);
-                    setImageIndex(0);
-                  }}
-                  className={cn('h-9 w-9 rounded-full border-2 p-0.5', color === name ? 'border-brand-600' : 'border-gray-200')}
-                >
-                  <span className="block h-full w-full rounded-full border border-gray-200" style={{ background: hex ?? '#ccc' }} />
-                </button>
-              ))}
+              {colors.map(([name, hex]) => {
+                const thumb = imagesFor(name)[0];
+                const anyStock = product.variants.some((v) => v.color === name && v.inStock);
+                return (
+                  <button
+                    key={name}
+                    title={name}
+                    aria-label={name}
+                    aria-pressed={color === name}
+                    onClick={() => {
+                      setColor(name);
+                      setImageIndex(0);
+                    }}
+                    className={cn('relative h-16 w-14 overflow-hidden rounded-md border-2 bg-gray-50 transition', color === name ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400', !anyStock && 'opacity-50')}
+                  >
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb.url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="block h-full w-full" style={{ background: hex ?? '#ccc' }} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {sizes.length > 0 && (
-          <div className="mt-6">
-            <div className="mb-2 flex items-center justify-between">
-              <p className={cn('text-sm font-semibold', sizeError && 'text-red-600')}>{sizeError ? 'Please select a size' : 'Select size'}</p>
+          <div className="mt-6" id="size-picker">
+            <div className="mb-2 flex items-center gap-4">
+              <p className={cn('text-sm font-bold', sizeError && 'text-red-600')}>{sizeError ? 'Please select a size' : 'Select size'}</p>
               {product.sizeChart && (
-                <button onClick={() => setShowChart(true)} className="text-xs font-semibold text-brand-700">
-                  Size chart
+                <button onClick={() => setShowChart(true)} className="flex items-center gap-1 text-sm font-semibold text-brand-700">
+                  <Icon name="ruler" className="h-4 w-4" /> Size chart
                 </button>
               )}
             </div>
@@ -166,9 +274,9 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                       setSizeError(false);
                     }}
                     className={cn(
-                      'min-w-[3rem] rounded-full border px-3 py-2 text-sm font-semibold',
-                      size === s ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-gray-300 hover:border-gray-900',
-                      !available && 'cursor-not-allowed text-gray-300 line-through hover:border-gray-300',
+                      'min-w-[3.25rem] rounded-md border px-3 py-2 text-sm font-semibold transition',
+                      size === s ? 'border-brand-600 bg-brand-600 text-white' : 'border-gray-300 bg-white hover:border-brand-600',
+                      !available && 'cursor-not-allowed border-dashed bg-gray-50 text-gray-300 line-through hover:border-gray-300',
                     )}
                   >
                     {s}
@@ -176,65 +284,105 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 );
               })}
             </div>
-            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-xs font-semibold text-orange-600">Only {variant.stock} left!</p>}
+            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-sm font-semibold text-red-600">Hurry, only {variant.stock} left!</p>}
           </div>
         )}
 
-        <div className="mt-6 flex gap-3">
-          <button className="btn-primary flex-1 py-3" disabled={busy || (variant && !variant.inStock)} onClick={() => void add(false)}>
-            {variant && !variant.inStock ? 'Out of stock' : 'Add to cart'}
-          </button>
-          <button className="btn-dark flex-1 py-3" disabled={busy || (variant && !variant.inStock)} onClick={() => void add(true)}>
-            Buy now
-          </button>
-          <button className="btn-outline px-4" onClick={() => void toggleWishlist(product.id)} aria-pressed={wished} aria-label="Wishlist">
-            <span className={wished ? 'text-rose-600' : ''}>{wished ? '♥' : '♡'}</span>
-          </button>
+        <div className="mt-6 grid gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-[auto_1fr]">
+          <p className="flex items-center gap-2 text-sm font-bold text-gray-700">
+            <Icon name="pin" className="h-4 w-4" /> Delivery
+          </p>
+          <div>
+            <form
+              className="flex max-w-sm border-b-2 border-brand-600"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void checkPincode(pincode);
+              }}
+            >
+              <input
+                value={pincode}
+                onChange={(e) => setPincodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="Enter delivery pincode"
+                inputMode="numeric"
+                className="w-full bg-transparent py-1.5 text-sm font-medium outline-none"
+                aria-label="Pincode"
+              />
+              <button className="px-2 text-sm font-bold text-brand-700">Check</button>
+            </form>
+            {svc ? (
+              svc.serviceable && svc.estimatedDelivery ? (
+                <div className="mt-2 space-y-1 text-sm">
+                  <p>
+                    Delivery by <span className="font-bold">{formatDate(svc.estimatedDelivery.to)}</span>
+                    <span className="text-gray-500"> | </span>
+                    <span className="text-emerald-600">{price >= 99900 ? 'Free delivery' : 'Free on orders above ₹999'}</span>
+                  </p>
+                  <p className="text-gray-600">{svc.codAvailable ? 'Cash on Delivery available' : 'Cash on Delivery not available'}</p>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-red-600">Sorry, we do not deliver to this pincode yet.</p>
+              )
+            ) : (
+              <p className="mt-2 text-xs text-gray-500">Enter your pincode to check delivery date and COD availability.</p>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-gray-200 p-4">
-          <p className="text-sm font-semibold">Delivery options</p>
-          <div className="mt-2 flex gap-2">
-            <input value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter pincode" inputMode="numeric" className="input" aria-label="Pincode" />
-            <button className="btn-outline" onClick={() => void checkPincode()}>
-              Check
-            </button>
-          </div>
-          {svc && (
-            <div className="mt-3 text-sm">
-              {svc.serviceable && svc.estimatedDelivery ? (
-                <>
-                  <p className="text-emerald-700">
-                    ✓ Delivery by {formatDate(svc.estimatedDelivery.to)}
-                  </p>
-                  <p className="text-gray-600">{svc.codAvailable ? '✓ Cash on delivery available' : '✗ Cash on delivery not available'}</p>
-                </>
-              ) : (
-                <p className="text-red-600">Sorry, we do not deliver to this pincode yet.</p>
-              )}
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-gray-700">
+          {(
+            [
+              ['returns', product.returnPolicy.isReturnable ? `${product.returnPolicy.returnWindowDays}-day return` : 'No returns'],
+              ['card', 'Cash on Delivery'],
+              ['shield', 'Original product'],
+            ] as const
+          ).map(([icon, label]) => (
+            <div key={label} className="flex flex-col items-center gap-1.5 rounded-md bg-gray-50 px-2 py-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-card">
+                <Icon name={icon} className="h-4 w-4" />
+              </span>
+              {label}
             </div>
-          )}
-          <p className="mt-3 text-xs text-gray-500">
-            {product.returnPolicy.isReturnable ? `Easy ${product.returnPolicy.returnWindowDays}-day returns & exchange` : 'This item is not returnable'}
-          </p>
+          ))}
         </div>
+
+        <p className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <Icon name="store" className="h-4 w-4" /> Sold by <span className="font-semibold text-brand-700">{process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart'} Retail</span>
+        </p>
+
+        {product.specifications && Object.keys(product.specifications).length > 0 && (
+          <div className="mt-6 border-t border-gray-100 pt-5">
+            <p className="mb-2 text-sm font-bold">Highlights</p>
+            <ul className="grid list-disc gap-x-8 gap-y-1.5 pl-5 text-sm text-gray-700 sm:grid-cols-2">
+              {product.material && <li>{product.material}</li>}
+              {Object.entries(product.specifications).slice(0, 7).map(([k, v]) => (
+                <li key={k}>
+                  {k}: {v}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
+      {/* Mobile sticky actions */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-0 border-t bg-white shadow-lift lg:hidden [&>button]:rounded-none">{actionButtons}</div>
+
       {showChart && product.sizeChart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowChart(false)} />
-          <div className="relative w-full max-w-md rounded-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Size chart">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowChart(false)} />
+          <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lift">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-bold">Size chart (inches)</h2>
               <button onClick={() => setShowChart(false)} aria-label="Close">
-                ✕
+                <Icon name="x" />
               </button>
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b">
+                <tr className="border-b bg-gray-50">
                   {Object.keys(product.sizeChart[0]).map((k) => (
-                    <th key={k} className="py-2 text-left capitalize">
+                    <th key={k} className="px-2 py-2 text-left capitalize">
                       {k}
                     </th>
                   ))}
@@ -244,7 +392,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 {product.sizeChart.map((row, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Object.values(row).map((v, j) => (
-                      <td key={j} className="py-2">
+                      <td key={j} className="px-2 py-2">
                         {v}
                       </td>
                     ))}

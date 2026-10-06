@@ -2,6 +2,7 @@
 import { AdminRole, BannerPosition, CouponType, InventoryReason, PrismaClient, ProductStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import 'dotenv/config';
+import { bannerSvg, productSvg, type Shape } from './artwork';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -9,49 +10,7 @@ const prisma = new PrismaClient();
 const API_URL = process.env.PUBLIC_API_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:4000';
 const SEED_DIR = join(__dirname, '..', 'assets', 'seed');
 
-// ───────────── Placeholder artwork (so the demo works fully offline) ─────────────
-
-const SHAPES: Record<string, string> = {
-  tshirt: 'M70 40 L110 25 Q150 45 190 25 L230 40 L270 95 L230 115 L215 95 L215 260 L85 260 L85 95 L70 115 L30 95 Z',
-  shirt: 'M70 40 L120 25 L150 60 L180 25 L230 40 L270 95 L230 115 L215 95 L215 260 L85 260 L85 95 L70 115 L30 95 Z M150 60 L150 260',
-  jeans: 'M85 30 L215 30 L230 270 L165 270 L150 110 L135 270 L70 270 Z',
-  dress: 'M115 25 L185 25 L175 90 L240 270 L60 270 L125 90 Z',
-  top: 'M90 50 L130 30 Q150 45 170 30 L210 50 L225 120 L205 125 L205 230 L95 230 L95 125 L75 120 Z',
-  kurta: 'M80 35 L125 25 L150 55 L175 25 L220 35 L255 120 L220 130 L220 275 L80 275 L80 130 L45 120 Z',
-  shoe: 'M40 190 L60 130 Q110 140 150 120 L180 150 Q240 160 265 190 L265 215 L40 215 Z',
-  sandal: 'M50 200 Q150 170 255 200 L255 215 L50 215 Z M90 200 L130 140 L170 200 M150 195 L200 150 L230 200',
-  bag: 'M70 110 L230 110 L245 265 L55 265 Z M110 110 Q110 50 150 50 Q190 50 190 110',
-  watch: 'M120 40 L180 40 L180 90 L120 90 Z M120 210 L180 210 L180 260 L120 260 Z M150 90 A60 60 0 1 0 150.1 90 Z',
-};
-
-function shade(hex: string, amount: number) {
-  const n = parseInt(hex.slice(1), 16);
-  const c = (v: number) => Math.max(0, Math.min(255, v + amount));
-  const r = c(n >> 16);
-  const g = c((n >> 8) & 255);
-  const b = c(n & 255);
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-}
-
-function productSvg(shape: string, color: string, label: string, angle = 0) {
-  const bg = angle === 0 ? '#f3f4f6' : '#e5e7eb';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
-<rect width="300" height="400" fill="${bg}"/>
-<g transform="translate(0,50) ${angle ? 'scale(-1,1) translate(-300,0)' : ''}">
-<path d="${SHAPES[shape]}" fill="${color}" stroke="${shade(color, -40)}" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
-</g>
-<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">${label}</text>
-</svg>`;
-}
-
-function bannerSvg(title: string, from: string, to: string) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" width="1600" height="600">
-<defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs>
-<rect width="1600" height="600" fill="url(#g)"/>
-<circle cx="1300" cy="300" r="220" fill="#ffffff" opacity="0.12"/><circle cx="1150" cy="120" r="90" fill="#ffffff" opacity="0.1"/>
-<text x="1300" y="320" text-anchor="middle" font-family="sans-serif" font-size="56" font-weight="700" fill="#ffffff" opacity="0.5">${title}</text>
-</svg>`;
-}
+// ───────────── Demo artwork (generated, committed under assets/ so it survives redeploys) ─────────────
 
 function writeAsset(name: string, svg: string) {
   writeFileSync(join(SEED_DIR, name), svg);
@@ -137,7 +96,7 @@ interface ProductDef {
   name: string;
   brand: string;
   category: string;
-  shape: keyof typeof SHAPES;
+  shape: Shape;
   price: number; // rupees
   mrp: number; // rupees
   colors: string[];
@@ -208,7 +167,7 @@ async function main() {
   // Category images
   for (const root of CATEGORY_TREE) {
     const shape = { men: 'tshirt', women: 'dress', kids: 'tshirt', footwear: 'shoe', accessories: 'bag' }[root.slug] ?? 'tshirt';
-    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape, '#4f46e5', root.name));
+    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#2563eb'));
     await prisma.category.update({ where: { slug: root.slug }, data: { imageUrl: url } });
   }
 
@@ -217,8 +176,8 @@ async function main() {
   for (const def of PRODUCTS) {
     const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const images = def.colors.flatMap((color) => [
-      { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-1.svg`, productSvg(def.shape, COLORS[color], `${def.brand} · ${color}`)), alt: `${def.name} ${color}`, color },
-      { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-2.svg`, productSvg(def.shape, COLORS[color], `${def.brand} · ${color}`, 1)), alt: `${def.name} ${color} back`, color },
+      { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-1.svg`, productSvg(def.shape, COLORS[color])), alt: `${def.name} ${color}`, color },
+      { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-2.svg`, productSvg(def.shape, COLORS[color], 1)), alt: `${def.name} ${color} detail`, color },
     ]);
     const existing = await prisma.product.findUnique({ where: { slug } });
     if (existing) continue;
@@ -322,9 +281,9 @@ async function main() {
 
   // Banners
   const bannerImages = [
-    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#312e81', '#7c3aed')),
-    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#9a3412', '#db2777')),
-    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#065f46', '#0d9488')),
+    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#0a1c36', '#2563eb', ['tshirt', 'dress', 'shoe'])),
+    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#7c2d12', '#db2777', ['kurta', 'dress', 'sandal'])),
+    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#064e3b', '#0d9488', ['bag', 'shirt', 'watch'])),
   ];
   if ((await prisma.banner.count()) === 0) {
     await prisma.banner.createMany({

@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { StoreProvider } from '@/context/StoreProvider';
@@ -7,20 +8,26 @@ import type { Category } from '@/lib/types';
 import './globals.css';
 
 const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: { default: `${STORE_NAME} — Online Fashion Store`, template: `%s | ${STORE_NAME}` },
-  description: 'Shop the latest fashion for men, women and kids. Easy returns, COD and secure payments.',
+  title: { default: `${STORE_NAME} — Online Shopping for Fashion`, template: `%s | ${STORE_NAME}` },
+  description: 'Shop the latest fashion for men, women and kids. Free delivery over ₹999, easy 7-day returns, COD and secure payments.',
 };
+
+export const viewport: Viewport = { themeColor: '#0a1c36' };
 
 export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const categories = await serverGetSafe<Category[]>('/categories', []);
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         <StoreProvider>
+          <div className="bg-navy-950 py-1.5 text-center text-xs font-medium text-white">
+            Free delivery on orders above ₹999 · Easy 7-day returns · Cash on delivery available
+          </div>
           <Header categories={categories} />
           <main className="min-h-[60vh]">{children}</main>
           <Footer categories={categories} />
