@@ -14,6 +14,8 @@ const NAV: { href: string; label: string; section: string; icon: IconName }[] = 
   { href: '/orders', label: 'Orders', section: 'orders', icon: 'receipt' },
   { href: '/returns', label: 'Returns & refunds', section: 'returns', icon: 'returns' },
   { href: '/products', label: 'Products', section: 'products', icon: 'shirt' },
+  { href: '/sellers', label: 'Sellers', section: 'sellers', icon: 'store' },
+  { href: '/payouts', label: 'Seller payouts', section: 'payouts', icon: 'wallet' },
   { href: '/categories', label: 'Categories', section: 'categories', icon: 'folder' },
   { href: '/inventory', label: 'Inventory', section: 'inventory', icon: 'package' },
   { href: '/customers', label: 'Customers', section: 'customers', icon: 'users' },
@@ -47,13 +49,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [navOpen, setNavOpen] = useState(false);
   const isLogin = pathname === '/login';
+  // The marketplace seller panel (/seller/*) has its own login and layout
+  const isSellerPanel = pathname === '/seller' || pathname.startsWith('/seller/');
 
   useEffect(() => {
+    if (isSellerPanel) return;
     const auth = getAuth();
     if (!auth && !isLogin) router.replace('/login');
     setAdmin(auth?.admin ?? null);
     setNavOpen(false);
-  }, [pathname, isLogin, router]);
+  }, [pathname, isLogin, isSellerPanel, router]);
 
   const toast = useCallback((text: string, error = false) => {
     const id = Date.now() + Math.random();
@@ -61,20 +66,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
   }, []);
 
-  if (isLogin) return <>{children}</>;
+  if (isLogin || isSellerPanel) return <>{children}</>;
   if (!admin) return <Spinner />;
 
-  const section = NAV.find((n) => n.href !== '/' && pathname.startsWith(n.href))?.section ?? 'dashboard';
+  const section = NAV.find((n) => n.href !== '/' && (pathname === n.href || pathname.startsWith(`${n.href}/`)))?.section ?? 'dashboard';
   const allowed = canAccess(admin.role, section);
 
   return (
     <AdminContext.Provider value={{ admin, toast }}>
       <div className="flex min-h-screen bg-page">
         <aside className={cn('fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-navy-900 text-gray-300 transition-transform lg:static lg:translate-x-0', navOpen ? 'translate-x-0' : '-translate-x-full')}>
-          <div className="px-5 py-5"><p className="text-xl font-extrabold italic tracking-tight text-white">StyleKart</p><p className="text-[11px] font-semibold uppercase tracking-widest text-accent-300">Seller Admin</p></div>
+          <div className="px-5 py-5"><p className="text-xl font-extrabold italic tracking-tight text-white">StyleKart</p><p className="text-[11px] font-semibold uppercase tracking-widest text-accent-300">Marketplace Admin</p></div>
           <nav className="space-y-0.5 px-3 pb-6">
             {NAV.filter((n) => canAccess(admin.role, n.section)).map((n) => {
-              const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
+              const active = n.href === '/' ? pathname === '/' : pathname === n.href || pathname.startsWith(`${n.href}/`);
               return (
                 <Link key={n.href} href={n.href} className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm', active ? 'bg-brand-600 font-semibold text-white shadow-sm' : 'hover:bg-white/5 hover:text-white')}>
                   <Icon name={n.icon} className="h-[18px] w-[18px] shrink-0 opacity-80" />

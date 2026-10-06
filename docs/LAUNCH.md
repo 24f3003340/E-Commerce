@@ -35,13 +35,19 @@ hai ki kahan kya daalna hai.
 |---|---|---|
 | Vercel web | `NEXT_PUBLIC_API_URL`, `API_URL` | `https://api.stylekart.in` |
 | Vercel web | `NEXT_PUBLIC_SITE_URL` | `https://www.stylekart.in` |
+| Vercel web | `NEXT_PUBLIC_ADMIN_URL` | `https://admin.stylekart.in` (footer ka "Sell on StyleKart" link) |
 | Vercel admin | `NEXT_PUBLIC_API_URL` | `https://api.stylekart.in` |
 | Vercel admin | `NEXT_PUBLIC_STORE_URL` | `https://www.stylekart.in` |
 | Render API | `STOREFRONT_URL` | `https://www.stylekart.in` |
 | Render API | `CORS_ORIGINS` | `https://www.stylekart.in,https://stylekart.in,https://admin.stylekart.in` |
 | Render API | `PUBLIC_API_URL` | `https://api.stylekart.in` |
+| Render API | `ADMIN_URL` | `https://admin.stylekart.in` (seller emails ke links) |
 
 ## 3. Payment gateway — Razorpay (live)
+
+> **Abhi website sirf Cash on Delivery par chalti hai.** Checkout mein "Pay online" ke saath
+> **Coming soon** dikhta hai. Neeche ki teen Razorpay keys Render mein daalte hi online payment
+> (UPI, card, net banking, wallets) **apne aap on ho jayega** — code mein kuch badalna nahi hai.
 
 - [ ] [razorpay.com](https://razorpay.com) par account banaiye, **KYC** (PAN, GST, bank, business
       proof) poora kariye. Website URL mein apna domain daaliye — unki team policy pages aur contact
@@ -52,7 +58,7 @@ hai ki kahan kya daalna hai.
       events `payment.captured`, `payment.failed`, `order.paid`, ek secret banaiye aur wahi Render mein
       `RAZORPAY_WEBHOOK_SECRET` mein daaliye.
 - [ ] **Payment capture → Automatic** on rakhiye.
-- [ ] Render mein **`ALLOW_MOCK_PAYMENTS` = `false`** kariye (test wala "Pay successfully" dialog band).
+- [ ] Keys daalne ke baad Render → **Manual Deploy** kariye, phir website checkout mein "Pay online" chalu dikhna chahiye.
 - [ ] Apne card/UPI se ₹1–₹10 ka ek asli order karke dekhiye, phir use cancel karke refund bhi check kariye.
 
 ## 4. Emails — Resend
@@ -92,7 +98,32 @@ Render ke server par upload ki gayi photos har redeploy par mit jaati hain, isli
       header `x-webhook-token` = Render ka `SHIPPING_WEBHOOK_TOKEN`. (Unka payload format alag ho sakta hai —
       zarurat ho to `apps/api/src/shipping/shipping.controller.ts` mein mapping jodni hogi.)
 
-## 8. Admin aur store ki safai
+## 8. Marketplace — bahar ke sellers
+
+Sellers **`https://admin.stylekart.in/seller/register`** par khud register karte hain (website footer
+mein "Sell on StyleKart" link hai). Wahan woh GSTIN, PAN, pickup address aur bank / UPI details
+bharte hain.
+
+- [ ] Admin → Settings → **Marketplace sellers**: default commission % (jaise 10%), *Seller products
+      need approval* on rakhiye, *Payout hold* return window se zyada rakhiye (jaise 10 din).
+- [ ] Naya seller aane par order-alert email par mail aati hai. Admin → **Sellers** → seller kholiye →
+      GSTIN / PAN / bank verify kariye → **Approve seller**. (Kisi seller ka commission alag rakhna ho
+      to wahin set kariye.)
+- [ ] Seller ke products Admin → Products → **Waiting for approval** mein aate hain → photo, title,
+      category, price check karke **Approve** ya reason ke saath **Reject**.
+- [ ] Ek cart mein alag-alag sellers ke items ho to **har seller ka alag order** banta hai. Seller apne
+      panel mein order accept → packed → **AWB daal kar shipped** karta hai. Delivered courier webhook
+      ya Admin se mark hota hai (COD ka cash aapke courier account mein aata hai).
+- [ ] **Payout**: delivery + hold period ke baad seller ki kamai (item value − commission) "Ready for
+      payout" mein aati hai. Seller ke bank / UPI mein transfer kariye, phir Admin → Sellers → seller →
+      **Record payout** mein UTR daaliye. Seller ko email jaati hai.
+- [ ] **CA se zaroor poochiye**: marketplace (e-commerce operator) ko GST ke under **TCS (Section 52)**
+      aur Income Tax **TDS (194-O)** kaatna aur file karna padta hai, aur commission par GST invoice
+      dena hota hai. Ye abhi app mein automatic nahi hai — payout ke waqt CA ke hisaab se amount kaatiye.
+- [ ] Ek **seller agreement** (commission, returns, payout timing, fake product par penalty) lawyer se
+      banwa kar sellers ke saath share kariye.
+
+## 9. Admin aur store ki safai
 
 - [ ] Admin login → Settings → **2FA on kariye** (Google Authenticator).
 - [ ] Har team member ka alag admin user banaiye, sahi role ke saath (Admin users page).
@@ -102,18 +133,19 @@ Render ke server par upload ki gayi photos har redeploy par mit jaati hain, isli
 - [ ] Apne asli products daaliye: har product ki 3–5 asli photos, sahi sizes, stock, MRP/price, HSN code.
 - [ ] Banners (1600 × 600) apne design ke daaliye.
 
-## 9. Launch se pehle aakhri test (mobile par bhi)
+## 10. Launch se pehle aakhri test (mobile par bhi)
 
 - [ ] Naya account banana, login, forgot password
 - [ ] Product search, filters, size select, pincode check
-- [ ] Online payment (UPI + card) aur COD order
+- [ ] COD order (aur Razorpay keys ke baad online payment — UPI + card)
+- [ ] Test seller register → approve → product approve → us product ka COD order → seller panel se ship → payout
 - [ ] Coupon lagana
 - [ ] Admin se order Packed → Shipped (AWB) → Delivered
 - [ ] Return request → approve → refund
 - [ ] Invoice download (GST sahi aa raha hai)
 - [ ] Emails aa rahe hain (order placed, shipped, refund)
 
-## 10. Launch ke baad marketing
+## 11. Launch ke baad marketing
 
 - [ ] [Google Search Console](https://search.google.com/search-console) → domain verify → `https://www.stylekart.in/sitemap.xml` submit.
 - [ ] Google Analytics 4 property banaiye → Measurement ID (`G-XXXX`) Vercel web mein `NEXT_PUBLIC_GA_ID`.
@@ -124,7 +156,9 @@ Render ke server par upload ki gayi photos har redeploy par mit jaati hain, isli
 
 ### Kya-kya already ban chuka hai
 
-Website, admin panel aur backend ke saare features (catalog, cart, checkout, Razorpay + COD,
+Multi-seller marketplace (seller sign-up + approval, seller panel, per-seller orders, commission,
+payouts), Cash on Delivery checkout (online payment Razorpay keys aate hi on),
+website, admin panel aur backend ke saare features (catalog, cart, checkout, Razorpay + COD,
 orders, shipping tracking, returns/refunds, coupons, reviews, notifications, GST invoices, reports,
 role-based admin with 2FA), policy pages, forgot password, order emails, SEO (sitemap, robots,
 product structured data), WhatsApp chat button, Redis-down fallback, aur automated tests.

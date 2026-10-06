@@ -33,8 +33,8 @@ export default function LoginPage() {
         }}
       >
         <p className="text-2xl font-extrabold italic tracking-tight text-navy-900">StyleKart</p>
-        <h1 className="mt-1 text-sm font-semibold uppercase tracking-widest text-brand-600">Seller Admin</h1>
-        <p className="mt-1 text-sm text-gray-500">Sign in to manage your store</p>
+        <h1 className="mt-1 text-sm font-semibold uppercase tracking-widest text-brand-600">Marketplace Admin</h1>
+        <p className="mt-1 text-sm text-gray-500">Sign in to manage the marketplace</p>
         {error && <p className="mt-4 rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>}
         <div className="mt-6 space-y-4">
           <input type="email" required placeholder="Email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" autoComplete="username" />
@@ -46,6 +46,9 @@ export default function LoginPage() {
         <button className="btn-primary mt-6 w-full" disabled={busy}>
           {busy ? 'Signing in…' : needOtp ? 'Verify & sign in' : 'Sign in'}
         </button>
+        <p className="mt-4 text-center text-xs text-gray-500">
+          Selling on StyleKart? <a href="/seller/login" className="font-semibold text-brand-700">Go to the seller panel</a>
+        </p>
       </form>
     </div>
   );

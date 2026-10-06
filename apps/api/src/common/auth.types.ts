@@ -1,4 +1,4 @@
-import { AdminRole } from '@prisma/client';
+import { AdminRole, SellerStatus } from '@prisma/client';
 
 export interface UserPrincipal {
   id: string;
@@ -11,8 +11,14 @@ export interface AdminPrincipal {
   role: AdminRole;
 }
 
+export interface SellerPrincipal {
+  id: string;
+  type: 'seller';
+  status: SellerStatus;
+}
+
 export interface AccessTokenPayload {
   sub: string;
-  typ: 'user' | 'admin';
+  typ: 'user' | 'admin' | 'seller';
   role?: AdminRole;
 }

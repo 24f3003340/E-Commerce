@@ -45,14 +45,28 @@ export class TokensService {
     return { accessToken, refreshToken };
   }
 
+  async issueForSeller(sellerId: string): Promise<TokenPair> {
+    const payload: AccessTokenPayload = { sub: sellerId, typ: 'seller' };
+    const accessToken = await this.jwt.signAsync(payload, {
+      secret: config.jwt.sellerAccessSecret,
+      expiresIn: config.jwt.accessTtl as any,
+    });
+    const refreshToken = await this.createRefresh({ sellerId });
+    return { accessToken, refreshToken };
+  }
+
   /** Validates and revokes a refresh token, returning who it belonged to. */
-  async consume(refreshToken: string): Promise<{ userId?: string; adminId?: string }> {
+  async consume(refreshToken: string): Promise<{ userId?: string; adminId?: string; sellerId?: string }> {
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hash(refreshToken) },
     });
     if (!record) throw new UnauthorizedException('Invalid refresh token');
     if (record.revokedAt) {
-      await this.revokeAll({ userId: record.userId ?? undefined, adminId: record.adminId ?? undefined });
+      await this.revokeAll({
+        userId: record.userId ?? undefined,
+        adminId: record.adminId ?? undefined,
+        sellerId: record.sellerId ?? undefined,
+      });
       throw new UnauthorizedException('Refresh token reuse detected; please login again');
     }
     if (record.expiresAt < new Date()) throw new UnauthorizedException('Refresh token expired');
@@ -61,7 +75,7 @@ export class TokensService {
       data: { revokedAt: new Date() },
     });
     if (updated.count === 0) throw new UnauthorizedException('Invalid refresh token');
-    return { userId: record.userId ?? undefined, adminId: record.adminId ?? undefined };
+    return { userId: record.userId ?? undefined, adminId: record.adminId ?? undefined, sellerId: record.sellerId ?? undefined };
   }
 
   async revoke(refreshToken: string) {
@@ -71,15 +85,15 @@ export class TokensService {
     });
   }
 
-  async revokeAll(owner: { userId?: string; adminId?: string }) {
-    if (!owner.userId && !owner.adminId) return;
+  async revokeAll(owner: { userId?: string; adminId?: string; sellerId?: string }) {
+    if (!owner.userId && !owner.adminId && !owner.sellerId) return;
     await this.prisma.refreshToken.updateMany({
       where: { ...owner, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }
 
-  private async createRefresh(owner: { userId?: string; adminId?: string }): Promise<string> {
+  private async createRefresh(owner: { userId?: string; adminId?: string; sellerId?: string }): Promise<string> {
     const token = randomBytes(48).toString('base64url');
     await this.prisma.refreshToken.create({
       data: {

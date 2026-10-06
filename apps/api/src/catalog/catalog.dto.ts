@@ -155,6 +155,11 @@ export class AdminProductQueryDto {
   @IsEnum(ProductStatus)
   status?: ProductStatus;
 
+  /** Marketplace seller id, or "store" for the store's own products */
+  @IsOptional()
+  @IsString()
+  sellerId?: string;
+
   @IsOptional()
   @IsString()
   categoryId?: string;

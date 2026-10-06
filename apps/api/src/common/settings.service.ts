@@ -36,6 +36,15 @@ export interface StoreSettings {
   orderAlertEmail: string;
   /** WhatsApp support number with country code, e.g. 919876543210 */
   whatsappNumber: string;
+  // ── Marketplace ──
+  /** Whether outside sellers can sign up from the seller panel */
+  sellerRegistrationOpen: boolean;
+  /** Commission (% of item value) kept by the marketplace when a seller has no custom rate */
+  defaultCommissionPct: number;
+  /** Seller products go live only after the marketplace team approves them */
+  sellerProductApproval: boolean;
+  /** Days after delivery before an order's earnings can be paid out (covers the return window) */
+  sellerPayoutHoldDays: number;
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -62,6 +71,10 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   defaultHsn: '6109',
   orderAlertEmail: '',
   whatsappNumber: '',
+  sellerRegistrationOpen: true,
+  defaultCommissionPct: 10,
+  sellerProductApproval: true,
+  sellerPayoutHoldDays: 10,
 };
 
 const CACHE_KEY = 'settings:store';

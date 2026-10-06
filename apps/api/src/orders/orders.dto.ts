@@ -47,6 +47,11 @@ export class AdminOrderQueryDto {
   @IsString()
   q?: string;
 
+  /** Marketplace seller id, or "store" for the store's own orders */
+  @IsOptional()
+  @IsString()
+  sellerId?: string;
+
   @IsOptional()
   @IsEnum(OrderStatus)
   status?: OrderStatus;

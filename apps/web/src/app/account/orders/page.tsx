@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { EmptyState, Spinner, StatusBadge } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatDate, inr, ORDER_STATUS_LABEL } from '@/lib/format';
 import type { OrderSummary, Paginated } from '@/lib/types';
 
-export default function OrdersPage() {
+function Orders() {
+  const params = useSearchParams();
+  const placed = Number(params.get('placed') ?? 0);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Paginated<OrderSummary> | null>(null);
 
@@ -20,6 +23,12 @@ export default function OrdersPage() {
 
   return (
     <div>
+      {placed > 1 && (
+        <div className="mb-4 rounded-lg bg-emerald-50 p-4 text-emerald-800">
+          <p className="font-bold">🎉 Thank you! Your order has been placed.</p>
+          <p className="text-sm">Your items come from {placed} sellers, so you have {placed} orders below — each one is packed and delivered separately.</p>
+        </div>
+      )}
       <h1 className="mb-4 text-lg font-bold">My orders</h1>
       <ul className="space-y-4">
         {data.items.map((o) => (
@@ -57,5 +66,13 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <Orders />
+    </Suspense>
   );
 }

@@ -19,14 +19,14 @@ datasource db {
 // ─────────────────────────────── Identity ───────────────────────────────
 
 model User {
-  id            String         @id @default(cuid())
+  id            String               @id @default(cuid())
   name          String
-  email         String         @unique
-  phone         String?        @unique
+  email         String               @unique
+  phone         String?              @unique
   passwordHash  String
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  isActive      Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   addresses     Address[]
   cart          Cart?
   wishlist      WishlistItem[]
@@ -86,14 +86,17 @@ model RefreshToken {
   tokenHash String    @unique
   userId    String?
   adminId   String?
+  sellerId  String?
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
   user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   admin     Admin?    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  seller    Seller?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([adminId])
+  @@index([sellerId])
   @@map("refresh_tokens")
 }
 
@@ -116,6 +119,77 @@ model Address {
 
   @@index([userId])
   @@map("addresses")
+}
+
+// ─────────────────────────────── Marketplace sellers ───────────────────────────────
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+/// An outside business selling on the marketplace. Products and orders with no seller belong to
+/// the store itself.
+model Seller {
+  id                String         @id @default(cuid())
+  // Contact person
+  name              String
+  email             String         @unique
+  phone             String         @unique
+  passwordHash      String
+  storeName         String
+  slug              String         @unique
+  description       String?
+  gstin             String?
+  pan               String?
+  // Pickup / registered business address
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  pincode           String
+  // Payout details
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIfsc          String?
+  upiId             String?
+  status            SellerStatus   @default(PENDING)
+  // Reason shown to the seller when rejected / suspended
+  statusNote        String?
+  // Marketplace commission in percent; null = the store default
+  commissionPct     Float?
+  approvedAt        DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  products          Product[]
+  orders            Order[]
+  payouts           SellerPayout[]
+  refreshTokens     RefreshToken[]
+
+  @@index([status, createdAt])
+  @@map("sellers")
+}
+
+/// A settlement paid to a seller (bank / UPI transfer) covering one or more delivered orders.
+model SellerPayout {
+  id           String   @id @default(cuid())
+  payoutNumber String   @unique
+  sellerId     String
+  amount       Int
+  orderCount   Int
+  // Bank UTR / UPI reference of the transfer
+  reference    String?
+  note         String?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  seller       Seller   @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  orders       Order[]
+
+  @@index([sellerId, createdAt])
+  @@map("seller_payouts")
 }
 
 // ─────────────────────────────── Catalog ───────────────────────────────
@@ -144,7 +218,10 @@ model Category {
 
 enum ProductStatus {
   DRAFT
+  // Submitted by a seller, waiting for the marketplace team to review
+  PENDING_APPROVAL
   ACTIVE
+  REJECTED
   ARCHIVED
 }
 
@@ -164,7 +241,11 @@ model Product {
   hsnCode        String?
   tags           String[]
   status         ProductStatus     @default(DRAFT)
+  // Why the marketplace team rejected a seller's product
+  reviewNote     String?
   isFeatured     Boolean           @default(false)
+  // null = sold by the store itself
+  sellerId       String?
   // Denormalised fields for fast listing/sorting
   minPrice       Int               @default(0)
   maxMrp         Int               @default(0)
@@ -179,8 +260,10 @@ model Product {
   images         ProductImage[]
   reviews        Review[]
   wishlistItems  WishlistItem[]
+  seller         Seller?           @relation(fields: [sellerId], references: [id], onDelete: Restrict)
 
   @@index([status, createdAt])
+  @@index([sellerId, status])
   @@index([brand])
   @@map("products")
 }
@@ -409,6 +492,13 @@ model Order {
   shippingAddress Json
   deliveryMethod  String               @default("STANDARD")
   notes           String?
+  // Marketplace: a cart with items from several sellers becomes one order per seller, all
+  // sharing the same checkoutId. sellerId null = sold by the store itself.
+  sellerId        String?
+  checkoutId      String?
+  // Commission snapshot at the time of ordering (percent of item value)
+  commissionPct   Float                @default(0)
+  payoutId        String?
   confirmedAt     DateTime?
   deliveredAt     DateTime?
   cancelledAt     DateTime?
@@ -417,6 +507,8 @@ model Order {
   updatedAt       DateTime             @updatedAt
   user            User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
   coupon          Coupon?              @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  seller          Seller?              @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  payout          SellerPayout?        @relation(fields: [payoutId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   payments        Payment[]
   shipments       Shipment[]
@@ -427,6 +519,8 @@ model Order {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([checkoutId])
   @@map("orders")
 }
 
@@ -483,8 +577,10 @@ model Payment {
   id                String              @id @default(cuid())
   orderId           String
   provider          PaymentProvider
-  providerOrderId   String?             @unique
-  providerPaymentId String?             @unique
+  // One gateway order can pay for several orders of the same checkout (one per seller), so
+  // these ids are shared by those orders' payment rows.
+  providerOrderId   String?
+  providerPaymentId String?
   amount            Int
   currency          String              @default("INR")
   status            PaymentRecordStatus @default(CREATED)
@@ -496,6 +592,8 @@ model Payment {
   refunds           Refund[]
 
   @@index([orderId])
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
   @@map("payments")
 }
 

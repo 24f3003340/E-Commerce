@@ -18,7 +18,12 @@ export default async function AboutPage() {
         <li>Original products with clear size charts and real photos.</li>
         <li>Free delivery on orders above {inr(s.freeShippingThreshold)}.</li>
         <li>Easy {s.defaultReturnWindowDays}-day returns on eligible items.</li>
-        <li>Secure payments by UPI, cards, net banking and wallets{s.codEnabled ? ', plus cash on delivery' : ''}.</li>
+        {s.onlinePayments ? (
+          <li>Secure payments by UPI, cards, net banking and wallets{s.codEnabled ? ', plus cash on delivery' : ''}.</li>
+        ) : (
+          <li>Cash on delivery — pay when your order arrives. Online payments are coming soon.</li>
+        )}
+        <li>A marketplace of trusted sellers — every seller is verified before they can sell.</li>
       </ul>
       <H2>Who we are</H2>
       <p>

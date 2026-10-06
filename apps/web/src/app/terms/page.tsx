@@ -19,6 +19,12 @@ export default async function TermsPage() {
         We try to show products, colours and prices accurately. Prices are in Indian Rupees and include GST. If a product is listed at an
         incorrect price or is unavailable, we may cancel the order and fully refund any amount paid.
       </p>
+      <H2>Marketplace sellers</H2>
+      <p>
+        Some products are sold by independent sellers registered on {s.storeName}. The product page and your order show who the seller is.
+        The seller is responsible for the product, its description and the tax invoice; we verify sellers, handle payments and support,
+        and help with returns. An order with items from several sellers is split into one order per seller.
+      </p>
       <H2>Orders and payment</H2>
       <p>
         An order is confirmed once payment succeeds (or, for cash on delivery, when we confirm it). Payments are processed by our payment

@@ -32,3 +32,62 @@ export interface Category {
   returnWindowDays: number | null;
   children: Category[];
 }
+
+export type SellerStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+
+export interface Seller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  storeName: string;
+  slug: string;
+  description: string | null;
+  gstin: string | null;
+  pan: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
+  bankIfsc: string | null;
+  upiId: string | null;
+  status: SellerStatus;
+  statusNote: string | null;
+  commissionPct: number | null;
+  approvedAt: string | null;
+  createdAt: string;
+}
+
+/** Seller earnings as computed by the API (all amounts in paise). */
+export interface Earnings {
+  holdDays: number;
+  totals: { readyForPayout: number; onHold: number; paidOut: number; payouts: number };
+  orders: {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    createdAt: string;
+    deliveredAt: string | null;
+    commissionPct: number;
+    itemValue: number;
+    commission: number;
+    payable: number;
+    eligible: boolean;
+    releaseOn: string | null;
+  }[];
+}
+
+export interface Payout {
+  id: string;
+  payoutNumber: string;
+  amount: number;
+  orderCount: number;
+  reference: string | null;
+  note: string | null;
+  createdAt: string;
+  seller: { id: string; storeName: string };
+  orders: { id: string; orderNumber: string }[];
+}

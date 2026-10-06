@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { AdminRole } from '@prisma/client';
+import { AdminRole, SellerStatus } from '@prisma/client';
 import { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessTokenPayload } from './auth.types';
 import { config } from './config';
-import { ROLES_KEY, SUPER_ADMIN_ONLY_KEY } from './decorators';
+import { ROLES_KEY, SELLER_ANY_STATUS_KEY, SELLER_APPROVED_KEY, SUPER_ADMIN_ONLY_KEY } from './decorators';
 
 function bearer(req: Request): string | undefined {
   const header = req.headers.authorization;
@@ -105,6 +105,42 @@ export class AdminAuthGuard implements CanActivate {
     const roles = this.reflector.getAllAndOverride<AdminRole[] | undefined>(ROLES_KEY, targets);
     if (!roles || roles.length === 0) return true;
     if (!roles.includes(admin.role)) throw new ForbiddenException('Insufficient permissions');
+    return true;
+  }
+}
+
+/** Requires a valid marketplace seller access token; re-reads the account status every request. */
+@Injectable()
+export class SellerAuthGuard implements CanActivate {
+  constructor(
+    private readonly jwt: JwtService,
+    private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+    const req = ctx.switchToHttp().getRequest();
+    const token = bearer(req);
+    if (!token) throw new UnauthorizedException('Seller login required');
+    let payload: AccessTokenPayload;
+    try {
+      payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, { secret: config.jwt.sellerAccessSecret });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    if (payload.typ !== 'seller') throw new UnauthorizedException('Invalid token');
+    const seller = await this.prisma.seller.findUnique({ where: { id: payload.sub }, select: { id: true, status: true } });
+    if (!seller) throw new UnauthorizedException('Seller account not found');
+    req.seller = { id: seller.id, type: 'seller', status: seller.status };
+
+    const targets = [ctx.getHandler(), ctx.getClass()];
+    if (this.reflector.getAllAndOverride<boolean>(SELLER_ANY_STATUS_KEY, targets)) return true;
+    if (seller.status === SellerStatus.REJECTED || seller.status === SellerStatus.SUSPENDED) {
+      throw new ForbiddenException({ message: 'Your seller account is not active', code: 'SELLER_INACTIVE' });
+    }
+    if (this.reflector.getAllAndOverride<boolean>(SELLER_APPROVED_KEY, targets) && seller.status !== SellerStatus.APPROVED) {
+      throw new ForbiddenException({ message: 'Your seller account is waiting for approval', code: 'SELLER_PENDING' });
+    }
     return true;
   }
 }

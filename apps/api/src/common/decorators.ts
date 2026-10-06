@@ -11,6 +11,20 @@ export const AdminRoles = (...roles: AdminRole[]) => SetMetadata(ROLES_KEY, role
 export const SUPER_ADMIN_ONLY_KEY = 'superAdminOnly';
 export const SuperAdminOnly = () => SetMetadata(SUPER_ADMIN_ONLY_KEY, true);
 
+/**
+ * Seller endpoints normally need an active (pending or approved) seller account. Marks the few
+ * endpoints a rejected / suspended seller may still use (profile, status).
+ */
+export const SELLER_ANY_STATUS_KEY = 'sellerAnyStatus';
+export const SellerAnyStatus = () => SetMetadata(SELLER_ANY_STATUS_KEY, true);
+/** Endpoints that need an approved seller (orders, payouts). */
+export const SELLER_APPROVED_KEY = 'sellerApproved';
+export const ApprovedSellerOnly = () => SetMetadata(SELLER_APPROVED_KEY, true);
+
+export const CurrentSeller = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
+  return ctx.switchToHttp().getRequest().seller;
+});
+
 export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
   return ctx.switchToHttp().getRequest().user;
 });

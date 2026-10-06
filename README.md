@@ -1,7 +1,8 @@
 # StyleKart — Multi-category E-Commerce Platform
 
-Clothing se shuru hone wala, lekin **multi-category marketplace tak grow** karne ke liye bana hua
-full e-commerce platform. Ek central backend API teeno clients ko serve karta hai:
+Clothing se shuru hone wala **multi-seller marketplace** (Meesho / Flipkart jaisa): bahar ke sellers
+khud register karke apne products bechte hain, aur aapki apni dukaan ke products bhi saath mein
+chalte hain. Ek central backend API saare clients ko serve karta hai:
 
 ```
               Backend API (NestJS)
@@ -17,7 +18,7 @@ full e-commerce platform. Ek central backend API teeno clients ko serve karta ha
 |---|---|---|---|
 | Backend API | `apps/api` | 4000 | NestJS 11, Prisma 6, PostgreSQL, Redis |
 | Customer website | `apps/web` | 3000 | Next.js 15, React 19, Tailwind CSS |
-| Admin panel | `apps/admin` | 3001 | Next.js 15, React 19, Tailwind CSS |
+| Admin panel + Seller panel (`/seller`) | `apps/admin` | 3001 | Next.js 15, React 19, Tailwind CSS |
 
 Full technical blueprint (architecture, database, API list, flows, security, roadmap):
 **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**
@@ -59,10 +60,23 @@ npm run dev:admin   # http://localhost:3001
 
 Demo coupons: `WELCOME10` (first order), `FLAT200` (orders ≥ ₹1,499), `FOOTWEAR15` (footwear only).
 
+### Marketplace sellers
+
+- Sellers sign up at **http://localhost:3001/seller/register** (linked from the website footer as
+  "Sell on StyleKart") with GSTIN, PAN, pickup address and bank / UPI details.
+- Admin → **Sellers** approves / rejects / suspends them and sets a per-seller commission (default
+  in Admin → Settings → Marketplace). Seller products go to **Products → Waiting for approval**.
+- A cart with items from several sellers becomes **one order per seller**; each seller sees and
+  ships only their own orders and gets a GST invoice in their name.
+- Seller earnings = item value − commission, released after delivery + the payout hold period.
+  Admin → Sellers → *Record payout* (after the bank / UPI transfer) settles them.
+
 ### Payments in development
 
-Without Razorpay keys the API runs a **mock gateway**: checkout shows a test dialog with
-"Pay successfully" / "Fail payment". Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
+Checkout is **cash on delivery only** in production until Razorpay keys are set — the website
+shows "Pay online — coming soon". In development, without Razorpay keys the API runs a **mock
+gateway**: checkout shows a test dialog with "Pay successfully" / "Fail payment". Add
+`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
 `RAZORPAY_WEBHOOK_SECRET` to `apps/api/.env` to switch to real Razorpay Checkout
 (UPI, cards, net banking, wallets). Point the Razorpay webhook to
 `POST /payments/razorpay/webhook` with events `payment.captured`, `payment.failed`, `order.paid`,
@@ -89,7 +103,7 @@ Create **two** projects at [vercel.com/new](https://vercel.com/new), both import
 
 | Project | Root Directory | Environment variables |
 |---|---|---|
-| `stylekart-web` | `apps/web` | `NEXT_PUBLIC_API_URL` = Render API URL, `API_URL` = Render API URL |
+| `stylekart-web` | `apps/web` | `NEXT_PUBLIC_API_URL` = Render API URL, `API_URL` = Render API URL, `NEXT_PUBLIC_ADMIN_URL` = admin app URL |
 | `stylekart-admin` | `apps/admin` | `NEXT_PUBLIC_API_URL` = Render API URL, `NEXT_PUBLIC_STORE_URL` = website URL |
 
 Framework, install and build commands come from each app's `vercel.json`.
@@ -100,8 +114,10 @@ Framework, install and build commands come from each app's `vercel.json`.
   ~30–60 s. Free PostgreSQL databases expire after 30 days — upgrade before real launch.
 - `CORS_ORIGINS` defaults to `https://*.vercel.app`; set your exact domains once you add a
   custom domain.
-- `ALLOW_MOCK_PAYMENTS=true` keeps the test payment dialog for the demo. For real sales add the
-  `RAZORPAY_*` keys in Render and set `ALLOW_MOCK_PAYMENTS=false`.
+- Checkout is cash on delivery only until the `RAZORPAY_*` keys are added in Render; online
+  payment then turns on automatically (the mock payment dialog never runs in production).
+- Set `ADMIN_URL` (Render) and `NEXT_PUBLIC_ADMIN_URL` (Vercel web) to the admin app URL so seller
+  emails and the "Sell on StyleKart" footer link point to the seller panel.
 - Admin-uploaded images are stored on the service disk, which is wiped on every redeploy on
   Render — move uploads to S3 / Cloudflare R2 before adding real products. The demo artwork
   lives in `apps/api/assets` and is safe.
@@ -121,7 +137,11 @@ printable invoice, returns, reviews (verified buyers) and notifications.
 coupons with rules, banners, review moderation, sales reports with CSV export, settings,
 admin users with roles, TOTP two-factor login, audit logs.
 
-**Backend** — JWT access + rotating refresh tokens, role-based admin permissions, rate limiting,
+**Seller panel** (`/seller` in the admin app) — seller sign-up with GST / PAN / bank details,
+dashboard, products (same editor, sent for approval), inventory, own orders (accept → pack → ship
+with AWB → invoice / packing slip, cancel), earnings & payout history, profile.
+
+**Backend** — marketplace (sellers, approval, per-seller orders, commission, payouts), JWT access + rotating refresh tokens, role-based admin permissions, rate limiting,
 input validation, atomic stock reservation, Razorpay signature + webhook verification
 (idempotent), shipping aggregator webhook, auto-expiry of unpaid orders, notifications
 (in-app + email via Resend; push/SMS hooks), Redis caching, audit logs.

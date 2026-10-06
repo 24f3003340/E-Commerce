@@ -38,7 +38,8 @@ export default function CheckoutPage() {
   const [addressId, setAddressId] = useState<string>('');
   const [adding, setAdding] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<'STANDARD' | 'EXPRESS'>('STANDARD');
-  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'COD'>('ONLINE');
+  // Cash on delivery until online payments are switched on (Razorpay keys added on the API)
+  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'COD'>('COD');
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | undefined>();
   const [coupons, setCoupons] = useState<PublicCoupon[]>([]);
@@ -74,14 +75,15 @@ export default function CheckoutPage() {
 
   if (!ready || !quote || !addresses) return <Spinner />;
   const s = quote.summary;
+  const method = paymentMethod === 'ONLINE' && !s.onlinePaymentsAvailable ? 'COD' : paymentMethod;
 
   const placeOrder = async () => {
     if (!addressId) return toast('Please add a delivery address', 'error');
     setPlacing(true);
     try {
-      const res = await api<{ order: Order; payment: GatewayPayment | null }>('/orders', {
+      const res = await api<{ order: Order; orders: Order[]; payment: GatewayPayment | null }>('/orders', {
         method: 'POST',
-        body: { addressId, paymentMethod, deliveryMethod, couponCode },
+        body: { addressId, paymentMethod: method, deliveryMethod, couponCode },
       });
       await refreshCart();
       if (res.payment) {
@@ -89,7 +91,8 @@ export default function CheckoutPage() {
         if (result === 'failed') toast('Payment failed. You can retry from your order page.', 'error');
         if (result === 'dismissed') toast('Payment not completed. You can retry from your order page.', 'info');
       }
-      router.replace(`/account/orders/${res.order.orderNumber}?placed=1`);
+      // A cart with items from several sellers becomes one order per seller
+      router.replace(res.orders.length > 1 ? `/account/orders?placed=${res.orders.length}` : `/account/orders/${res.order.orderNumber}?placed=1`);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Could not place order', 'error');
       setPlacing(false);
@@ -194,24 +197,31 @@ export default function CheckoutPage() {
 
           <Step n={4} title="Payment method">
             <div className="space-y-3">
-              <label className={cn('flex cursor-pointer gap-3 rounded-md border p-3 text-sm', paymentMethod === 'ONLINE' ? 'border-brand-600 bg-brand-50' : 'border-gray-200')}>
-                <input type="radio" name="payment" checked={paymentMethod === 'ONLINE'} onChange={() => setPaymentMethod('ONLINE')} />
+              <label
+                className={cn(
+                  'flex gap-3 rounded-md border p-3 text-sm',
+                  method === 'COD' ? 'border-brand-600 bg-brand-50' : 'border-gray-200',
+                  s.codAvailable || method === 'COD' ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+                )}
+              >
+                <input type="radio" name="payment" disabled={!s.codAvailable && method !== 'COD'} checked={method === 'COD'} onChange={() => setPaymentMethod('COD')} />
                 <span>
-                  <span className="font-semibold">Pay online</span>
-                  <span className="block text-gray-500">UPI, credit / debit card, net banking, wallets</span>
+                  <span className="font-semibold">Cash on delivery</span>
+                  <span className="block text-gray-500">{s.codAvailable ? 'Pay in cash or UPI to the delivery partner when your order arrives (small COD fee applies)' : 'Not available for this order'}</span>
                 </span>
               </label>
               <label
                 className={cn(
                   'flex gap-3 rounded-md border p-3 text-sm',
-                  paymentMethod === 'COD' ? 'border-brand-600 bg-brand-50' : 'border-gray-200',
-                  s.codAvailable || paymentMethod === 'COD' ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+                  method === 'ONLINE' ? 'border-brand-600 bg-brand-50' : 'border-gray-200',
+                  s.onlinePaymentsAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60',
                 )}
               >
-                <input type="radio" name="payment" disabled={!s.codAvailable && paymentMethod !== 'COD'} checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
+                <input type="radio" name="payment" disabled={!s.onlinePaymentsAvailable} checked={method === 'ONLINE'} onChange={() => setPaymentMethod('ONLINE')} />
                 <span>
-                  <span className="font-semibold">Cash on delivery</span>
-                  <span className="block text-gray-500">{s.codAvailable ? 'Pay when your order arrives (small COD fee applies)' : 'Not available for this order'}</span>
+                  <span className="font-semibold">Pay online</span>
+                  {!s.onlinePaymentsAvailable && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-800">Coming soon</span>}
+                  <span className="block text-gray-500">UPI, credit / debit card, net banking, wallets</span>
                 </span>
               </label>
             </div>
@@ -262,10 +272,15 @@ export default function CheckoutPage() {
           {s.productDiscount + s.couponDiscount > 0 && (
             <p className="text-xs font-semibold text-emerald-700">You save {inr(s.productDiscount + s.couponDiscount)} on this order</p>
           )}
+          {s.packageCount > 1 && (
+            <p className="rounded-md bg-blue-50 p-2 text-xs text-blue-900">
+              Your items come from {s.packageCount} sellers, so they will be placed as {s.packageCount} orders and may arrive in separate packages.
+            </p>
+          )}
           <button className="btn-buy mt-3 w-full py-3 text-base" disabled={placing || !addressId || quote.hasIssues} onClick={() => void placeOrder()}>
-            {placing ? 'Placing order…' : paymentMethod === 'COD' ? 'Place order' : `Pay ${inr(s.total)}`}
+            {placing ? 'Placing order…' : method === 'COD' ? 'Place order (Cash on delivery)' : `Pay ${inr(s.total)}`}
           </button>
-          <p className="text-center text-xs text-gray-500">🔒 Payments are processed securely</p>
+          <p className="text-center text-xs text-gray-500">{method === 'COD' ? '💵 Pay when your order is delivered' : '🔒 Payments are processed securely'}</p>
           <p className="text-center text-[11px] leading-4 text-gray-500">
             By placing this order you agree to our{' '}
             <Link href="/terms" className="underline">

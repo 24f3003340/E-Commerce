@@ -18,12 +18,41 @@ interface InvoiceOrder {
   couponCode: string | null;
   shippingAddress: unknown;
   items: { productName: string; variantLabel: string; sku: string; unitPrice: number; quantity: number; total: number; hsn?: string | null }[];
+  /** Marketplace seller who sold the goods; null = the store itself */
+  seller?: {
+    storeName: string;
+    gstin: string | null;
+    addressLine1: string;
+    addressLine2: string | null;
+    city: string;
+    state: string;
+    pincode: string;
+    email: string;
+    phone: string;
+  } | null;
 }
 
 /** Printable GST tax invoice — the browser's "Save as PDF" produces the PDF. */
 export function renderInvoice(order: InvoiceOrder, settings: StoreSettings): string {
   const a = order.shippingAddress as Record<string, string>;
-  const g = gstBreakdown({ ...order, shipState: a.state ?? '' }, settings);
+  const s = order.seller;
+  // Marketplace orders are invoiced by the seller (their GSTIN and state decide the tax split)
+  const issuer = s
+    ? {
+        name: s.storeName,
+        address: [s.addressLine1, s.addressLine2, `${s.city}, ${s.state} - ${s.pincode}`].filter(Boolean).join(', '),
+        gstin: s.gstin ?? '',
+        contact: `${s.email} · ${s.phone}`,
+        state: s.state,
+      }
+    : {
+        name: settings.legalName || settings.storeName,
+        address: settings.invoiceAddress,
+        gstin: settings.gstin,
+        contact: `${settings.supportEmail} · ${settings.supportPhone}`,
+        state: settings.sellerState,
+      };
+  const g = gstBreakdown({ ...order, shipState: a.state ?? '' }, { ...settings, sellerState: issuer.state });
   const rows = g.lines
     .map(
       (l, idx) => `<tr><td>${idx + 1}</td><td>${esc(l.label)}</td><td>${esc(l.hsn)}</td><td class="r">${l.quantity}</td>
@@ -39,9 +68,9 @@ th{background:#f6f6f6}.r{text-align:right}.muted{color:#666;font-size:13px}.grid
 .totals td{border:none;padding:4px 8px}.totals tr.grand td{font-weight:700;border-top:2px solid #111}
 @media print{button{display:none}}
 </style></head><body>
-<div class="grid"><div><h1>${esc(settings.legalName || settings.storeName)}</h1><div class="muted">${esc(settings.invoiceAddress)}${
-    settings.gstin ? `<br>GSTIN: ${esc(settings.gstin)}` : ''
-  }<br>${esc(settings.supportEmail)} · ${esc(settings.supportPhone)}</div></div>
+<div class="grid"><div><h1>${esc(issuer.name)}</h1><div class="muted">${esc(issuer.address)}${
+    issuer.gstin ? `<br>GSTIN: ${esc(issuer.gstin)}` : ''
+  }<br>${esc(issuer.contact)}${s ? `<br>Sold via ${esc(settings.storeName)} marketplace` : ''}</div></div>
 <div class="r"><strong>TAX INVOICE</strong><div class="muted">Invoice / Order: ${esc(order.orderNumber)}<br>Date: ${new Date(
     order.createdAt,
   ).toLocaleDateString('en-IN')}<br>Payment: ${esc(order.paymentMethod)} (${esc(order.paymentStatus)})<br>Place of supply: ${esc(a.state)}</div></div></div>

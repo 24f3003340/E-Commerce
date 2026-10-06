@@ -226,7 +226,10 @@ function OrderDetail() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-lg font-bold">Order {order.orderNumber}</h1>
-          <p className="text-sm text-gray-500">Placed on {formatDate(order.createdAt, true)}</p>
+          <p className="text-sm text-gray-500">
+            Placed on {formatDate(order.createdAt, true)}
+            {order.seller && <> · Sold by <span className="font-medium text-gray-700">{order.seller.storeName}</span></>}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusBadge status={order.status} label={ORDER_STATUS_LABEL[order.status]} />

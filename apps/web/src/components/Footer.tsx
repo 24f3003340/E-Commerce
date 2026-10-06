@@ -6,9 +6,11 @@ import { Icon } from './icons';
 import { Logo } from './Header';
 
 const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
-const PAYMENT_METHODS = ['UPI', 'Visa', 'Mastercard', 'RuPay', 'Net Banking', 'Wallets', 'Cash on Delivery'];
+const ONLINE_METHODS = ['UPI', 'Visa', 'Mastercard', 'RuPay', 'Net Banking', 'Wallets'];
+/** Seller panel (part of the admin app), e.g. https://admin.yourstore.com/seller */
+const SELLER_URL = `${(process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001').replace(/\/$/, '')}/seller`;
 
-export function Footer({ categories }: { categories: Category[] }) {
+export function Footer({ categories, onlinePayments, sellerRegistrationOpen }: { categories: Category[]; onlinePayments: boolean; sellerRegistrationOpen: boolean }) {
   return (
     <footer className="mt-12">
       <button
@@ -66,6 +68,15 @@ export function Footer({ categories }: { categories: Category[] }) {
               <li><Link href="/account" className="hover:text-white hover:underline">Your account</Link></li>
               <li><Link href="/wishlist" className="hover:text-white hover:underline">Wishlist</Link></li>
             </ul>
+            {sellerRegistrationOpen && (
+              <>
+                <p className="mb-4 mt-8 text-xs font-bold uppercase tracking-wider text-white">Sell with us</p>
+                <ul className="space-y-2.5 text-sm">
+                  <li><a href={`${SELLER_URL}/register`} className="font-semibold text-accent-400 hover:text-white hover:underline">Sell on {STORE_NAME}</a></li>
+                  <li><a href={`${SELLER_URL}/login`} className="hover:text-white hover:underline">Seller login</a></li>
+                </ul>
+              </>
+            )}
           </div>
           <div>
             <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Company &amp; Policies</p>
@@ -95,11 +106,12 @@ export function Footer({ categories }: { categories: Category[] }) {
           <div className="container flex flex-col items-center justify-between gap-4 py-5 text-xs text-gray-400 md:flex-row">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="mr-1">We accept</span>
-              {PAYMENT_METHODS.map((m) => (
+              {[...(onlinePayments ? ONLINE_METHODS : []), 'Cash on Delivery'].map((m) => (
                 <span key={m} className="rounded border border-white/15 bg-white/5 px-2 py-1 font-semibold text-gray-200">
                   {m}
                 </span>
               ))}
+              {!onlinePayments && <span className="text-gray-400">· Online payments coming soon</span>}
             </div>
             <p>© {new Date().getFullYear()} {STORE_NAME}. All rights reserved.</p>
           </div>

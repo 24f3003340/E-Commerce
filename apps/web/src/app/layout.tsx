@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <Header categories={categories} />
           <main className="min-h-[60vh]">{children}</main>
-          <Footer categories={categories} />
+          <Footer categories={categories} onlinePayments={store.onlinePayments} sellerRegistrationOpen={store.sellerRegistrationOpen} />
           {store.whatsappNumber && (
             <a
               href={`https://wa.me/${store.whatsappNumber}?text=${encodeURIComponent('Hi! I need help with my order.')}`}

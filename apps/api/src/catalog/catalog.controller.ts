@@ -22,7 +22,7 @@ import { CategoriesService } from './categories.service';
 import { InventoryService } from './inventory.service';
 import { ProductsService } from './products.service';
 
-class AdjustStockDto {
+export class AdjustStockDto {
   @IsInt()
   @Min(-100000)
   @Max(100000)
@@ -37,7 +37,7 @@ class AdjustStockDto {
   note?: string;
 }
 
-class InventoryQueryDto {
+export class InventoryQueryDto {
   @IsOptional()
   @IsString()
   q?: string;

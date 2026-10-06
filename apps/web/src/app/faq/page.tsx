@@ -12,6 +12,8 @@ export default async function FaqPage() {
     ['How do I track my order?', <>Open <Link href="/account/orders" className="text-brand-700 underline">My Orders</Link> or use <Link href="/track" className="text-brand-700 underline">Track Order</Link> with your order ID and email / phone.</>],
     ['Is delivery free?', <>Yes, on orders above {inr(s.freeShippingThreshold)}. Below that a {inr(s.standardShippingFee)} delivery fee applies.</>],
     ['Do you offer cash on delivery?', s.codEnabled ? <>Yes, COD is available on most pincodes with a {inr(s.codFee)} handling fee.</> : <>Not at the moment — please pay online with UPI, card or net banking.</>],
+    ['Can I pay online?', s.onlinePayments ? <>Yes — UPI, credit / debit cards, net banking and wallets.</> : <>Online payments are coming soon. For now please choose cash on delivery at checkout.</>],
+    ['Why did my order split into several orders?', <>{s.storeName} is a marketplace. When your cart has products from different sellers, each seller gets their own order and ships it separately. You pay the same total.</>],
     ['How do I return an item?', <>From My Orders choose the delivered order → Return items, within {s.defaultReturnWindowDays} days of delivery. See our <Link href="/return-policy" className="text-brand-700 underline">return policy</Link>.</>],
     ['When will I get my refund?', <>Within 5–7 business days after the returned item passes quality check, to your original payment method.</>],
     ['Can I cancel my order?', <>Yes, until it is packed — open the order and tap Cancel order.</>],

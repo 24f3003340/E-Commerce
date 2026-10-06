@@ -187,6 +187,11 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
       <div className="min-w-0">
         {product.brand && <p className="text-sm font-bold uppercase tracking-wide text-brand-700">{product.brand}</p>}
         <h1 className="mt-1 text-xl font-medium leading-snug text-gray-900 sm:text-2xl">{product.name}</h1>
+        {product.seller && (
+          <p className="mt-1 text-sm text-gray-500">
+            Sold by <span className="font-semibold text-gray-800">{product.seller.storeName}</span>
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           {product.ratingCount > 0 ? (
             <a href="#reviews" className="flex items-center gap-2">

@@ -55,6 +55,8 @@ const COLORS: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
   REQUESTED: 'bg-amber-50 text-amber-700 border-amber-200',
   DRAFT: 'bg-gray-50 text-gray-600 border-gray-200',
+  PENDING_APPROVAL: 'bg-amber-50 text-amber-700 border-amber-200',
+  SUSPENDED: 'bg-red-50 text-red-700 border-red-200',
   CONFIRMED: 'bg-blue-50 text-blue-700 border-blue-200',
   PROCESSING: 'bg-blue-50 text-blue-700 border-blue-200',
   APPROVED: 'bg-blue-50 text-blue-700 border-blue-200',
