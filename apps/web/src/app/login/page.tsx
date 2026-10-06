@@ -38,7 +38,7 @@ function LoginForm() {
         }}
       >
         <h1 className="text-2xl font-bold">Login</h1>
-        <p className="mt-1 text-sm text-ink-500">Track orders, save your wishlist and checkout faster.</p>
+        <p className="mt-1 text-sm text-gray-500">Track orders, save your wishlist and checkout faster.</p>
         {error && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <div className="mt-6 space-y-4">
           <div>
@@ -57,13 +57,13 @@ function LoginForm() {
         <button className="btn-primary mt-6 w-full" disabled={busy}>
           {busy ? 'Signing in…' : 'Login'}
         </button>
-        <p className="mt-4 text-center text-sm text-ink-500">
+        <p className="mt-4 text-center text-sm text-gray-600">
           New here?{' '}
           <Link href={`/register?next=${encodeURIComponent(safeNext(params.get('next')))}`} className="font-semibold text-brand-700">
             Create an account
           </Link>
         </p>
-        <p className="mt-4 rounded-md bg-ink-50 p-3 text-xs text-ink-500">Demo account: customer@example.com / Customer@123</p>
+        <p className="mt-4 rounded-md bg-gray-50 p-3 text-xs text-gray-500">Demo account: customer@example.com / Customer@123</p>
       </form>
     </div>
   );

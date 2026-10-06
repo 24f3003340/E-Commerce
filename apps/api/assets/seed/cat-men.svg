@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 375" width="600" height="750">
 <defs>
-  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#fffdf9"/><stop offset="1" stop-color="#f1e9de"/></radialGradient>
+  <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eeeef1"/></radialGradient>
   <linearGradient id="light" x1="0" x2="1" y1="0" y2="1">
     <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
     <stop offset="1" stop-color="#000000" stop-opacity="0.22"/>
@@ -11,12 +11,12 @@
 <rect width="300" height="375" fill="url(#bg)"/>
 <ellipse cx="150" cy="338" rx="110" ry="12" fill="url(#floor)"/>
 <clipPath id="clip1"><path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z"/></clipPath>
-<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="#ea6547"/>
+<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="#d81b67"/>
 <g clip-path="url(#clip1)">
   <rect x="0" y="0" width="300" height="375" fill="url(#light)"/>
   
-        <path d="M112 165 Q120 230 113 290" fill="none" stroke="#ae290b" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M188 170 Q180 235 189 292" fill="none" stroke="#ae290b" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M140 260 Q150 280 160 300" fill="none" stroke="#ae290b" stroke-width="3" stroke-linecap="round" opacity="0.15"/>
-        <path d="M93 292 Q150 299 209 292" fill="none" stroke="#a41f01" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M72 134 L52 113" fill="none" stroke="#a41f01" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M228 134 L248 113" fill="none" stroke="#a41f01" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+        <path d="M112 165 Q120 230 113 290" fill="none" stroke="#9c002b" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M188 170 Q180 235 189 292" fill="none" stroke="#9c002b" stroke-width="3" stroke-linecap="round" opacity="0.22"/><path d="M140 260 Q150 280 160 300" fill="none" stroke="#9c002b" stroke-width="3" stroke-linecap="round" opacity="0.15"/>
+        <path d="M93 292 Q150 299 209 292" fill="none" stroke="#ff61ad" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M72 134 L52 113" fill="none" stroke="#ff61ad" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/><path d="M228 134 L248 113" fill="none" stroke="#ff61ad" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
 </g>
-<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="none" stroke="#c74224" stroke-width="1.6" stroke-linejoin="round"/><path d="M126 58 Q150 80 174 58" fill="none" stroke="#ce492b" stroke-width="6" stroke-linecap="round"/>
+<path d="M95 72 L126 58 Q150 76 174 58 L205 72 L252 108 L233 144 L208 128 L210 302 Q150 309 90 302 L92 128 L67 144 L48 108 Z" fill="none" stroke="#b50044" stroke-width="1.6" stroke-linejoin="round"/><path d="M126 58 Q150 80 174 58" fill="none" stroke="#bc004b" stroke-width="6" stroke-linecap="round"/>
 </svg>

@@ -4,12 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-page text-ink-900 antialiased;
-  }
-  h1,
-  h2,
-  h3 {
-    @apply font-display;
+    @apply bg-page text-gray-900 antialiased;
   }
   ::selection {
     @apply bg-brand-100;
@@ -18,42 +13,39 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-page disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
     @apply btn bg-brand-600 text-white hover:bg-brand-700;
   }
-  /* "Add to bag" */
+  /* Add to bag */
   .btn-cart {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
   }
-  /* "Buy now" / strong secondary */
+  /* Buy now */
   .btn-buy {
-    @apply btn bg-ink-900 text-white hover:bg-ink-800;
+    @apply btn bg-buy-500 text-white shadow-sm hover:bg-buy-600;
   }
   .btn-outline {
-    @apply btn border border-ink-200 bg-white text-ink-900 hover:border-ink-900;
+    @apply btn border border-gray-300 bg-white text-gray-900 hover:border-gray-900;
   }
   .btn-dark {
-    @apply btn bg-ink-900 text-white hover:bg-ink-800;
+    @apply btn bg-gray-900 text-white hover:bg-black;
   }
   .input {
-    @apply w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-ink-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
   }
   .label {
-    @apply mb-1 block text-sm font-medium text-ink-700;
+    @apply mb-1 block text-sm font-medium text-gray-700;
   }
   .card {
-    @apply rounded-2xl border border-ink-100 bg-white shadow-card;
+    @apply rounded-xl border border-gray-100 bg-white shadow-card;
   }
   .chip {
     @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium;
   }
   .section-title {
-    @apply font-display text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl;
-  }
-  .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-600;
+    @apply text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl;
   }
   .scrollbar-none {
     scrollbar-width: none;

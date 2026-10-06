@@ -33,7 +33,7 @@ function GuestCart() {
               <Link href={`/p/${item.productSlug}`} className="font-medium hover:underline">
                 {item.productName}
               </Link>
-              <p className="text-sm text-ink-500">{item.label}</p>
+              <p className="text-sm text-gray-500">{item.label}</p>
               <Price price={item.price} mrp={item.mrp} size="sm" />
               <div className="mt-2 flex items-center gap-3">
                 <select value={item.quantity} onChange={(e) => updateGuestItem(item.variantId, Number(e.target.value))} className="rounded border px-2 py-1 text-sm" aria-label="Quantity">
@@ -54,7 +54,7 @@ function GuestCart() {
           <span>Subtotal</span>
           <span>{inr(subtotal)}</span>
         </div>
-        <p className="mt-1 text-xs text-ink-500">Shipping and coupons are applied at checkout.</p>
+        <p className="mt-1 text-xs text-gray-500">Shipping and coupons are applied at checkout.</p>
         <button className="btn-buy mt-4 w-full py-3" onClick={() => router.push('/login?next=/checkout')}>
           Login to checkout
         </button>
@@ -100,7 +100,7 @@ function AccountCart() {
               <Link href={`/p/${item.product.slug}`} className="font-medium hover:underline">
                 {item.product.name}
               </Link>
-              <p className="text-sm text-ink-500">{item.variant.label}</p>
+              <p className="text-sm text-gray-500">{item.variant.label}</p>
               <Price price={item.variant.price} mrp={item.variant.mrp} size="sm" />
               {item.issue && <p className="mt-1 text-xs font-semibold text-red-600">{ISSUE_TEXT[item.issue]}</p>}
               <div className="mt-2 flex items-center gap-3">

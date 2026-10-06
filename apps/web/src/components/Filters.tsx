@@ -41,24 +41,24 @@ function useQueryUpdater() {
 
 export function SortSelect() {
   const { params, update } = useQueryUpdater();
+  const current = params.get('sort') ?? 'popular';
   return (
-    <label className="relative inline-flex items-center">
-      <span className="sr-only">Sort by</span>
-      <select
-        value={params.get('sort') ?? 'popular'}
-        onChange={(e) => update({ sort: e.target.value })}
-        className="appearance-none rounded-full border border-ink-200 bg-white py-2 pl-4 pr-9 text-sm font-semibold text-ink-900 outline-none hover:border-ink-900 focus:ring-2 focus:ring-brand-100"
-      >
-        {SORTS.map((s) => (
-          <option key={s.value} value={s.value}>
-            Sort: {s.label}
-          </option>
-        ))}
-      </select>
-      <svg viewBox="0 0 24 24" className="pointer-events-none absolute right-3 h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-        <path d="m6 9 6 6 6-6" />
-      </svg>
-    </label>
+    <div className="flex items-center gap-1 overflow-x-auto text-sm scrollbar-none">
+      <span className="mr-2 shrink-0 font-semibold text-gray-800">Sort By</span>
+      {SORTS.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => update({ sort: s.value })}
+          aria-pressed={current === s.value}
+          className={cn(
+            'shrink-0 border-b-2 px-2 py-1.5 transition',
+            current === s.value ? 'border-brand-600 font-semibold text-brand-700' : 'border-transparent text-gray-600 hover:text-gray-900',
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -86,7 +86,7 @@ export function ActiveFilters() {
   return (
     <div className="flex flex-wrap gap-2">
       {chips.map((c) => (
-        <button key={c.label} onClick={c.remove} className="inline-flex items-center gap-1.5 rounded-full bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink-800">
+        <button key={c.label} onClick={c.remove} className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-gray-500">
           {c.label}
           <span aria-hidden>✕</span>
           <span className="sr-only">Remove filter</span>
@@ -105,8 +105,8 @@ function toggleCsv(current: string | null, value: string) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-ink-100 py-4 last:border-0">
-      <h3 className="mb-3 font-sans text-sm font-bold text-ink-900">{title}</h3>
+    <div className="border-b border-gray-200 py-4">
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-900">{title}</h3>
       {children}
     </div>
   );
@@ -124,10 +124,10 @@ export function Filters({ facets }: { facets: Facets }) {
   const body = (
     <div>
       <div className="flex items-center justify-between pb-2">
-        <span className="font-display text-lg font-bold">Filters</span>
+        <span className="text-sm font-bold">Filters</span>
         {activeCount > 0 && (
           <button
-            className="text-xs font-semibold text-brand-600 underline underline-offset-2"
+            className="text-xs font-semibold text-brand-700"
             onClick={() => update({ size: undefined, color: undefined, brand: undefined, minPrice: undefined, maxPrice: undefined, rating: undefined, discount: undefined, inStock: undefined })}
           >
             Clear all
@@ -143,7 +143,7 @@ export function Filters({ facets }: { facets: Facets }) {
                 key={s}
                 onClick={() => update({ size: toggleCsv(params.get('size'), s) })}
                 aria-pressed={sizes.has(s)}
-                className={cn('min-w-[2.5rem] rounded-full border px-3 py-1 text-xs font-semibold', sizes.has(s) ? 'border-ink-900 bg-ink-900 text-white' : 'border-ink-200 hover:border-ink-900')}
+                className={cn('min-w-[2.5rem] rounded-md border px-2 py-1 text-xs font-medium', sizes.has(s) ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-gray-300 hover:border-gray-900')}
               >
                 {s}
               </button>
@@ -157,8 +157,8 @@ export function Filters({ facets }: { facets: Facets }) {
           <div className="space-y-2">
             {facets.colors.map((c) => (
               <label key={c.name} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" className="accent-brand-600" checked={colors.has(c.name)} onChange={() => update({ color: toggleCsv(params.get('color'), c.name) })} />
-                <span className="h-4 w-4 rounded-full ring-1 ring-ink-200" style={{ background: c.hex ?? '#ccc' }} />
+                <input type="checkbox" checked={colors.has(c.name)} onChange={() => update({ color: toggleCsv(params.get('color'), c.name) })} />
+                <span className="h-4 w-4 rounded-full border border-gray-300" style={{ background: c.hex ?? '#ccc' }} />
                 {c.name}
               </label>
             ))}
@@ -173,7 +173,6 @@ export function Filters({ facets }: { facets: Facets }) {
             return (
               <label key={b.label} className="flex cursor-pointer items-center gap-2 text-sm">
                 <input
-                  className="accent-brand-600"
                   type="radio"
                   name="price"
                   checked={active}
@@ -184,7 +183,7 @@ export function Filters({ facets }: { facets: Facets }) {
             );
           })}
           {facets.price.max > 0 && (
-            <p className="text-xs text-ink-500">
+            <p className="text-xs text-gray-500">
               Range {inr(facets.price.min)} – {inr(facets.price.max)}
             </p>
           )}
@@ -196,7 +195,7 @@ export function Filters({ facets }: { facets: Facets }) {
           <div className="max-h-48 space-y-2 overflow-y-auto">
             {facets.brands.map((b) => (
               <label key={b} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" className="accent-brand-600" checked={brands.has(b)} onChange={() => update({ brand: toggleCsv(params.get('brand'), b) })} />
+                <input type="checkbox" checked={brands.has(b)} onChange={() => update({ brand: toggleCsv(params.get('brand'), b) })} />
                 {b}
               </label>
             ))}
@@ -207,7 +206,7 @@ export function Filters({ facets }: { facets: Facets }) {
       <Section title="Customer rating">
         {[4, 3].map((r) => (
           <label key={r} className="mb-2 flex cursor-pointer items-center gap-2 text-sm">
-            <input type="radio" className="accent-brand-600" name="rating" checked={params.get('rating') === String(r)} onChange={() => update({ rating: String(r) })} />
+            <input type="radio" name="rating" checked={params.get('rating') === String(r)} onChange={() => update({ rating: String(r) })} />
             {r}★ & above
           </label>
         ))}
@@ -216,7 +215,7 @@ export function Filters({ facets }: { facets: Facets }) {
       <Section title="Discount">
         {[10, 30, 50].map((d) => (
           <label key={d} className="mb-2 flex cursor-pointer items-center gap-2 text-sm">
-            <input type="radio" className="accent-brand-600" name="discount" checked={params.get('discount') === String(d)} onChange={() => update({ discount: String(d) })} />
+            <input type="radio" name="discount" checked={params.get('discount') === String(d)} onChange={() => update({ discount: String(d) })} />
             {d}% or more
           </label>
         ))}
@@ -224,7 +223,7 @@ export function Filters({ facets }: { facets: Facets }) {
 
       <Section title="Availability">
         <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input type="checkbox" className="accent-brand-600" checked={params.get('inStock') === 'true'} onChange={(e) => update({ inStock: e.target.checked ? 'true' : undefined })} />
+          <input type="checkbox" checked={params.get('inStock') === 'true'} onChange={(e) => update({ inStock: e.target.checked ? 'true' : undefined })} />
           In stock only
         </label>
       </Section>
@@ -236,11 +235,11 @@ export function Filters({ facets }: { facets: Facets }) {
       <button className="btn-outline w-full lg:hidden" onClick={() => setOpen(true)}>
         Filters {activeCount > 0 && `(${activeCount})`}
       </button>
-      <aside className="hidden h-fit rounded-3xl bg-white p-5 shadow-card lg:sticky lg:top-24 lg:block">{body}</aside>
+      <aside className="card hidden h-fit p-4 lg:sticky lg:top-32 lg:block">{body}</aside>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 right-0 w-80 max-w-full overflow-y-auto rounded-l-3xl bg-white p-5">
+          <div className="absolute inset-y-0 right-0 w-80 max-w-full overflow-y-auto bg-white p-5">
             {body}
             <button className="btn-primary mt-4 w-full" onClick={() => setOpen(false)}>
               Show results
@@ -267,7 +266,7 @@ export function Pagination({ page, pages }: { page: number; pages: number }) {
       <button className="btn-outline" disabled={page <= 1} onClick={() => go(page - 1)}>
         Previous
       </button>
-      <span className="px-3 text-sm text-ink-500">
+      <span className="px-3 text-sm text-gray-600">
         Page {page} of {pages}
       </span>
       <button className="btn-outline" disabled={page >= pages} onClick={() => go(page + 1)}>

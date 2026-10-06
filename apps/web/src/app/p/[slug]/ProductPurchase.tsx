@@ -8,6 +8,7 @@ import { useStore } from '@/context/StoreProvider';
 import { api, ApiError } from '@/lib/api';
 import { cn, formatDate, inr } from '@/lib/format';
 import type { ProductDetail } from '@/lib/types';
+import { toListing, useRecentlyViewed } from '@/lib/recentlyViewed';
 import { usePincode } from '@/lib/usePincode';
 
 interface Serviceability {
@@ -45,6 +46,11 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
   const [svc, setSvc] = useState<Serviceability | null>(null);
   const [showChart, setShowChart] = useState(false);
   const [coupons, setCoupons] = useState<PublicCoupon[]>([]);
+  const { record } = useRecentlyViewed();
+
+  useEffect(() => {
+    record(toListing(product));
+  }, [product, record]);
 
   useEffect(() => {
     // Only show coupons that can apply to this product (category-restricted ones must match its category tree)
@@ -119,17 +125,17 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
 
   const actionButtons = (
     <>
-      <button className="btn-cart flex-1 py-4 text-base" disabled={busy || unavailable} onClick={() => void add(false)}>
-        <Icon name="cart" className="h-[18px] w-[18px]" /> {unavailable ? 'Sold out' : 'Add to bag'}
+      <button className="btn-cart flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(false)}>
+        <Icon name="cart" /> {unavailable ? 'Out of stock' : 'Add to Bag'}
       </button>
-      <button className="btn-buy flex-1 py-4 text-base" disabled={busy || unavailable} onClick={() => void add(true)}>
-        Buy now
+      <button className="btn-buy flex-1 py-3.5 text-base" disabled={busy || unavailable} onClick={() => void add(true)}>
+        <Icon name="zap" /> Buy Now
       </button>
     </>
   );
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-12">
+    <div className="card grid gap-6 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:p-6">
       {/* Gallery */}
       <div className="lg:sticky lg:top-32 lg:self-start">
         <div className="flex flex-col-reverse gap-3 sm:flex-row">
@@ -140,7 +146,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 onMouseEnter={() => setImageIndex(i)}
                 onClick={() => setImageIndex(i)}
                 aria-label={`Show image ${i + 1}`}
-                className={cn('h-20 w-16 shrink-0 overflow-hidden rounded border-2 bg-ink-50', i === imageIndex ? 'border-ink-900' : 'border-ink-100 hover:border-ink-300')}
+                className={cn('h-20 w-16 shrink-0 overflow-hidden rounded border-2 bg-gray-50', i === imageIndex ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400')}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="" className="h-full w-full object-cover" />
@@ -148,7 +154,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
             ))}
           </div>
           <div
-            className="relative aspect-[4/5] flex-1 cursor-zoom-in overflow-hidden rounded-2xl border border-ink-100 bg-ink-50"
+            className="relative aspect-[4/5] flex-1 cursor-zoom-in overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
             onMouseMove={(e) => {
               const r = e.currentTarget.getBoundingClientRect();
               setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
@@ -170,7 +176,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
               aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
               className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-card transition hover:scale-110"
             >
-              <Icon name="heart" filled={wished} className={cn('h-5 w-5', wished ? 'text-brand-500' : 'text-ink-300')} />
+              <Icon name="heart" filled={wished} className={cn('h-5 w-5', wished ? 'text-rose-500' : 'text-gray-400')} />
             </button>
           </div>
         </div>
@@ -179,24 +185,25 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
 
       {/* Details */}
       <div className="min-w-0">
-        {product.brand && <p className="eyebrow">{product.brand}</p>}
-        <h1 className="mt-2 font-display text-2xl font-bold leading-tight tracking-tight text-ink-900 sm:text-4xl">{product.name}</h1>
+        {product.brand && <p className="text-sm font-bold uppercase tracking-wide text-brand-700">{product.brand}</p>}
+        <h1 className="mt-1 text-xl font-medium leading-snug text-gray-900 sm:text-2xl">{product.name}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           {product.ratingCount > 0 ? (
             <a href="#reviews" className="flex items-center gap-2">
               <Stars value={product.ratingAvg} />
-              <span className="font-medium text-ink-500">
+              <span className="font-medium text-gray-500">
                 {product.ratingCount} rating{product.ratingCount === 1 ? '' : 's'} & reviews
               </span>
             </a>
           ) : (
-            <span className="text-ink-500">Be the first to review</span>
+            <span className="text-gray-500">Be the first to review</span>
           )}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          {mrp > price && <p className="text-sm font-bold text-brand-600">Deal price</p>}
           <Price price={price} mrp={mrp} size="lg" />
-          <p className="mt-1 text-xs text-ink-500">Inclusive of all taxes · {price >= 99900 ? 'Free delivery' : 'Free delivery on orders above ₹999'}</p>
+          <p className="mt-1 text-xs text-gray-500">Inclusive of all taxes · {price >= 99900 ? 'Free delivery' : 'Free delivery on orders above ₹999'}</p>
         </div>
 
         {coupons.length > 0 && (
@@ -205,10 +212,10 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
             <ul className="space-y-2 text-sm">
               {coupons.slice(0, 4).map((c) => (
                 <li key={c.code} className="flex gap-2">
-                  <Icon name="tag" className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
+                  <Icon name="tag" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                   <span>
                     <span className="font-semibold">Coupon {c.code}</span> — {c.description}
-                    {c.minOrderValue > 0 && <span className="text-ink-500"> (min. order {inr(c.minOrderValue)})</span>}
+                    {c.minOrderValue > 0 && <span className="text-gray-500"> (min. order {inr(c.minOrderValue)})</span>}
                   </span>
                 </li>
               ))}
@@ -219,7 +226,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
         {colors.length > 0 && (
           <div className="mt-6">
             <p className="mb-2 text-sm">
-              <span className="font-bold">Colour:</span> <span className="text-ink-700">{color}</span>
+              <span className="font-bold">Colour:</span> <span className="text-gray-700">{color}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               {colors.map(([name, hex]) => {
@@ -235,7 +242,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                       setColor(name);
                       setImageIndex(0);
                     }}
-                    className={cn('relative h-16 w-14 overflow-hidden rounded-xl border-2 bg-ink-50 transition', color === name ? 'border-ink-900' : 'border-ink-100 hover:border-ink-300', !anyStock && 'opacity-50')}
+                    className={cn('relative h-16 w-14 overflow-hidden rounded-md border-2 bg-gray-50 transition', color === name ? 'border-brand-600' : 'border-gray-200 hover:border-gray-400', !anyStock && 'opacity-50')}
                   >
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -253,7 +260,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
         {sizes.length > 0 && (
           <div className="mt-6" id="size-picker">
             <div className="mb-2 flex items-center gap-4">
-              <p className={cn('text-sm font-bold', sizeError && 'text-brand-700')}>{sizeError ? 'Please select a size' : 'Select size'}</p>
+              <p className={cn('text-sm font-bold', sizeError && 'text-red-600')}>{sizeError ? 'Please select a size' : 'Select size'}</p>
               {product.sizeChart && (
                 <button onClick={() => setShowChart(true)} className="flex items-center gap-1 text-sm font-semibold text-brand-700">
                   <Icon name="ruler" className="h-4 w-4" /> Size chart
@@ -273,9 +280,9 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                       setSizeError(false);
                     }}
                     className={cn(
-                      'min-w-[3.25rem] rounded-full border px-4 py-2 text-sm font-semibold transition',
-                      size === s ? 'border-ink-900 bg-ink-900 text-white' : 'border-ink-200 bg-white hover:border-ink-900',
-                      !available && 'cursor-not-allowed border-dashed bg-ink-50 text-ink-300 line-through hover:border-ink-200',
+                      'min-w-[3.25rem] rounded-md border px-3 py-2 text-sm font-semibold transition',
+                      size === s ? 'border-brand-600 bg-brand-600 text-white' : 'border-gray-300 bg-white hover:border-brand-600',
+                      !available && 'cursor-not-allowed border-dashed bg-gray-50 text-gray-300 line-through hover:border-gray-300',
                     )}
                   >
                     {s}
@@ -283,17 +290,17 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 );
               })}
             </div>
-            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-sm font-semibold text-brand-700">Hurry, only {variant.stock} left!</p>}
+            {variant && variant.inStock && variant.stock <= 5 && <p className="mt-2 text-sm font-semibold text-red-600">Hurry, only {variant.stock} left!</p>}
           </div>
         )}
 
-        <div className="mt-6 grid gap-4 rounded-2xl border border-ink-100 p-4 sm:grid-cols-[auto_1fr]">
-          <p className="flex items-center gap-2 text-sm font-bold text-ink-700">
+        <div className="mt-6 grid gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-[auto_1fr]">
+          <p className="flex items-center gap-2 text-sm font-bold text-gray-700">
             <Icon name="pin" className="h-4 w-4" /> Delivery
           </p>
           <div>
             <form
-              className="flex max-w-sm border-b-2 border-ink-900"
+              className="flex max-w-sm border-b-2 border-brand-600"
               onSubmit={(e) => {
                 e.preventDefault();
                 void checkPincode(pincode);
@@ -307,28 +314,28 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
                 className="w-full bg-transparent py-1.5 text-sm font-medium outline-none"
                 aria-label="Pincode"
               />
-              <button className="px-2 text-sm font-bold text-brand-600">Check</button>
+              <button className="px-2 text-sm font-bold text-brand-700">Check</button>
             </form>
             {svc ? (
               svc.serviceable && svc.estimatedDelivery ? (
                 <div className="mt-2 space-y-1 text-sm">
                   <p>
                     Delivery by <span className="font-bold">{formatDate(svc.estimatedDelivery.to)}</span>
-                    <span className="text-ink-500"> | </span>
-                    <span className="text-sage-700">{price >= 99900 ? 'Free delivery' : 'Free on orders above ₹999'}</span>
+                    <span className="text-gray-500"> | </span>
+                    <span className="text-emerald-600">{price >= 99900 ? 'Free delivery' : 'Free on orders above ₹999'}</span>
                   </p>
-                  <p className="text-ink-500">{svc.codAvailable ? 'Cash on Delivery available' : 'Cash on Delivery not available'}</p>
+                  <p className="text-gray-600">{svc.codAvailable ? 'Cash on Delivery available' : 'Cash on Delivery not available'}</p>
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-brand-700">Sorry, we do not deliver to this pincode yet.</p>
+                <p className="mt-2 text-sm text-red-600">Sorry, we do not deliver to this pincode yet.</p>
               )
             ) : (
-              <p className="mt-2 text-xs text-ink-500">Enter your pincode to check delivery date and COD availability.</p>
+              <p className="mt-2 text-xs text-gray-500">Enter your pincode to check delivery date and COD availability.</p>
             )}
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-ink-700">
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-gray-700">
           {(
             [
               ['returns', product.returnPolicy.isReturnable ? `${product.returnPolicy.returnWindowDays}-day return` : 'No returns'],
@@ -336,8 +343,8 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
               ['shield', 'Original product'],
             ] as const
           ).map(([icon, label]) => (
-            <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl bg-ink-50 px-2 py-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sage-100 text-sage-700">
+            <div key={label} className="flex flex-col items-center gap-1.5 rounded-md bg-gray-50 px-2 py-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand-700 shadow-card">
                 <Icon name={icon} className="h-4 w-4" />
               </span>
               {label}
@@ -345,11 +352,14 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
           ))}
         </div>
 
+        <p className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <Icon name="store" className="h-4 w-4" /> Sold by <span className="font-semibold text-brand-700">{process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart'} Retail</span>
+        </p>
 
         {product.specifications && Object.keys(product.specifications).length > 0 && (
-          <div className="mt-6 border-t border-ink-100 pt-5">
+          <div className="mt-6 border-t border-gray-100 pt-5">
             <p className="mb-2 text-sm font-bold">Highlights</p>
-            <ul className="grid list-disc gap-x-8 gap-y-1.5 pl-5 text-sm text-ink-700 sm:grid-cols-2">
+            <ul className="grid list-disc gap-x-8 gap-y-1.5 pl-5 text-sm text-gray-700 sm:grid-cols-2">
               {product.material && <li>{product.material}</li>}
               {Object.entries(product.specifications).slice(0, 7).map(([k, v]) => (
                 <li key={k}>
@@ -367,7 +377,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
       {showChart && product.sizeChart && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Size chart">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowChart(false)} />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-lift">
+          <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lift">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-bold">Size chart (inches)</h2>
               <button onClick={() => setShowChart(false)} aria-label="Close">
@@ -376,7 +386,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-ink-50">
+                <tr className="border-b bg-gray-50">
                   {Object.keys(product.sizeChart[0]).map((k) => (
                     <th key={k} className="px-2 py-2 text-left capitalize">
                       {k}

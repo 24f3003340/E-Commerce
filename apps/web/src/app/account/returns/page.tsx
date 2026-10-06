@@ -30,7 +30,7 @@ export default function ReturnsPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold">{r.returnNumber}</p>
-                  <p className="text-xs text-ink-500">
+                  <p className="text-xs text-gray-500">
                     Order{' '}
                     <Link href={`/account/orders/${r.order?.orderNumber}`} className="underline">
                       {r.order?.orderNumber}
@@ -40,7 +40,7 @@ export default function ReturnsPage() {
                 </div>
                 <StatusBadge status={r.status} />
               </div>
-              <ul className="mt-3 text-ink-700">
+              <ul className="mt-3 text-gray-700">
                 {r.items.map((i) => (
                   <li key={i.id}>
                     {i.orderItem?.productName} ({i.orderItem?.variantLabel}) × {i.quantity}
@@ -50,12 +50,12 @@ export default function ReturnsPage() {
               {idx >= 0 && (
                 <div className="mt-3 flex gap-1">
                   {STEPS.map((s, i) => (
-                    <div key={s} className={`h-1.5 flex-1 rounded ${i <= idx ? 'bg-emerald-500' : 'bg-ink-100'}`} title={s} />
+                    <div key={s} className={`h-1.5 flex-1 rounded ${i <= idx ? 'bg-emerald-500' : 'bg-gray-200'}`} title={s} />
                   ))}
                 </div>
               )}
-              <p className="mt-2 text-xs text-ink-500">Refund amount: {inr(r.refundAmount)}</p>
-              {r.adminNote && <p className="mt-1 text-xs text-ink-500">Note from store: {r.adminNote}</p>}
+              <p className="mt-2 text-xs text-gray-500">Refund amount: {inr(r.refundAmount)}</p>
+              {r.adminNote && <p className="mt-1 text-xs text-gray-600">Note from store: {r.adminNote}</p>}
             </li>
           );
         })}

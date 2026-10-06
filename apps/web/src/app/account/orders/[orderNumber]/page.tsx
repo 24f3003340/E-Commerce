@@ -55,7 +55,7 @@ function ReturnModal({ order, onClose, onDone }: { order: Order; onClose: () => 
       {!elig ? (
         <Spinner />
       ) : !elig.eligible ? (
-        <p className="text-sm text-ink-500">{elig.reason ?? 'The return window for this order has closed.'}</p>
+        <p className="text-sm text-gray-600">{elig.reason ?? 'The return window for this order has closed.'}</p>
       ) : (
         <form
           className="space-y-4"
@@ -79,7 +79,7 @@ function ReturnModal({ order, onClose, onDone }: { order: Order; onClose: () => 
               <li key={i.orderItemId} className="flex items-center justify-between gap-3 rounded border p-3 text-sm">
                 <span>
                   <span className="font-medium">{i.productName}</span>
-                  <span className="block text-xs text-ink-500">
+                  <span className="block text-xs text-gray-500">
                     {i.variantLabel} · {i.returnableQuantity > 0 ? `return by ${formatDate(i.returnBy)}` : (i.policyNote ?? 'Not returnable')}
                   </span>
                 </span>
@@ -144,7 +144,7 @@ function ReviewModal({ item, onClose }: { item: OrderItem; onClose: () => void }
       >
         <div className="flex gap-1 text-3xl" role="radiogroup" aria-label="Rating">
           {[1, 2, 3, 4, 5].map((n) => (
-            <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} stars`} className={n <= rating ? 'text-amber-500' : 'text-ink-200'}>
+            <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} stars`} className={n <= rating ? 'text-amber-500' : 'text-gray-300'}>
               ★
             </button>
           ))}
@@ -226,7 +226,7 @@ function OrderDetail() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-lg font-bold">Order {order.orderNumber}</h1>
-          <p className="text-sm text-ink-500">Placed on {formatDate(order.createdAt, true)}</p>
+          <p className="text-sm text-gray-500">Placed on {formatDate(order.createdAt, true)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusBadge status={order.status} label={ORDER_STATUS_LABEL[order.status]} />
@@ -253,7 +253,7 @@ function OrderDetail() {
           <h2 className="mb-4 font-bold">Tracking</h2>
           <OrderTimeline status={order.status} history={order.history} />
           {order.shipments.map((s) => (
-            <div key={s.id} className="mt-4 rounded-md bg-ink-50 p-3 text-sm">
+            <div key={s.id} className="mt-4 rounded-md bg-gray-50 p-3 text-sm">
               <p>
                 <span className="font-semibold">{s.carrier}</span> · AWB {s.awb}
               </p>
@@ -262,7 +262,7 @@ function OrderDetail() {
                   Track on courier website
                 </a>
               )}
-              <ul className="mt-2 space-y-1 text-xs text-ink-500">
+              <ul className="mt-2 space-y-1 text-xs text-gray-600">
                 {s.events.slice(0, 5).map((e) => (
                   <li key={e.id}>
                     {formatDate(e.occurredAt, true)} — {humanize(e.status)}
@@ -277,7 +277,7 @@ function OrderDetail() {
         <section className="card space-y-4 p-5 text-sm">
           <div>
             <h2 className="mb-2 font-bold">Delivery address</h2>
-            <p className="text-ink-700">
+            <p className="text-gray-700">
               {a.name} · {a.phone}
               <br />
               {a.line1}
@@ -337,12 +337,12 @@ function OrderDetail() {
           {order.items.map((i) => (
             <li key={i.id} className="flex gap-4 py-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={i.imageUrl ?? ''} alt="" className="h-20 w-16 rounded bg-ink-100 object-cover" />
+              <img src={i.imageUrl ?? ''} alt="" className="h-20 w-16 rounded bg-gray-100 object-cover" />
               <div className="flex-1 text-sm">
                 <Link href={`/p/${i.productSlug}`} className="font-medium hover:underline">
                   {i.productName}
                 </Link>
-                <p className="text-ink-500">
+                <p className="text-gray-500">
                   {i.variantLabel} · Qty {i.quantity}
                 </p>
                 {i.returnedQuantity > 0 && <p className="text-xs text-amber-700">{i.returnedQuantity} returned / return requested</p>}

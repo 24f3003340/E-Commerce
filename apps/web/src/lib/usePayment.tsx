@@ -81,8 +81,8 @@ export function usePayment(): { pay: (p: GatewayPayment) => Promise<PaymentResul
       <div className="relative w-full max-w-sm rounded-lg bg-white p-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Test mode — mock gateway</p>
         <h2 className="mt-2 text-lg font-bold">Pay {inr(mock.payment.amount)}</h2>
-        <p className="mt-1 text-sm text-ink-500">Order {mock.payment.orderNumber}</p>
-        <p className="mt-3 text-xs text-ink-500">Add Razorpay keys to the API .env to use the real Razorpay checkout (UPI, cards, net banking, wallets).</p>
+        <p className="mt-1 text-sm text-gray-500">Order {mock.payment.orderNumber}</p>
+        <p className="mt-3 text-xs text-gray-500">Add Razorpay keys to the API .env to use the real Razorpay checkout (UPI, cards, net banking, wallets).</p>
         <div className="mt-5 flex gap-3">
           <button className="btn-outline flex-1" onClick={() => void finishMock(false)}>
             Fail payment
@@ -92,7 +92,7 @@ export function usePayment(): { pay: (p: GatewayPayment) => Promise<PaymentResul
           </button>
         </div>
         <button
-          className="mt-3 text-xs text-ink-500 underline"
+          className="mt-3 text-xs text-gray-500 underline"
           onClick={() => {
             mock.resolve('dismissed');
             setMock(null);

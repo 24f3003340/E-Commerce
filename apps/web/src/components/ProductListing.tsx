@@ -23,26 +23,25 @@ export async function ProductListing({ searchParams, category, title }: { search
   const from = data.total ? (data.page - 1) * data.limit + 1 : 0;
   const to = Math.min(data.page * data.limit, data.total);
   return (
-    <div className="grid gap-8 lg:grid-cols-[250px_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
       <Suspense>
         <Filters facets={data.facets} />
       </Suspense>
-      <div className="min-w-0 space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
-            <p className="mt-1 text-sm text-ink-500">
-              {data.total} {data.total === 1 ? 'style' : 'styles'}
-              {data.total > data.limit && ` · showing ${from}–${to}`}
+      <div className="min-w-0 space-y-3">
+        <div className="card space-y-3 px-4 py-3">
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <h1 className="text-lg font-bold">{title}</h1>
+            <p className="text-xs text-gray-500">
+              (Showing {from}–{to} of {data.total} products)
             </p>
           </div>
           <Suspense>
             <SortSelect />
           </Suspense>
+          <Suspense>
+            <ActiveFilters />
+          </Suspense>
         </div>
-        <Suspense>
-          <ActiveFilters />
-        </Suspense>
         {data.items.length ? (
           <ProductGrid products={data.items} />
         ) : (

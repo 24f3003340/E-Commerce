@@ -24,11 +24,11 @@ export default function OrdersPage() {
       <ul className="space-y-4">
         {data.items.map((o) => (
           <li key={o.id}>
-            <Link href={`/account/orders/${o.orderNumber}`} className="card block p-4 transition hover:border-ink-300">
+            <Link href={`/account/orders/${o.orderNumber}`} className="card block p-4 transition hover:border-gray-400">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold">{o.orderNumber}</p>
-                  <p className="text-xs text-ink-500">Placed on {formatDate(o.createdAt)}</p>
+                  <p className="text-xs text-gray-500">Placed on {formatDate(o.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <StatusBadge status={o.status} label={ORDER_STATUS_LABEL[o.status]} />
@@ -38,9 +38,9 @@ export default function OrdersPage() {
               <div className="mt-3 flex gap-2">
                 {o.items.slice(0, 5).map((i, idx) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={idx} src={i.imageUrl ?? ''} alt={i.productName} className="h-16 w-12 rounded bg-ink-100 object-cover" />
+                  <img key={idx} src={i.imageUrl ?? ''} alt={i.productName} className="h-16 w-12 rounded bg-gray-100 object-cover" />
                 ))}
-                {o.items.length > 5 && <span className="self-center text-sm text-ink-500">+{o.items.length - 5} more</span>}
+                {o.items.length > 5 && <span className="self-center text-sm text-gray-500">+{o.items.length - 5} more</span>}
               </div>
             </Link>
           </li>

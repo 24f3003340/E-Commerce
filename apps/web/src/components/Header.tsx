@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/context/StoreProvider';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/format';
+import { usePincode } from '@/lib/usePincode';
 import type { Category } from '@/lib/types';
 import { Icon } from './icons';
 
-const STORE_NAME = (process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart').toLowerCase();
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
 
 interface Suggestions {
   products: { name: string; slug: string; images: { url: string }[] }[];
@@ -18,16 +19,18 @@ interface Suggestions {
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="shrink-0 font-display text-2xl font-extrabold tracking-tight" aria-label={`${STORE_NAME} home`}>
-      <span className={light ? 'text-white' : 'text-ink-900'}>{STORE_NAME}</span>
-      <span className="text-brand-500">.</span>
+    <Link href="/" className="flex shrink-0 items-center leading-none" aria-label={`${STORE_NAME} home`}>
+      <span className={cn('text-[24px] font-extrabold tracking-tight', light ? 'text-white' : 'text-gray-900')}>
+        style<span className="text-brand-600">kart</span>
+      </span>
     </Link>
   );
 }
 
-function SearchBox({ onDone, autoFocus }: { onDone?: () => void; autoFocus?: boolean }) {
+function SearchBox({ categories, onDone }: { categories: Category[]; onDone?: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState('');
+  const [scope, setScope] = useState('');
   const [open, setOpen] = useState(false);
   const [sugg, setSugg] = useState<Suggestions | null>(null);
   const [active, setActive] = useState(-1);
@@ -49,8 +52,8 @@ function SearchBox({ onDone, autoFocus }: { onDone?: () => void; autoFocus?: boo
   }, [q]);
 
   const items = [
-    ...(sugg?.categories.map((c) => ({ key: `c-${c.slug}`, href: `/c/${c.slug}`, label: c.name, image: undefined as string | undefined, kind: 'category' })) ?? []),
-    ...(sugg?.products.map((p) => ({ key: `p-${p.slug}`, href: `/p/${p.slug}`, label: p.name, image: p.images[0]?.url, kind: 'product' })) ?? []),
+    ...(sugg?.categories.map((c) => ({ key: `c-${c.slug}`, href: `/c/${c.slug}`, label: c.name, kind: 'category' as const, image: undefined })) ?? []),
+    ...(sugg?.products.map((p) => ({ key: `p-${p.slug}`, href: `/p/${p.slug}`, label: p.name, kind: 'product' as const, image: p.images[0]?.url })) ?? []),
   ];
 
   const go = (href: string) => {
@@ -60,20 +63,38 @@ function SearchBox({ onDone, autoFocus }: { onDone?: () => void; autoFocus?: boo
     router.push(href);
   };
 
+  const submit = () => {
+    if (active >= 0 && items[active]) return go(items[active].href);
+    const term = q.trim();
+    if (!term && !scope) return;
+    if (scope && !term) return go(`/c/${scope}`);
+    go(scope ? `/c/${scope}?q=${encodeURIComponent(term)}` : `/search?q=${encodeURIComponent(term)}`);
+  };
+
   return (
     <form
       role="search"
-      className="relative w-full"
+      className="relative flex w-full rounded-lg ring-brand-200 focus-within:ring-2"
       onSubmit={(e) => {
         e.preventDefault();
-        if (active >= 0 && items[active]) go(items[active].href);
-        else if (q.trim()) go(`/search?q=${encodeURIComponent(q.trim())}`);
+        submit();
       }}
     >
-      <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500" />
+      <select
+        value={scope}
+        onChange={(e) => setScope(e.target.value)}
+        aria-label="Search in category"
+        className="hidden max-w-[130px] rounded-l-lg border-r border-gray-200 bg-gray-100 px-3 text-xs font-semibold text-gray-700 outline-none hover:bg-gray-200 sm:block"
+      >
+        <option value="">All</option>
+        {categories.map((c) => (
+          <option key={c.id} value={c.slug}>
+            {c.name}
+          </option>
+        ))}
+      </select>
       <input
         value={q}
-        autoFocus={autoFocus}
         onChange={(e) => {
           setQ(e.target.value);
           setOpen(true);
@@ -90,33 +111,34 @@ function SearchBox({ onDone, autoFocus }: { onDone?: () => void; autoFocus?: boo
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Search tees, kurtas, sneakers…"
+        placeholder="Search for products, brands and more"
         aria-label="Search"
-        className="h-11 w-full rounded-full border border-ink-100 bg-ink-50 pl-11 pr-4 text-sm outline-none transition placeholder:text-ink-500 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100"
+        className="h-11 w-full rounded-l-lg bg-gray-100 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:bg-white sm:rounded-none"
       />
+      <button type="submit" aria-label="Search" className="flex h-11 w-12 shrink-0 items-center justify-center rounded-r-lg bg-brand-600 text-white hover:bg-brand-700">
+        <Icon name="search" />
+      </button>
       {open && items.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-ink-100 bg-white p-1.5 shadow-lift">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lift">
           {items.map((item, i) => (
             <button
               key={item.key}
               type="button"
               onMouseDown={() => go(item.href)}
               onMouseEnter={() => setActive(i)}
-              className={cn('flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm', i === active && 'bg-brand-50')}
+              className={cn('flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-800', i === active && 'bg-gray-100')}
             >
               {item.kind === 'category' ? (
                 <>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sage-100 text-sage-700">
-                    <Icon name="grid" className="h-4 w-4" />
-                  </span>
+                  <Icon name="search" className="h-4 w-4 text-gray-400" />
                   <span>
-                    <span className="font-semibold">{item.label}</span> <span className="text-xs text-ink-500">· category</span>
+                    <span className="font-semibold">{item.label}</span> <span className="text-xs text-brand-600">in Categories</span>
                   </span>
                 </>
               ) : (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {item.image ? <img src={item.image} alt="" className="h-11 w-9 rounded-lg object-cover" /> : <span className="h-11 w-9" />}
+                  {item.image ? <img src={item.image} alt="" className="h-10 w-8 rounded object-cover" /> : <span className="h-10 w-8" />}
                   <span className="line-clamp-1">{item.label}</span>
                 </>
               )}
@@ -128,18 +150,52 @@ function SearchBox({ onDone, autoFocus }: { onDone?: () => void; autoFocus?: boo
   );
 }
 
+function PincodeButton() {
+  const { pincode, setPincode } = usePincode();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  return (
+    <div className="relative hidden lg:block">
+      <button onClick={() => { setValue(pincode ?? ''); setOpen((o) => !o); }} className="flex items-end gap-1 rounded-lg px-2 py-1 text-left text-gray-900 hover:bg-gray-100">
+        <Icon name="pin" className="mb-0.5 h-5 w-5 text-brand-600" />
+        <span className="leading-tight">
+          <span className="block text-[11px] text-gray-500">Deliver to</span>
+          <span className="block text-sm font-bold">{pincode ?? 'Select pincode'}</span>
+        </span>
+      </button>
+      {open && (
+        <form
+          className="absolute left-0 top-full z-50 mt-2 w-72 rounded-lg bg-white p-4 text-gray-900 shadow-lift"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (/^[1-9]\d{5}$/.test(value)) {
+              setPincode(value);
+              setOpen(false);
+            }
+          }}
+        >
+          <p className="text-sm font-semibold">Choose your location</p>
+          <p className="mt-1 text-xs text-gray-500">Delivery options and speeds may vary by pincode.</p>
+          <div className="mt-3 flex gap-2">
+            <input autoFocus inputMode="numeric" value={value} onChange={(e) => setValue(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit pincode" className="input" aria-label="Pincode" />
+            <button className="btn-cart px-3">Apply</button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export function Header({ categories }: { categories: Category[] }) {
   const { user, cartCount, wishlist, logout } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [mobileSearch, setMobileSearch] = useState(false);
   const pathname = usePathname();
   const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMenuOpen(false);
     setAccountOpen(false);
-    setMobileSearch(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -150,156 +206,177 @@ export function Header({ categories }: { categories: Category[] }) {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const iconBtn = 'relative flex h-10 w-10 items-center justify-center rounded-full text-ink-900 transition hover:bg-ink-100';
-
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-100 bg-page/90 backdrop-blur-md">
-      <div className="container flex h-[68px] items-center gap-4">
-        <button className={cn(iconBtn, 'lg:hidden')} aria-label="Open menu" onClick={() => setMenuOpen(true)}>
-          <Icon name="menu" />
-        </button>
-        <Logo />
+    <header className="sticky top-0 z-40 bg-white shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+      {/* Main bar */}
+      <div className="bg-white">
+        <div className="container flex h-[72px] items-center gap-3 lg:gap-6">
+          <button className="text-gray-900 lg:hidden" aria-label="Open menu" onClick={() => setMenuOpen(true)}>
+            <Icon name="menu" className="h-6 w-6" />
+          </button>
+          <Logo />
+          <PincodeButton />
+          <div className="hidden flex-1 md:flex">
+            <SearchBox categories={categories} />
+          </div>
 
-        <nav className="ml-6 hidden h-full items-center gap-1 lg:flex" aria-label="Categories">
+          <div className="ml-auto flex items-center gap-1 text-gray-900 md:ml-0 lg:gap-1">
+            <div className="relative" ref={accountRef}>
+              {user ? (
+                <button
+                  onClick={() => setAccountOpen((o) => !o)}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-gray-100"
+                  aria-expanded={accountOpen}
+                  aria-label="Account menu"
+                >
+                  <Icon name="user" className="h-5 w-5 sm:hidden" />
+                  <span className="hidden leading-tight sm:block">
+                    <span className="block text-[11px] text-gray-500">Hi, {user.name.split(' ')[0]}</span>
+                    <span className="flex items-center gap-0.5 text-sm font-bold">
+                      Account <Icon name="chevronDown" className="h-3.5 w-3.5" />
+                    </span>
+                  </span>
+                </button>
+              ) : (
+                <Link href="/login" className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-gray-100" aria-label="Sign in">
+                  <Icon name="user" className="h-5 w-5 sm:hidden" />
+                  <span className="hidden leading-tight sm:block">
+                    <span className="block text-[11px] text-gray-500">Welcome</span>
+                    <span className="block text-sm font-bold">Log in / Sign up</span>
+                  </span>
+                </Link>
+              )}
+              {accountOpen && user && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-lg bg-white py-2 text-sm text-gray-800 shadow-lift">
+                  <div className="border-b px-4 pb-2">
+                    <p className="font-semibold">{user.name}</p>
+                    <p className="truncate text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  {(
+                    [
+                      ['/account', 'user', 'My Profile'],
+                      ['/account/orders', 'package', 'Orders'],
+                      ['/wishlist', 'heart', 'Wishlist'],
+                      ['/account/returns', 'returns', 'Returns & Refunds'],
+                      ['/account/notifications', 'bell', 'Notifications'],
+                    ] as const
+                  ).map(([href, icon, label]) => (
+                    <Link key={href} href={href} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50">
+                      <Icon name={icon} className="h-4 w-4 text-brand-600" /> {label}
+                    </Link>
+                  ))}
+                  <button onClick={() => void logout()} className="flex w-full items-center gap-3 border-t px-4 py-2 text-left text-red-600 hover:bg-gray-50">
+                    <Icon name="logout" className="h-4 w-4" /> Logout
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Link href="/account/orders" className="hidden flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100 lg:flex">
+              <Icon name="package" className="h-5 w-5" />
+              Orders
+            </Link>
+
+            <Link href="/wishlist" className="relative flex flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100" aria-label={`Wishlist, ${wishlist.size} items`}>
+              <Icon name="heart" className="h-5 w-5" />
+              <span className="hidden sm:block">Wishlist</span>
+              {wishlist.size > 0 && (
+                <span className="absolute right-1 top-0 min-w-[18px] rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-[18px] text-white">{wishlist.size}</span>
+              )}
+            </Link>
+
+            <Link href="/cart" className="relative flex flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100" aria-label={`Bag, ${cartCount} items`}>
+              <Icon name="cart" className="h-5 w-5" />
+              <span className="hidden sm:block">Bag</span>
+              {cartCount > 0 && (
+                <span className="absolute right-1 top-0 min-w-[18px] rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-[18px] text-white">{cartCount}</span>
+              )}
+            </Link>
+          </div>
+        </div>
+        <div className="container pb-3 md:hidden">
+          <SearchBox categories={categories} />
+        </div>
+      </div>
+
+      {/* Category strip */}
+      <nav className="border-t border-gray-100 bg-white text-gray-800" aria-label="Categories">
+        <div className="container flex h-11 items-center gap-1 overflow-x-auto text-sm font-semibold scrollbar-none lg:overflow-visible">
+          <button onClick={() => setMenuOpen(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-bold hover:bg-gray-100">
+            <Icon name="menu" className="h-4 w-4" /> All
+          </button>
           {categories.map((cat) => (
-            <div key={cat.id} className="group relative flex h-full items-center">
-              <Link
-                href={`/c/${cat.slug}`}
-                className={cn(
-                  'rounded-full px-3.5 py-2 text-sm font-semibold transition hover:bg-ink-100',
-                  pathname.startsWith(`/c/${cat.slug}`) ? 'text-brand-600' : 'text-ink-700',
-                )}
-              >
+            <div key={cat.id} className="group relative shrink-0">
+              <Link href={`/c/${cat.slug}`} className="flex items-center gap-0.5 border-b-2 border-transparent px-2.5 py-2.5 hover:border-brand-600 hover:text-brand-600">
                 {cat.name}
+                {cat.children.length > 0 && <Icon name="chevronDown" className="hidden h-3.5 w-3.5 opacity-70 lg:block" />}
               </Link>
               {cat.children.length > 0 && (
-                <div className="invisible absolute left-0 top-full z-50 pt-1 opacity-0 transition group-hover:visible group-hover:opacity-100">
-                  <div className="w-60 rounded-2xl border border-ink-100 bg-white p-2 shadow-lift">
+                <div className="invisible absolute left-0 top-full z-50 hidden pt-1 opacity-0 transition group-hover:visible group-hover:opacity-100 lg:block">
+                  <div className="w-64 rounded-xl border border-gray-100 bg-white p-2 text-gray-800 shadow-lift">
+                    <p className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-gray-500">{cat.name}</p>
                     {cat.children.map((sub) => (
-                      <Link key={sub.id} href={`/c/${sub.slug}`} className="block rounded-xl px-3 py-2 text-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700">
-                        {sub.name}
+                      <Link key={sub.id} href={`/c/${sub.slug}`} className="flex items-center justify-between rounded px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700">
+                        {sub.name} <Icon name="chevronRight" className="h-4 w-4 opacity-40" />
                       </Link>
                     ))}
-                    <Link href={`/c/${cat.slug}`} className="mt-1 flex items-center justify-between rounded-xl bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-900 hover:bg-ink-100">
-                      Shop all {cat.name} <Icon name="chevronRight" className="h-4 w-4" />
+                    <Link href={`/c/${cat.slug}`} className="mt-1 block rounded border-t px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+                      View all {cat.name}
                     </Link>
                   </div>
                 </div>
               )}
             </div>
           ))}
-          <Link href="/search?sort=discount" className="rounded-full bg-brand-50 px-3.5 py-2 text-sm font-bold text-brand-600 transition hover:bg-brand-100">
-            Sale
+          <Link href="/search?sort=discount" className="shrink-0 rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-600 hover:bg-brand-100">
+            Deals
           </Link>
-        </nav>
-
-        <div className="ml-auto hidden w-full max-w-xs md:block xl:max-w-sm">
-          <SearchBox />
-        </div>
-
-        <div className="ml-auto flex items-center gap-0.5 md:ml-1">
-          <button className={cn(iconBtn, 'md:hidden')} aria-label="Search" onClick={() => setMobileSearch((s) => !s)}>
-            <Icon name="search" />
-          </button>
-          <Link href="/wishlist" className={cn(iconBtn, 'hidden sm:flex')} aria-label={`Wishlist, ${wishlist.size} items`}>
-            <Icon name="heart" />
-            {wishlist.size > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-brand-500 ring-2 ring-page" />}
+          <Link href="/search?sort=newest" className="shrink-0 border-b-2 border-transparent px-2.5 py-2.5 hover:border-brand-600 hover:text-brand-600">
+            New Arrivals
           </Link>
-          <div className="relative" ref={accountRef}>
-            {user ? (
-              <button onClick={() => setAccountOpen((o) => !o)} className={iconBtn} aria-expanded={accountOpen} aria-label="Account menu">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sage-100 font-display text-sm font-bold text-sage-700">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
-              </button>
-            ) : (
-              <Link href="/login" className={iconBtn} aria-label="Sign in">
-                <Icon name="user" />
-              </Link>
-            )}
-            {accountOpen && user && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-60 rounded-2xl border border-ink-100 bg-white p-2 text-sm shadow-lift">
-                <div className="px-3 pb-2 pt-1">
-                  <p className="font-display font-bold">Hey {user.name.split(' ')[0]} 👋</p>
-                  <p className="truncate text-xs text-ink-500">{user.email}</p>
-                </div>
-                {(
-                  [
-                    ['/account/orders', 'package', 'My orders'],
-                    ['/wishlist', 'heart', 'Wishlist'],
-                    ['/account', 'user', 'Profile & addresses'],
-                    ['/account/returns', 'returns', 'Returns'],
-                    ['/account/notifications', 'bell', 'Updates'],
-                  ] as const
-                ).map(([href, icon, label]) => (
-                  <Link key={href} href={href} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-ink-50">
-                    <Icon name={icon} className="h-4 w-4 text-ink-500" /> {label}
-                  </Link>
-                ))}
-                <button onClick={() => void logout()} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-brand-700 hover:bg-brand-50">
-                  <Icon name="logout" className="h-4 w-4" /> Log out
-                </button>
-              </div>
-            )}
-          </div>
-          <Link href="/cart" className={cn(iconBtn, 'w-auto gap-1.5 bg-ink-900 px-3.5 text-white hover:bg-ink-800')} aria-label={`Bag, ${cartCount} items`}>
-            <Icon name="cart" className="h-[18px] w-[18px]" />
-            <span className="text-sm font-bold">{cartCount}</span>
+          <Link href="/track" className="ml-auto hidden shrink-0 items-center gap-1 px-2 py-2.5 text-gray-600 hover:text-brand-600 lg:flex">
+            <Icon name="truck" className="h-4 w-4" /> Track Order
           </Link>
         </div>
-      </div>
-
-      {mobileSearch && (
-        <div className="container pb-3 md:hidden">
-          <SearchBox autoFocus onDone={() => setMobileSearch(false)} />
-        </div>
-      )}
-
-      {/* Mobile category pills */}
-      <nav className="container flex gap-2 overflow-x-auto pb-3 scrollbar-none lg:hidden" aria-label="Categories">
-        {categories.map((c) => (
-          <Link key={c.id} href={`/c/${c.slug}`} className="shrink-0 rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-ink-700">
-            {c.name}
-          </Link>
-        ))}
-        <Link href="/search?sort=discount" className="shrink-0 rounded-full bg-brand-50 px-3.5 py-1.5 text-xs font-bold text-brand-600">
-          Sale
-        </Link>
       </nav>
 
+      {/* Side drawer */}
       {menuOpen && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="absolute inset-0 bg-ink-950/50" onClick={() => setMenuOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto rounded-r-3xl bg-page p-5">
-            <div className="mb-6 flex items-center justify-between">
-              <Logo />
-              <button aria-label="Close menu" onClick={() => setMenuOpen(false)} className={iconBtn}>
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMenuOpen(false)} />
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto bg-white">
+            <div className="flex items-center gap-3 bg-gradient-to-r from-brand-700 to-brand-500 px-5 py-4 text-white">
+              <Icon name="user" className="h-7 w-7 rounded-full bg-white/15 p-1" />
+              <span className="text-lg font-bold">{user ? `Hi, ${user.name.split(' ')[0]}` : <Link href="/login">Log in / Sign up</Link>}</span>
+              <button aria-label="Close menu" onClick={() => setMenuOpen(false)} className="ml-auto">
                 <Icon name="x" />
               </button>
             </div>
+            <p className="px-5 pb-1 pt-4 text-base font-bold">Shop by Category</p>
             {categories.map((cat) => (
-              <div key={cat.id} className="mb-4">
-                <Link href={`/c/${cat.slug}`} className="font-display text-lg font-bold">
-                  {cat.name}
+              <div key={cat.id} className="border-b border-gray-100 px-5 py-2">
+                <Link href={`/c/${cat.slug}`} className="flex items-center justify-between py-1 font-semibold">
+                  {cat.name} <Icon name="chevronRight" className="h-4 w-4 text-gray-400" />
                 </Link>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 pb-1">
                   {cat.children.map((sub) => (
-                    <Link key={sub.id} href={`/c/${sub.slug}`} className="rounded-full bg-white px-3 py-1 text-sm text-ink-700 shadow-card">
+                    <Link key={sub.id} href={`/c/${sub.slug}`} className="text-sm text-gray-600 hover:text-brand-700">
                       {sub.name}
                     </Link>
                   ))}
                 </div>
               </div>
             ))}
-            <div className="mt-6 space-y-1 border-t border-ink-100 pt-4 text-sm">
-              <Link href="/search?sort=discount" className="block py-1.5 font-semibold text-brand-600">Sale</Link>
-              <Link href="/account/orders" className="block py-1.5">My orders</Link>
-              <Link href="/track" className="block py-1.5">Track an order</Link>
-              <Link href="/wishlist" className="block py-1.5">Wishlist</Link>
+            <p className="px-5 pb-1 pt-4 text-base font-bold">Help & Settings</p>
+            <div className="space-y-1 px-5 pb-6 text-sm">
+              <Link href="/account" className="block py-1.5">Your Account</Link>
+              <Link href="/account/orders" className="block py-1.5">Your Orders</Link>
+              <Link href="/track" className="block py-1.5">Track Order</Link>
+              <Link href="/account/returns" className="block py-1.5">Returns & Refunds</Link>
               {user ? (
-                <button onClick={() => void logout()} className="block py-1.5 text-brand-700">Log out</button>
+                <button onClick={() => void logout()} className="block py-1.5 text-red-600">Sign out</button>
               ) : (
-                <Link href="/login" className="block py-1.5 font-semibold">Log in / Sign up</Link>
+                <Link href="/login" className="block py-1.5 font-semibold text-brand-700">Sign in</Link>
               )}
             </div>
           </div>

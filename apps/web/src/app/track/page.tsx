@@ -26,7 +26,7 @@ export default function TrackPage() {
   return (
     <div className="container max-w-2xl py-10">
       <h1 className="text-2xl font-bold">Track your order</h1>
-      <p className="mt-1 text-sm text-ink-500">Enter your order ID and the email or mobile number used while ordering.</p>
+      <p className="mt-1 text-sm text-gray-500">Enter your order ID and the email or mobile number used while ordering.</p>
       <form
         className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
         onSubmit={async (e) => {
@@ -50,7 +50,7 @@ export default function TrackPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-bold">{result.orderNumber}</p>
-              <p className="text-xs text-ink-500">
+              <p className="text-xs text-gray-500">
                 Placed {formatDate(result.createdAt)} · {inr(result.total)}
               </p>
             </div>
@@ -58,11 +58,11 @@ export default function TrackPage() {
           </div>
           <OrderTimeline status={result.status} history={result.history} />
           {result.shipments.map((s, i) => (
-            <div key={i} className="rounded-md bg-ink-50 p-3 text-sm">
+            <div key={i} className="rounded-md bg-gray-50 p-3 text-sm">
               <p className="font-semibold">
                 {s.carrier} · AWB {s.awb}
               </p>
-              <ul className="mt-1 text-xs text-ink-500">
+              <ul className="mt-1 text-xs text-gray-600">
                 {s.events.map((e, j) => (
                   <li key={j}>
                     {formatDate(e.occurredAt, true)} — {humanize(e.status)}
@@ -72,7 +72,7 @@ export default function TrackPage() {
               </ul>
             </div>
           ))}
-          <ul className="text-sm text-ink-700">
+          <ul className="text-sm text-gray-700">
             {result.items.map((i, k) => (
               <li key={k}>
                 {i.productName} ({i.variantLabel}) × {i.quantity}

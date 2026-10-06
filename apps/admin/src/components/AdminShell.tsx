@@ -70,8 +70,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <AdminContext.Provider value={{ admin, toast }}>
       <div className="flex min-h-screen bg-page">
-        <aside className={cn('fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-ink-900 text-gray-300 transition-transform lg:static lg:translate-x-0', navOpen ? 'translate-x-0' : '-translate-x-full')}>
-          <div className="px-5 py-5"><p className="text-xl font-extrabold tracking-tight text-white">stylekart<span className="text-brand-400">.</span></p><p className="text-[11px] font-semibold uppercase tracking-widest text-brand-300">Seller Admin</p></div>
+        <aside className={cn('fixed inset-y-0 left-0 z-40 w-60 shrink-0 overflow-y-auto bg-navy-900 text-gray-300 transition-transform lg:static lg:translate-x-0', navOpen ? 'translate-x-0' : '-translate-x-full')}>
+          <div className="px-5 py-5"><p className="text-xl font-extrabold tracking-tight text-white">style<span className="text-brand-400">kart</span></p><p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Seller Admin</p></div>
           <nav className="space-y-0.5 px-3 pb-6">
             {NAV.filter((n) => canAccess(admin.role, n.section)).map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
