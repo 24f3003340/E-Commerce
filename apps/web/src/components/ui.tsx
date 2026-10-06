@@ -6,11 +6,11 @@ export function Price({ price, mrp, size = 'md' }: { price: number; mrp: number;
   const off = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-      <span className={cn('font-bold text-gray-900', size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-base' : 'text-lg')}>{inr(price)}</span>
+      <span className={cn('font-extrabold text-black', size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-base' : 'text-lg')}>{inr(price)}</span>
       {off > 0 && (
         <>
           <span className={cn('text-gray-500 line-through', size === 'lg' ? 'text-base' : 'text-xs')}>{inr(mrp)}</span>
-          <span className={cn('font-bold text-brand-600', size === 'lg' ? 'text-base' : 'text-xs')}>{off}% off</span>
+          <span className={cn('rounded-md bg-hot-500 px-1.5 py-0.5 font-extrabold text-white', size === 'lg' ? 'text-base' : 'text-xs')}>{off}% OFF</span>
         </>
       )}
     </div>

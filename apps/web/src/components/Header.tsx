@@ -20,8 +20,9 @@ interface Suggestions {
 export function Logo({ light = false }: { light?: boolean }) {
   return (
     <Link href="/" className="flex shrink-0 items-center leading-none" aria-label={`${STORE_NAME} home`}>
-      <span className={cn('text-[24px] font-extrabold tracking-tight', light ? 'text-white' : 'text-gray-900')}>
-        style<span className="text-brand-600">kart</span>
+      <span className={cn('font-display text-[26px] font-extrabold tracking-tight', light ? 'text-white' : 'text-black')}>
+        style
+        <span className="ml-0.5 inline-block -rotate-3 rounded-lg border-2 border-black bg-accent-400 px-1.5 leading-tight text-black shadow-brutal-sm">kart</span>
       </span>
     </Link>
   );
@@ -74,7 +75,7 @@ function SearchBox({ categories, onDone }: { categories: Category[]; onDone?: ()
   return (
     <form
       role="search"
-      className="relative flex w-full rounded-lg ring-brand-200 focus-within:ring-2"
+      className="relative flex w-full rounded-xl border-2 border-black bg-white transition focus-within:shadow-brutal-sm"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -84,7 +85,7 @@ function SearchBox({ categories, onDone }: { categories: Category[]; onDone?: ()
         value={scope}
         onChange={(e) => setScope(e.target.value)}
         aria-label="Search in category"
-        className="hidden max-w-[130px] rounded-l-lg border-r border-gray-200 bg-gray-100 px-3 text-xs font-semibold text-gray-700 outline-none hover:bg-gray-200 sm:block"
+        className="hidden max-w-[130px] rounded-l-[10px] border-r-2 border-black bg-brand-50 px-3 text-xs font-bold text-black outline-none hover:bg-brand-100 sm:block"
       >
         <option value="">All</option>
         {categories.map((c) => (
@@ -111,22 +112,22 @@ function SearchBox({ categories, onDone }: { categories: Category[]; onDone?: ()
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Search for products, brands and more"
+        placeholder="Search kar — oversized tees, kurtas, sneakers…"
         aria-label="Search"
-        className="h-11 w-full rounded-l-lg bg-gray-100 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:bg-white sm:rounded-none"
+        className="h-11 w-full rounded-l-[10px] bg-white px-4 text-sm font-medium text-black outline-none placeholder:text-gray-500 sm:rounded-none"
       />
-      <button type="submit" aria-label="Search" className="flex h-11 w-12 shrink-0 items-center justify-center rounded-r-lg bg-brand-600 text-white hover:bg-brand-700">
+      <button type="submit" aria-label="Search" className="flex h-11 w-12 shrink-0 items-center justify-center rounded-r-[10px] border-l-2 border-black bg-accent-400 text-black hover:bg-accent-300">
         <Icon name="search" />
       </button>
       {open && items.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lift">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border-2 border-black bg-white py-1 shadow-brutal">
           {items.map((item, i) => (
             <button
               key={item.key}
               type="button"
               onMouseDown={() => go(item.href)}
               onMouseEnter={() => setActive(i)}
-              className={cn('flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-800', i === active && 'bg-gray-100')}
+              className={cn('flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-800', i === active && 'bg-accent-100')}
             >
               {item.kind === 'category' ? (
                 <>
@@ -156,7 +157,7 @@ function PincodeButton() {
   const [value, setValue] = useState('');
   return (
     <div className="relative hidden lg:block">
-      <button onClick={() => { setValue(pincode ?? ''); setOpen((o) => !o); }} className="flex items-end gap-1 rounded-lg px-2 py-1 text-left text-gray-900 hover:bg-gray-100">
+      <button onClick={() => { setValue(pincode ?? ''); setOpen((o) => !o); }} className="flex items-end gap-1 rounded-xl px-2 py-1 text-left text-black hover:bg-accent-100">
         <Icon name="pin" className="mb-0.5 h-5 w-5 text-brand-600" />
         <span className="leading-tight">
           <span className="block text-[11px] text-gray-500">Deliver to</span>
@@ -165,7 +166,7 @@ function PincodeButton() {
       </button>
       {open && (
         <form
-          className="absolute left-0 top-full z-50 mt-2 w-72 rounded-lg bg-white p-4 text-gray-900 shadow-lift"
+          className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border-2 border-black bg-white p-4 text-black shadow-brutal"
           onSubmit={(e) => {
             e.preventDefault();
             if (/^[1-9]\d{5}$/.test(value)) {
@@ -174,7 +175,7 @@ function PincodeButton() {
             }
           }}
         >
-          <p className="text-sm font-semibold">Choose your location</p>
+          <p className="text-sm font-extrabold">Kahan deliver karein? 📍</p>
           <p className="mt-1 text-xs text-gray-500">Delivery options and speeds may vary by pincode.</p>
           <div className="mt-3 flex gap-2">
             <input autoFocus inputMode="numeric" value={value} onChange={(e) => setValue(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit pincode" className="input" aria-label="Pincode" />
@@ -207,7 +208,7 @@ export function Header({ categories }: { categories: Category[] }) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+    <header className="sticky top-0 z-40 border-b-2 border-black bg-white">
       {/* Main bar */}
       <div className="bg-white">
         <div className="container flex h-[72px] items-center gap-3 lg:gap-6">
@@ -225,29 +226,29 @@ export function Header({ categories }: { categories: Category[] }) {
               {user ? (
                 <button
                   onClick={() => setAccountOpen((o) => !o)}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-gray-100"
+                  className="flex items-center gap-2 rounded-xl px-2 py-1 text-left hover:bg-accent-100"
                   aria-expanded={accountOpen}
                   aria-label="Account menu"
                 >
                   <Icon name="user" className="h-5 w-5 sm:hidden" />
                   <span className="hidden leading-tight sm:block">
-                    <span className="block text-[11px] text-gray-500">Hi, {user.name.split(' ')[0]}</span>
+                    <span className="block text-[11px] font-semibold text-brand-600">Hey {user.name.split(' ')[0]} 👋</span>
                     <span className="flex items-center gap-0.5 text-sm font-bold">
                       Account <Icon name="chevronDown" className="h-3.5 w-3.5" />
                     </span>
                   </span>
                 </button>
               ) : (
-                <Link href="/login" className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-gray-100" aria-label="Sign in">
+                <Link href="/login" className="flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-accent-100" aria-label="Sign in">
                   <Icon name="user" className="h-5 w-5 sm:hidden" />
                   <span className="hidden leading-tight sm:block">
-                    <span className="block text-[11px] text-gray-500">Welcome</span>
+                    <span className="block text-[11px] font-semibold text-brand-600">Hey there 👋</span>
                     <span className="block text-sm font-bold">Log in / Sign up</span>
                   </span>
                 </Link>
               )}
               {accountOpen && user && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-lg bg-white py-2 text-sm text-gray-800 shadow-lift">
+                <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border-2 border-black bg-white py-2 text-sm text-black shadow-brutal">
                   <div className="border-b px-4 pb-2">
                     <p className="font-semibold">{user.name}</p>
                     <p className="truncate text-xs text-gray-500">{user.email}</p>
@@ -262,7 +263,7 @@ export function Header({ categories }: { categories: Category[] }) {
                     ] as const
                   ).map(([href, icon, label]) => (
                     <Link key={href} href={href} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50">
-                      <Icon name={icon} className="h-4 w-4 text-brand-600" /> {label}
+                      <Icon name={icon} className="h-4 w-4 text-brand-500" /> {label}
                     </Link>
                   ))}
                   <button onClick={() => void logout()} className="flex w-full items-center gap-3 border-t px-4 py-2 text-left text-red-600 hover:bg-gray-50">
@@ -272,24 +273,24 @@ export function Header({ categories }: { categories: Category[] }) {
               )}
             </div>
 
-            <Link href="/account/orders" className="hidden flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100 lg:flex">
+            <Link href="/account/orders" className="hidden flex-col items-center rounded-xl px-2.5 py-1 text-[11px] font-bold hover:bg-accent-100 lg:flex">
               <Icon name="package" className="h-5 w-5" />
               Orders
             </Link>
 
-            <Link href="/wishlist" className="relative flex flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100" aria-label={`Wishlist, ${wishlist.size} items`}>
+            <Link href="/wishlist" className="relative flex flex-col items-center rounded-xl px-2.5 py-1 text-[11px] font-bold hover:bg-accent-100" aria-label={`Wishlist, ${wishlist.size} items`}>
               <Icon name="heart" className="h-5 w-5" />
               <span className="hidden sm:block">Wishlist</span>
               {wishlist.size > 0 && (
-                <span className="absolute right-1 top-0 min-w-[18px] rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-[18px] text-white">{wishlist.size}</span>
+                <span className="absolute right-0.5 -top-0.5 min-w-[19px] rounded-full border-2 border-black bg-hot-500 px-1 text-center text-[10px] font-extrabold leading-[15px] text-white">{wishlist.size}</span>
               )}
             </Link>
 
-            <Link href="/cart" className="relative flex flex-col items-center rounded-lg px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-100" aria-label={`Bag, ${cartCount} items`}>
+            <Link href="/cart" className="relative flex flex-col items-center rounded-xl border-2 border-black bg-accent-400 px-3 py-1 text-[11px] font-extrabold shadow-brutal-sm transition hover:-translate-y-px hover:shadow-brutal" aria-label={`Bag, ${cartCount} items`}>
               <Icon name="cart" className="h-5 w-5" />
               <span className="hidden sm:block">Bag</span>
               {cartCount > 0 && (
-                <span className="absolute right-1 top-0 min-w-[18px] rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-[18px] text-white">{cartCount}</span>
+                <span className="absolute -right-2 -top-2 min-w-[20px] rounded-full border-2 border-black bg-hot-500 px-1 text-center text-[10px] font-extrabold leading-4 text-white">{cartCount}</span>
               )}
             </Link>
           </div>
@@ -300,27 +301,27 @@ export function Header({ categories }: { categories: Category[] }) {
       </div>
 
       {/* Category strip */}
-      <nav className="border-t border-gray-100 bg-white text-gray-800" aria-label="Categories">
-        <div className="container flex h-11 items-center gap-1 overflow-x-auto text-sm font-semibold scrollbar-none lg:overflow-visible">
-          <button onClick={() => setMenuOpen(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-bold hover:bg-gray-100">
+      <nav className="border-t-2 border-black bg-brand-500 text-white" aria-label="Categories">
+        <div className="container flex h-11 items-center gap-1 overflow-x-auto text-sm font-bold scrollbar-none lg:overflow-visible">
+          <button onClick={() => setMenuOpen(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-extrabold hover:bg-white/15">
             <Icon name="menu" className="h-4 w-4" /> All
           </button>
           {categories.map((cat) => (
             <div key={cat.id} className="group relative shrink-0">
-              <Link href={`/c/${cat.slug}`} className="flex items-center gap-0.5 border-b-2 border-transparent px-2.5 py-2.5 hover:border-brand-600 hover:text-brand-600">
+              <Link href={`/c/${cat.slug}`} className="flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 hover:bg-white hover:text-black">
                 {cat.name}
                 {cat.children.length > 0 && <Icon name="chevronDown" className="hidden h-3.5 w-3.5 opacity-70 lg:block" />}
               </Link>
               {cat.children.length > 0 && (
                 <div className="invisible absolute left-0 top-full z-50 hidden pt-1 opacity-0 transition group-hover:visible group-hover:opacity-100 lg:block">
-                  <div className="w-64 rounded-xl border border-gray-100 bg-white p-2 text-gray-800 shadow-lift">
+                  <div className="w-64 rounded-2xl border-2 border-black bg-white p-2 text-black shadow-brutal">
                     <p className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wider text-gray-500">{cat.name}</p>
                     {cat.children.map((sub) => (
-                      <Link key={sub.id} href={`/c/${sub.slug}`} className="flex items-center justify-between rounded px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700">
+                      <Link key={sub.id} href={`/c/${sub.slug}`} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold hover:bg-accent-100">
                         {sub.name} <Icon name="chevronRight" className="h-4 w-4 opacity-40" />
                       </Link>
                     ))}
-                    <Link href={`/c/${cat.slug}`} className="mt-1 block rounded border-t px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+                    <Link href={`/c/${cat.slug}`} className="mt-1 block rounded-lg border-t-2 border-black px-3 py-2 text-sm font-extrabold text-brand-600 hover:bg-brand-50">
                       View all {cat.name}
                     </Link>
                   </div>
@@ -328,13 +329,13 @@ export function Header({ categories }: { categories: Category[] }) {
               )}
             </div>
           ))}
-          <Link href="/search?sort=discount" className="shrink-0 rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-600 hover:bg-brand-100">
-            Deals
+          <Link href="/search?sort=discount" className="sticker shrink-0 rotate-[-2deg] bg-accent-400 text-black">
+            Loot Deals 🔥
           </Link>
-          <Link href="/search?sort=newest" className="shrink-0 border-b-2 border-transparent px-2.5 py-2.5 hover:border-brand-600 hover:text-brand-600">
-            New Arrivals
+          <Link href="/search?sort=newest" className="shrink-0 rounded-lg px-2.5 py-1.5 hover:bg-white hover:text-black">
+            Fresh Drops ✨
           </Link>
-          <Link href="/track" className="ml-auto hidden shrink-0 items-center gap-1 px-2 py-2.5 text-gray-600 hover:text-brand-600 lg:flex">
+          <Link href="/track" className="ml-auto hidden shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 hover:bg-white hover:text-black lg:flex">
             <Icon name="truck" className="h-4 w-4" /> Track Order
           </Link>
         </div>
@@ -344,10 +345,10 @@ export function Header({ categories }: { categories: Category[] }) {
       {menuOpen && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMenuOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto bg-white">
-            <div className="flex items-center gap-3 bg-gradient-to-r from-brand-700 to-brand-500 px-5 py-4 text-white">
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto border-r-2 border-black bg-white">
+            <div className="flex items-center gap-3 border-b-2 border-black bg-brand-500 px-5 py-4 text-white">
               <Icon name="user" className="h-7 w-7 rounded-full bg-white/15 p-1" />
-              <span className="text-lg font-bold">{user ? `Hi, ${user.name.split(' ')[0]}` : <Link href="/login">Log in / Sign up</Link>}</span>
+              <span className="text-lg font-bold">{user ? `Hey ${user.name.split(' ')[0]} 👋` : <Link href="/login">Log in / Sign up</Link>}</span>
               <button aria-label="Close menu" onClick={() => setMenuOpen(false)} className="ml-auto">
                 <Icon name="x" />
               </button>

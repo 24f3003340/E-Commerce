@@ -167,7 +167,7 @@ async function main() {
   // Category images
   for (const root of CATEGORY_TREE) {
     const shape = { men: 'tshirt', women: 'dress', kids: 'tshirt', footwear: 'shoe', accessories: 'bag' }[root.slug] ?? 'tshirt';
-    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#d81b67'));
+    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#7c3aed'));
     await prisma.category.update({ where: { slug: root.slug }, data: { imageUrl: url } });
   }
 
@@ -281,9 +281,9 @@ async function main() {
 
   // Banners
   const bannerImages = [
-    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#1a0b18', '#b01354', ['tshirt', 'dress', 'shoe'], ['#ffffff', '#ff93c0', '#f4f4f5'])),
-    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#2a0a1f', '#d81b67', ['kurta', 'dress', 'sandal'], ['#fde68a', '#ffffff', '#ffc2dd'])),
-    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#0b0b0e', '#7a1040', ['bag', 'shirt', 'watch'], ['#ffc2dd', '#ffffff', '#f4f4f5'])),
+    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#5b21b6', '#ff2e93', ['tshirt', 'dress', 'shoe'], ['#d4ff3f', '#ffffff', '#4cc3ff'])),
+    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#ff2e93', '#ff8a00', ['kurta', 'dress', 'sandal'], ['#d4ff3f', '#ffffff', '#5b21b6'])),
+    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#2e1065', '#7c3aed', ['bag', 'shirt', 'watch'], ['#d4ff3f', '#ffffff', '#ff5cad'])),
   ];
   if ((await prisma.banner.count()) === 0) {
     await prisma.banner.createMany({
