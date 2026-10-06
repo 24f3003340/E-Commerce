@@ -86,6 +86,12 @@ export class CatalogController {
     return this.products.list(query);
   }
 
+  /** Every live product slug — used by the website's sitemap.xml */
+  @Get('products/sitemap')
+  sitemap() {
+    return this.products.sitemap();
+  }
+
   @Get('products/suggest')
   suggest(@Query('q') q = '') {
     return this.products.suggestions(String(q).slice(0, 100));

@@ -4,6 +4,7 @@ import { RecentlyViewed } from '@/components/RecentlyViewed';
 import { Breadcrumbs, Stars } from '@/components/ui';
 import { formatDate } from '@/lib/format';
 import { serverGet } from '@/lib/server';
+import { SITE_URL } from '@/lib/site';
 import type { ProductDetail } from '@/lib/types';
 import { ProductPurchase } from './ProductPurchase';
 
@@ -13,7 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: product.name,
     description: product.description.slice(0, 160),
-    openGraph: { images: product.images[0] ? [product.images[0].url] : [] },
+    alternates: { canonical: `/p/${product.slug}` },
+    openGraph: { title: product.name, description: product.description.slice(0, 160), images: product.images[0] ? [product.images[0].url] : [] },
   };
 }
 
@@ -21,9 +23,32 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const product = await serverGet<ProductDetail>(`/products/${slug}`);
   const total = Object.values(product.ratingBreakdown).reduce((a, b) => a + b, 0);
+  // Google "Product" rich result: price, availability and rating in search results
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.images.slice(0, 4).map((i) => i.url),
+    sku: product.variants[0]?.sku,
+    brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'INR',
+      lowPrice: (Math.min(...product.variants.map((v) => v.price)) / 100).toFixed(2),
+      highPrice: (Math.max(...product.variants.map((v) => v.price)) / 100).toFixed(2),
+      offerCount: product.variants.length,
+      availability: product.variants.some((v) => v.inStock) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}/p/${product.slug}`,
+    },
+    aggregateRating: product.ratingCount
+      ? { '@type': 'AggregateRating', ratingValue: product.ratingAvg, reviewCount: product.ratingCount }
+      : undefined,
+  };
 
   return (
     <div className="container space-y-4 py-4 pb-24 lg:pb-4">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <Breadcrumbs items={[...product.breadcrumbs.map((b) => ({ label: b.name, href: `/c/${b.slug}` })), { label: product.name }]} />
       <ProductPurchase product={product} />
 

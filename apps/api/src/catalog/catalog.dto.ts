@@ -272,6 +272,10 @@ export class ProductDto {
   videoUrl?: string;
 
   @IsOptional()
+  @Matches(/^\d{4,8}$/, { message: 'HSN code must be 4–8 digits' })
+  hsnCode?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   @ArrayMaxSize(30)

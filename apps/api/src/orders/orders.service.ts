@@ -21,6 +21,7 @@ import { CartService, cartItemIssue, toPricedLines, variantImage, variantLabel }
 import { ProductsService } from '../catalog/products.service';
 import { CacheService } from '../common/cache.service';
 import { config } from '../common/config';
+import { EmailService, escapeHtml } from '../common/email.service';
 import { SettingsService } from '../common/settings.service';
 import { nextSequenceNumber, paginate, paginated } from '../common/utils';
 import { shippingFee, subtotalOf } from '../coupons/coupon-math';
@@ -67,6 +68,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     private readonly gateway: RazorpayGateway,
     private readonly notifications: NotificationsService,
     private readonly cache: CacheService,
+    private readonly email: EmailService,
   ) {}
 
   onModuleInit() {
@@ -212,7 +214,15 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     );
     await this.cache.delByPrefix('catalog:');
 
-    await this.notify(order.userId, 'ORDER_PLACED', 'Order placed', `Your order ${order.orderNumber} has been placed.`, order.orderNumber);
+    await this.notifications.notify(
+      order.userId,
+      'ORDER_PLACED',
+      'Order placed',
+      `Thanks for shopping with us! Your order ${order.orderNumber} has been placed.`,
+      { orderNumber: order.orderNumber },
+      await this.orderSummaryHtml(order.id),
+    );
+    if (order.paymentMethod === PaymentMethod.COD) void this.alertStore(order.id);
 
     if (order.paymentMethod === PaymentMethod.ONLINE) {
       const payment = await this.createGatewayPayment(order.id);
@@ -284,6 +294,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
 
     if (result.changed) {
       await this.notify(result.order.userId, 'PAYMENT_SUCCESS', 'Payment successful', `We received your payment for order ${result.order.orderNumber}.`, result.order.orderNumber);
+      void this.alertStore(result.order.id);
     }
     if (result.lateRefund) await this.processPendingRefunds(result.order.id);
     return result.order;
@@ -581,9 +592,12 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
   }
 
   async findForInvoice(where: Prisma.OrderWhereUniqueInput) {
-    const order = await this.prisma.order.findUnique({ where, include: { items: true } });
+    const order = await this.prisma.order.findUnique({
+      where,
+      include: { items: { include: { variant: { select: { product: { select: { hsnCode: true } } } } } } },
+    });
     if (!order) throw new NotFoundException('Order not found');
-    return order;
+    return { ...order, items: order.items.map((i) => ({ ...i, hsn: i.variant.product.hsnCode })) };
   }
 
   private withCustomerFlags<T extends { status: OrderStatus; deliveredAt: Date | null }>(order: T) {
@@ -592,6 +606,38 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
       canCancel: CUSTOMER_CANCELLABLE.includes(order.status),
       canReturn: order.status === OrderStatus.DELIVERED,
     };
+  }
+
+  /** Items + totals table used in the order confirmation email. */
+  private async orderSummaryHtml(orderId: string) {
+    const o = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { items: true } });
+    const rupee = (p: number) => `₹${(p / 100).toLocaleString('en-IN', { minimumFractionDigits: p % 100 ? 2 : 0 })}`;
+    const a = o.shippingAddress as Record<string, string>;
+    const rows = o.items
+      .map((i) => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee">${escapeHtml(i.productName)}<br><span style="color:#777;font-size:12px">${escapeHtml(i.variantLabel)} × ${i.quantity}</span></td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${rupee(i.total)}</td></tr>`)
+      .join('');
+    const line = (label: string, value: string, bold = false) =>
+      `<tr><td style="padding:4px 0;${bold ? 'font-weight:bold' : ''}">${label}</td><td style="padding:4px 0;text-align:right;${bold ? 'font-weight:bold' : ''}">${value}</td></tr>`;
+    return `<table role="presentation" width="100%" style="border-collapse:collapse;font-size:14px;margin-top:12px">${rows}
+${line('Subtotal', rupee(o.subtotal))}${o.discount ? line(`Discount${o.couponCode ? ` (${escapeHtml(o.couponCode)})` : ''}`, `-${rupee(o.discount)}`) : ''}
+${line('Shipping', o.shippingFee ? rupee(o.shippingFee) : 'FREE')}${o.codFee ? line('COD fee', rupee(o.codFee)) : ''}${line('Total', rupee(o.total), true)}</table>
+<p style="margin-top:16px;font-size:13px;color:#555"><b>Delivering to:</b> ${escapeHtml(a.name)}, ${escapeHtml(a.line1)}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} – ${escapeHtml(a.pincode)}<br><b>Payment:</b> ${o.paymentMethod === PaymentMethod.COD ? 'Cash on delivery' : 'Paid online'}</p>`;
+  }
+
+  /** Emails the store team when an order is confirmed (COD placed or online payment received). */
+  private async alertStore(orderId: string) {
+    try {
+      const settings = await this.settings.get();
+      if (!settings.orderAlertEmail) return;
+      const o = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { user: { select: { name: true } } } });
+      const html = await this.email.layout(
+        `New order ${o.orderNumber}`,
+        `<p>${escapeHtml(o.user.name)} placed an order (${o.paymentMethod === PaymentMethod.COD ? 'COD' : 'paid online'}).</p>${await this.orderSummaryHtml(orderId)}`,
+      );
+      await this.email.send(settings.orderAlertEmail, `🛍 New order ${o.orderNumber} — ₹${(o.total / 100).toFixed(2)}`, html, `New order ${o.orderNumber}`);
+    } catch (err) {
+      this.logger.warn(`Store alert failed for ${orderId}: ${(err as Error).message}`);
+    }
   }
 
   private async notify(userId: string, type: NotificationType, title: string, body: string, orderNumber: string) {

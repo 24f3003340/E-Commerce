@@ -4,7 +4,7 @@ import { AdminPrincipal, UserPrincipal } from '../common/auth.types';
 import { CurrentAdmin, CurrentUser } from '../common/decorators';
 import { AdminAuthGuard, UserAuthGuard } from '../common/guards';
 import { PrismaService } from '../prisma/prisma.service';
-import { AdminLoginDto, ChangePasswordDto, LoginDto, OtpDto, RefreshDto, RegisterDto } from './auth.dto';
+import { AdminLoginDto, ChangePasswordDto, ForgotPasswordDto, LoginDto, OtpDto, RefreshDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { AuthService, publicUser } from './auth.service';
 
 const AUTH_THROTTLE = { default: { limit: 10, ttl: 60_000 } };
@@ -33,6 +33,20 @@ export class AuthController {
   @Post('refresh')
   refresh(@Body() dto: RefreshDto) {
     return this.auth.refreshUser(dto.refreshToken);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(200)
+  @Post('forgot-password')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.auth.forgotPassword(dto.email);
+  }
+
+  @Throttle(AUTH_THROTTLE)
+  @HttpCode(200)
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.token, dto.password);
   }
 
   @HttpCode(200)

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { config } from '../common/config';
+import { EmailService, escapeHtml } from '../common/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type NotificationType =
@@ -29,7 +30,10 @@ export type NotificationType =
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly email: EmailService,
+  ) {}
 
   async notify(
     userId: string,
@@ -37,6 +41,8 @@ export class NotificationsService {
     title: string,
     body: string,
     data?: Record<string, unknown>,
+    /** Extra pre-escaped HTML for the email (e.g. an order summary table) */
+    emailHtml?: string,
   ) {
     const channels = ['in_app', 'email', 'push'];
     try {
@@ -44,30 +50,18 @@ export class NotificationsService {
         data: { userId, type, title, body, channels, data: data as Prisma.InputJsonValue },
       });
       const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
-      if (user) void this.sendEmail(user.email, title, `Hi ${user.name},\n\n${body}`);
+      if (user) {
+        const orderNumber = typeof data?.orderNumber === 'string' ? data.orderNumber : undefined;
+        const html = await this.email.layout(
+          title,
+          `<p>Hi ${escapeHtml(user.name)},</p><p>${escapeHtml(body)}</p>${emailHtml ?? ''}`,
+          orderNumber ? { label: 'View your order', url: `${config.storefrontUrl}/account/orders/${orderNumber}` } : undefined,
+        );
+        void this.email.send(user.email, title, html, `Hi ${user.name},\n\n${body}`);
+      }
       this.sendPush(userId, title, body);
     } catch (err) {
       this.logger.warn(`Failed to create notification ${type} for ${userId}: ${(err as Error).message}`);
-    }
-  }
-
-  private async sendEmail(to: string, subject: string, text: string) {
-    if (!config.email.resendApiKey) {
-      this.logger.log(`[email:dev] to=${to} subject="${subject}"`);
-      return;
-    }
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.email.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ from: config.email.from, to, subject, text }),
-      });
-      if (!res.ok) this.logger.warn(`Resend responded ${res.status}`);
-    } catch (err) {
-      this.logger.warn(`Email send failed: ${(err as Error).message}`);
     }
   }
 

@@ -46,6 +46,23 @@ export class OtpDto {
   otp: string;
 }
 
+export class ForgotPasswordDto {
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @Length(20, 200)
+  token: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(72)
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d).+$/, { message: 'password must contain letters and numbers' })
+  password: string;
+}
+
 export class ChangePasswordDto {
   @IsString()
   currentPassword: string;

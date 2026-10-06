@@ -36,8 +36,22 @@ model User {
   notifications Notification[]
   couponUsages  CouponUsage[]
   refreshTokens RefreshToken[]
+  resetTokens   PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 enum AdminRole {
@@ -146,6 +160,8 @@ model Product {
   // Size chart rows, e.g. [{ "size": "M", "chest": "40", "length": "28" }]
   sizeChart      Json?
   videoUrl       String?
+  // GST HSN code for invoices (falls back to the store default)
+  hsnCode        String?
   tags           String[]
   status         ProductStatus     @default(DRAFT)
   isFeatured     Boolean           @default(false)

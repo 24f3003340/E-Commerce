@@ -69,6 +69,14 @@ class SettingsDto implements Partial<StoreSettings> {
   @IsOptional() @IsArray() @IsString({ each: true }) metroPincodePrefixes?: string[];
   @IsOptional() @IsString() @MaxLength(20) gstin?: string;
   @IsOptional() @IsString() @MaxLength(300) invoiceAddress?: string;
+  @IsOptional() @IsString() @MaxLength(120) legalName?: string;
+  @IsOptional() @IsString() @MaxLength(60) sellerState?: string;
+  @IsOptional() @IsInt() @Min(0) gstRateLow?: number;
+  @IsOptional() @IsInt() @Min(0) gstRateHigh?: number;
+  @IsOptional() @IsInt() @Min(0) gstHighRateAbove?: number;
+  @IsOptional() @IsString() @MaxLength(10) defaultHsn?: string;
+  @IsOptional() @IsString() @MaxLength(120) orderAlertEmail?: string;
+  @IsOptional() @IsString() @MaxLength(20) whatsappNumber?: string;
 }
 
 const bannerData = (dto: BannerDto) => ({
@@ -118,6 +126,10 @@ export class ContentController {
       codEnabled: s.codEnabled,
       codFee: s.codFee,
       defaultReturnWindowDays: s.defaultReturnWindowDays,
+      legalName: s.legalName,
+      address: s.invoiceAddress,
+      gstin: s.gstin,
+      whatsappNumber: s.whatsappNumber,
     };
   }
 }

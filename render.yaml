@@ -51,6 +51,24 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      - key: EMAIL_FROM
+        sync: false
+      # Your website URL, e.g. https://www.yourstore.com (used in emails)
+      - key: STOREFRONT_URL
+        sync: false
+      # Cloudflare R2 / S3 for product images (uploads on Render's disk are lost on redeploy)
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_PUBLIC_URL
+        sync: false
 
   - type: keyvalue
     name: stylekart-cache

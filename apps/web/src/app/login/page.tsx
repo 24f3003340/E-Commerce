@@ -48,9 +48,14 @@ function LoginForm() {
             <input id="email" type="email" required autoComplete="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <label className="label" htmlFor="password">
-              Password
-            </label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700" htmlFor="password">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-xs font-semibold text-brand-700">
+                Forgot password?
+              </Link>
+            </div>
             <input id="password" type="password" required autoComplete="current-password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
         </div>

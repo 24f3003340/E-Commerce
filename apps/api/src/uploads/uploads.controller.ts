@@ -1,5 +1,6 @@
 import { BadRequestException, Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { AdminRole } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { promises as fs } from 'fs';
@@ -21,10 +22,22 @@ export function detectImageType(buf: Buffer): 'jpg' | 'png' | 'webp' | undefined
   return undefined;
 }
 
+const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' } as const;
+
+let s3: S3Client | undefined;
+function s3Client() {
+  s3 ??= new S3Client({
+    region: config.storage.region,
+    endpoint: config.storage.endpoint || undefined,
+    credentials: { accessKeyId: config.storage.accessKeyId, secretAccessKey: config.storage.secretAccessKey },
+  });
+  return s3;
+}
+
 /**
- * Stores product / banner images on local disk and serves them from /uploads.
- * For production, replace the write below with an upload to S3-compatible storage
- * (AWS S3, Cloudflare R2, DigitalOcean Spaces) and return the CDN URL.
+ * Stores product / banner images. In production configure S3-compatible storage (Cloudflare R2,
+ * AWS S3, DigitalOcean Spaces) via the S3_* variables so images survive redeploys; otherwise
+ * files go to local disk and are served from /uploads (development only).
  */
 @UseGuards(AdminAuthGuard)
 @AdminRoles(AdminRole.PRODUCT_MANAGER, AdminRole.MARKETING_MANAGER)
@@ -36,8 +49,21 @@ export class UploadsController {
     if (!file) throw new BadRequestException('No file uploaded');
     const ext = detectImageType(file.buffer);
     if (!ext) throw new BadRequestException('Only JPG, PNG and WEBP images are allowed');
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
     const name = `${Date.now()}-${randomBytes(8).toString('hex')}.${ext}`;
+    if (config.storage.enabled) {
+      const key = `uploads/${name}`;
+      await s3Client().send(
+        new PutObjectCommand({
+          Bucket: config.storage.bucket,
+          Key: key,
+          Body: file.buffer,
+          ContentType: MIME[ext],
+          CacheControl: 'public, max-age=31536000, immutable',
+        }),
+      );
+      return { url: `${config.storage.publicUrl}/${key}` };
+    }
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
     await fs.writeFile(join(UPLOAD_DIR, name), file.buffer);
     return { url: `${config.publicApiUrl}/uploads/${name}` };
   }

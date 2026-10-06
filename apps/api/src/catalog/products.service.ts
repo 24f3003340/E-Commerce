@@ -194,6 +194,17 @@ export class ProductsService {
     };
   }
 
+  sitemap() {
+    return this.cache.wrap('catalog:sitemap', 600, () =>
+      this.prisma.product.findMany({
+        where: { status: ProductStatus.ACTIVE },
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 50000,
+      }),
+    );
+  }
+
   async suggestions(q: string) {
     const term = q.trim();
     if (term.length < 2) return { products: [], categories: [] };
@@ -534,6 +545,7 @@ export class ProductsService {
       specifications: (dto.specifications ?? Prisma.JsonNull) as Prisma.InputJsonValue,
       sizeChart: (dto.sizeChart ?? Prisma.JsonNull) as Prisma.InputJsonValue,
       videoUrl: dto.videoUrl || null,
+      hsnCode: dto.hsnCode || null,
       tags: (dto.tags ?? []).map((t) => t.toLowerCase().trim()).filter(Boolean),
       status: dto.status ?? ProductStatus.DRAFT,
       isFeatured: dto.isFeatured ?? false,

@@ -22,6 +22,8 @@ full e-commerce platform. Ek central backend API teeno clients ko serve karta ha
 Full technical blueprint (architecture, database, API list, flows, security, roadmap):
 **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**
 
+**Going live?** Follow the step-by-step launch checklist: **[docs/LAUNCH.md](docs/LAUNCH.md)**
+
 ## Quick start (local)
 
 Requirements: Node.js 20+, Docker (or a local PostgreSQL 16 + Redis 7).

@@ -20,9 +20,17 @@ interface Settings {
   metroPincodePrefixes: string[];
   gstin: string;
   invoiceAddress: string;
+  legalName: string;
+  sellerState: string;
+  gstRateLow: number;
+  gstRateHigh: number;
+  gstHighRateAbove: number;
+  defaultHsn: string;
+  orderAlertEmail: string;
+  whatsappNumber: string;
 }
 
-const MONEY: (keyof Settings)[] = ['freeShippingThreshold', 'standardShippingFee', 'expressShippingFee', 'codFee', 'codMaxOrderValue'];
+const MONEY: (keyof Settings)[] = ['freeShippingThreshold', 'standardShippingFee', 'expressShippingFee', 'codFee', 'codMaxOrderValue', 'gstHighRateAbove'];
 
 function TwoFactor() {
   const { admin, toast } = useAdmin();
@@ -99,7 +107,17 @@ export default function SettingsPage() {
         <Field label="GSTIN"><input className="input" value={s.gstin} onChange={text('gstin')} /></Field>
         <Field label="Support email"><input className="input" type="email" value={s.supportEmail} onChange={text('supportEmail')} /></Field>
         <Field label="Support phone"><input className="input" value={s.supportPhone} onChange={text('supportPhone')} /></Field>
-        <div className="md:col-span-2"><Field label="Invoice address"><input className="input" value={s.invoiceAddress} onChange={text('invoiceAddress')} /></Field></div>
+        <Field label="Registered business name (legal name)"><input className="input" value={s.legalName} onChange={text('legalName')} /></Field>
+        <Field label="WhatsApp support number" hint="With country code, digits only — e.g. 919876543210. Shows a chat button on the website."><input className="input" value={s.whatsappNumber} onChange={text('whatsappNumber')} /></Field>
+        <div className="md:col-span-2"><Field label="Registered address (invoices, contact page)"><input className="input" value={s.invoiceAddress} onChange={text('invoiceAddress')} /></Field></div>
+        <Field label="New order alert email" hint="Every confirmed order is emailed here (leave empty to turn off)"><input className="input" type="email" value={s.orderAlertEmail} onChange={text('orderAlertEmail')} /></Field>
+
+        <h2 className="pt-2 font-bold md:col-span-2">GST (invoices)</h2>
+        <Field label="Seller state" hint="Same-state orders get CGST + SGST, others IGST"><input className="input" value={s.sellerState} onChange={text('sellerState')} /></Field>
+        <Field label="Default HSN code" hint="Used when a product has no HSN code"><input className="input" value={s.defaultHsn} onChange={text('defaultHsn')} /></Field>
+        <Field label="GST % (lower slab)"><input className="input" type="number" min={0} max={40} value={s.gstRateLow} onChange={num('gstRateLow')} /></Field>
+        <Field label="GST % (higher slab)"><input className="input" type="number" min={0} max={40} value={s.gstRateHigh} onChange={num('gstRateHigh')} /></Field>
+        <Field label="Higher slab applies above (₹ per item)" hint="Confirm current apparel GST slabs with your CA"><input className="input" type="number" min={0} value={s.gstHighRateAbove} onChange={num('gstHighRateAbove')} /></Field>
 
         <h2 className="pt-2 font-bold md:col-span-2">Shipping & COD (₹)</h2>
         <Field label="Free shipping above"><input className="input" type="number" min={0} value={s.freeShippingThreshold} onChange={num('freeShippingThreshold')} /></Field>

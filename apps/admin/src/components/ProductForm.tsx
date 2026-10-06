@@ -40,6 +40,7 @@ export interface ProductRecord {
   specifications: Record<string, string> | null;
   sizeChart: Record<string, string>[] | null;
   videoUrl: string | null;
+  hsnCode: string | null;
   tags: string[];
   status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
   isFeatured: boolean;
@@ -63,6 +64,7 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
     brand: product?.brand ?? '',
     material: product?.material ?? '',
     videoUrl: product?.videoUrl ?? '',
+    hsnCode: product?.hsnCode ?? '',
     tags: product?.tags.join(', ') ?? '',
     status: product?.status ?? 'DRAFT',
     isFeatured: product?.isFeatured ?? false,
@@ -162,6 +164,7 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
       brand: form.brand || undefined,
       material: form.material || undefined,
       videoUrl: form.videoUrl || undefined,
+      hsnCode: form.hsnCode || undefined,
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       status: form.status,
       isFeatured: form.isFeatured,
@@ -240,6 +243,7 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
             </select>
           </Field>
           <Field label="URL slug" hint="Leave empty to generate from the name"><input className="input" value={form.slug} onChange={set('slug')} /></Field>
+          <Field label="HSN code (GST)" hint="e.g. 6109 for T-shirts. Empty = store default"><input className="input" inputMode="numeric" value={form.hsnCode} onChange={set('hsnCode')} /></Field>
           {product && product.status === 'ACTIVE' && <a href={`${STORE_URL}/p/${product.slug}`} target="_blank" rel="noreferrer" className="block text-sm font-semibold text-brand-700">View in store ↗</a>}
         </section>
       </div>

@@ -14,7 +14,15 @@ export class CacheService implements OnModuleDestroy {
 
   constructor() {
     if (config.redisUrl) {
-      this.redis = new Redis(config.redisUrl, { lazyConnect: false, maxRetriesPerRequest: 1 });
+      // Fail fast when Redis is unreachable so requests fall back to the database instead of
+      // queueing behind a dead connection.
+      this.redis = new Redis(config.redisUrl, {
+        lazyConnect: false,
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+        commandTimeout: 500,
+        retryStrategy: (times) => Math.min(times * 500, 10_000),
+      });
       this.redis.on('error', (err) => this.logger.warn(`Redis error: ${err.message}`));
     }
   }

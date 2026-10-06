@@ -5,6 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { createHash, randomBytes } from 'crypto';
+import { config } from '../common/config';
+import { EmailService, escapeHtml } from '../common/email.service';
 import { generateTotpSecret, otpauthUrl, verifyTotp } from '../common/totp';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminLoginDto, ChangePasswordDto, LoginDto, RegisterDto } from './auth.dto';
@@ -26,6 +29,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokens: TokensService,
+    private readonly email: EmailService,
   ) {}
 
   // ───────────── Customers ─────────────
@@ -73,6 +77,51 @@ export class AuthService {
       data: { passwordHash: await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS) },
     });
     await this.tokens.revokeAll({ userId });
+    return { ok: true };
+  }
+
+  /**
+   * Emails a single-use reset link valid for 30 minutes. Always succeeds from the caller's point
+   * of view so the endpoint cannot be used to discover which emails have accounts.
+   */
+  async forgotPassword(emailAddress: string) {
+    const user = await this.prisma.user.findUnique({ where: { email: emailAddress.toLowerCase().trim() } });
+    if (user?.isActive) {
+      const token = randomBytes(32).toString('base64url');
+      await this.prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: createHash('sha256').update(token).digest('hex'),
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        },
+      });
+      const url = `${config.storefrontUrl}/reset-password?token=${token}`;
+      const html = await this.email.layout(
+        'Reset your password',
+        `<p>Hi ${escapeHtml(user.name)},</p><p>We received a request to reset your password. This link is valid for 30 minutes and can be used once.</p><p>If you did not ask for this, you can ignore this email — your password will not change.</p>`,
+        { label: 'Set a new password', url },
+      );
+      await this.email.send(user.email, 'Reset your password', html, `Reset your password: ${url} (valid for 30 minutes)`);
+    }
+    return { ok: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const record = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new BadRequestException('This reset link is invalid or has expired. Please request a new one.');
+    }
+    const claimed = await this.prisma.passwordResetToken.updateMany({
+      where: { id: record.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count === 0) throw new BadRequestException('This reset link has already been used.');
+    await this.prisma.user.update({
+      where: { id: record.userId },
+      data: { passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) },
+    });
+    await this.tokens.revokeAll({ userId: record.userId });
     return { ok: true };
   }
 

@@ -244,29 +244,31 @@ async function main() {
   });
   console.log(`✓ super admin ${email}`);
 
-  // Demo customer
-  await prisma.user.upsert({
-    where: { email: 'customer@example.com' },
-    create: {
-      name: 'Demo Customer',
-      email: 'customer@example.com',
-      phone: '9876543210',
-      passwordHash: await bcrypt.hash('Customer@123', 12),
-      addresses: {
-        create: {
-          name: 'Demo Customer',
-          phone: '9876543210',
-          line1: '221B, MG Road',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          pincode: '560001',
-          isDefault: true,
+  // Demo customer — never created in production, its password is public in the README
+  if (process.env.NODE_ENV !== 'production' || process.env.SEED_DEMO_CUSTOMER === 'true') {
+    await prisma.user.upsert({
+      where: { email: 'customer@example.com' },
+      create: {
+        name: 'Demo Customer',
+        email: 'customer@example.com',
+        phone: '9876543210',
+        passwordHash: await bcrypt.hash('Customer@123', 12),
+        addresses: {
+          create: {
+            name: 'Demo Customer',
+            phone: '9876543210',
+            line1: '221B, MG Road',
+            city: 'Bengaluru',
+            state: 'Karnataka',
+            pincode: '560001',
+            isDefault: true,
+          },
         },
       },
-    },
-    update: {},
-  });
-  console.log('✓ demo customer customer@example.com / Customer@123');
+      update: {},
+    });
+    console.log('✓ demo customer customer@example.com / Customer@123');
+  }
 
   // Coupons
   const coupons = [

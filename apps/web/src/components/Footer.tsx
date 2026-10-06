@@ -68,12 +68,25 @@ export function Footer({ categories }: { categories: Category[] }) {
             </ul>
           </div>
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Policies</p>
-            <ul className="space-y-2.5 text-sm text-gray-400">
-              <li>7-day return policy</li>
-              <li>Free shipping over ₹999</li>
-              <li>Cash on delivery available</li>
-              <li>Secure checkout</li>
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Company &amp; Policies</p>
+            <ul className="space-y-2.5 text-sm">
+              {(
+                [
+                  ['/about', 'About us'],
+                  ['/contact', 'Contact us'],
+                  ['/faq', 'FAQs'],
+                  ['/shipping-policy', 'Shipping policy'],
+                  ['/return-policy', 'Returns & refunds'],
+                  ['/terms', 'Terms of use'],
+                  ['/privacy', 'Privacy policy'],
+                ] as const
+              ).map(([href, label]) => (
+                <li key={href}>
+                  <Link href={href} className="hover:text-white hover:underline">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

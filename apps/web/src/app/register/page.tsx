@@ -66,6 +66,17 @@ function RegisterForm() {
         <button className="btn-primary mt-6 w-full" disabled={busy}>
           {busy ? 'Creating account…' : 'Create account'}
         </button>
+        <p className="mt-3 text-center text-[11px] text-gray-500">
+          By creating an account you agree to our{' '}
+          <Link href="/terms" className="underline">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="underline">
+            Privacy policy
+          </Link>
+          .
+        </p>
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link href="/login" className="font-semibold text-brand-700">

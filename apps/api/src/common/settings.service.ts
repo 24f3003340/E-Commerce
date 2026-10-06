@@ -21,6 +21,21 @@ export interface StoreSettings {
   metroPincodePrefixes: string[];
   gstin: string;
   invoiceAddress: string;
+  /** Registered business name shown on invoices and policy pages */
+  legalName: string;
+  /** State the goods ship from — decides CGST+SGST (same state) vs IGST */
+  sellerState: string;
+  /** GST % for items priced at or below `gstHighRateAbove` (per unit, paise) */
+  gstRateLow: number;
+  /** GST % for items priced above `gstHighRateAbove` */
+  gstRateHigh: number;
+  gstHighRateAbove: number;
+  /** HSN code used when a product has none */
+  defaultHsn: string;
+  /** New-order alerts are emailed here (empty = off) */
+  orderAlertEmail: string;
+  /** WhatsApp support number with country code, e.g. 919876543210 */
+  whatsappNumber: string;
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -38,6 +53,15 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   metroPincodePrefixes: ['11', '40', '56', '60', '50', '70', '41', '38'],
   gstin: '',
   invoiceAddress: 'Registered office address',
+  legalName: 'StyleKart Retail',
+  sellerState: 'Karnataka',
+  // Apparel GST slabs change from time to time — confirm the current rates with your CA.
+  gstRateLow: 5,
+  gstRateHigh: 18,
+  gstHighRateAbove: 250000,
+  defaultHsn: '6109',
+  orderAlertEmail: '',
+  whatsappNumber: '',
 };
 
 const CACHE_KEY = 'settings:store';

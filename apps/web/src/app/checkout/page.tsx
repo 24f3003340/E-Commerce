@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { AddressForm } from '@/components/AddressForm';
@@ -265,6 +266,21 @@ export default function CheckoutPage() {
             {placing ? 'Placing order…' : paymentMethod === 'COD' ? 'Place order' : `Pay ${inr(s.total)}`}
           </button>
           <p className="text-center text-xs text-gray-500">🔒 Payments are processed securely</p>
+          <p className="text-center text-[11px] leading-4 text-gray-500">
+            By placing this order you agree to our{' '}
+            <Link href="/terms" className="underline">
+              Terms
+            </Link>
+            ,{' '}
+            <Link href="/return-policy" className="underline">
+              Return policy
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="underline">
+              Privacy policy
+            </Link>
+            .
+          </p>
         </aside>
       </div>
       {dialog}
