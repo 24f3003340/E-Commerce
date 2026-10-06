@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="600" height="800">
+<rect width="300" height="400" fill="#f3f4f6"/>
+<g transform="translate(0,50) ">
+<path d="M90 50 L130 30 Q150 45 170 30 L210 50 L225 120 L205 125 L205 230 L95 230 L95 125 L75 120 Z" fill="#d6c7a1" stroke="#ae9f79" stroke-width="4" stroke-linejoin="round" fill-rule="evenodd"/>
+</g>
+<text x="150" y="375" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#6b7280">Aura · Beige</text>
+</svg>

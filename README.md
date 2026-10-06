@@ -66,6 +66,44 @@ Without Razorpay keys the API runs a **mock gateway**: checkout shows a test dia
 `POST /payments/razorpay/webhook` with events `payment.captured`, `payment.failed`, `order.paid`,
 and enable auto-capture.
 
+## Deploy (Render + Vercel, free tiers)
+
+The backend, database and Redis go on **Render** (one Blueprint), the website and admin panel
+on **Vercel** (two projects from the same repo).
+
+### 1. Backend on Render
+
+1. Sign in to [render.com](https://render.com) with GitHub → **New → Blueprint** → pick this
+   repository and branch. Render reads [`render.yaml`](render.yaml) and creates
+   `stylekart-api` (Node web service), `stylekart-db` (PostgreSQL) and `stylekart-cache` (Redis).
+2. Click **Apply**. The first deploy installs, builds, runs migrations and seeds the demo catalog.
+3. Copy the API URL, e.g. `https://stylekart-api.onrender.com`, and open `/health` on it.
+4. Admin password: Render → `stylekart-api` → **Environment** → `SEED_ADMIN_PASSWORD`
+   (generated). Email is `admin@example.com`.
+
+### 2. Website and admin panel on Vercel
+
+Create **two** projects at [vercel.com/new](https://vercel.com/new), both importing this repo:
+
+| Project | Root Directory | Environment variables |
+|---|---|---|
+| `stylekart-web` | `apps/web` | `NEXT_PUBLIC_API_URL` = Render API URL, `API_URL` = Render API URL |
+| `stylekart-admin` | `apps/admin` | `NEXT_PUBLIC_API_URL` = Render API URL, `NEXT_PUBLIC_STORE_URL` = website URL |
+
+Framework, install and build commands come from each app's `vercel.json`.
+
+### 3. Notes for the free tiers
+
+- The Render free web service sleeps after ~15 minutes idle; the first request then takes
+  ~30–60 s. Free PostgreSQL databases expire after 30 days — upgrade before real launch.
+- `CORS_ORIGINS` defaults to `https://*.vercel.app`; set your exact domains once you add a
+  custom domain.
+- `ALLOW_MOCK_PAYMENTS=true` keeps the test payment dialog for the demo. For real sales add the
+  `RAZORPAY_*` keys in Render and set `ALLOW_MOCK_PAYMENTS=false`.
+- Admin-uploaded images are stored on the service disk, which is wiped on every redeploy on
+  Render — move uploads to S3 / Cloudflare R2 before adding real products. The demo artwork
+  lives in `apps/api/assets` and is safe.
+
 ## What's included
 
 **Customer website** — home with banners & categories, category tree navigation, listing with

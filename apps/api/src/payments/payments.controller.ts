@@ -163,7 +163,7 @@ export class PaymentsController {
   @HttpCode(200)
   @Post('mock/complete')
   async mockComplete(@CurrentUser() user: UserPrincipal, @Body() dto: MockPaymentDto) {
-    if (!this.gateway.isMock || config.isProduction) throw new ForbiddenException('Mock payments are disabled');
+    if (!this.gateway.isMock || !config.allowMockPayments) throw new ForbiddenException('Mock payments are disabled');
     await this.ownPayment(user.id, dto.providerOrderId);
     if (dto.success === false) {
       await this.orders.markPaymentFailed(dto.providerOrderId, 'Mock payment failed');

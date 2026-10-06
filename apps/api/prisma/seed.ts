@@ -6,8 +6,8 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const prisma = new PrismaClient();
-const API_URL = process.env.PUBLIC_API_URL ?? 'http://localhost:4000';
-const SEED_DIR = join(__dirname, '..', 'uploads', 'seed');
+const API_URL = process.env.PUBLIC_API_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:4000';
+const SEED_DIR = join(__dirname, '..', 'assets', 'seed');
 
 // ───────────── Placeholder artwork (so the demo works fully offline) ─────────────
 
@@ -55,7 +55,7 @@ function bannerSvg(title: string, from: string, to: string) {
 
 function writeAsset(name: string, svg: string) {
   writeFileSync(join(SEED_DIR, name), svg);
-  return `${API_URL}/uploads/seed/${name}`;
+  return `${API_URL}/assets/seed/${name}`;
 }
 
 // ───────────── Catalog definition ─────────────
@@ -216,13 +216,13 @@ async function main() {
   let count = 0;
   for (const def of PRODUCTS) {
     const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const existing = await prisma.product.findUnique({ where: { slug } });
-    if (existing) continue;
-    const prefix = def.brand.replace(/[^A-Z]/gi, '').slice(0, 3).toUpperCase() + String(count + 1).padStart(3, '0');
     const images = def.colors.flatMap((color) => [
       { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-1.svg`, productSvg(def.shape, COLORS[color], `${def.brand} · ${color}`)), alt: `${def.name} ${color}`, color },
       { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-2.svg`, productSvg(def.shape, COLORS[color], `${def.brand} · ${color}`, 1)), alt: `${def.name} ${color} back`, color },
     ]);
+    const existing = await prisma.product.findUnique({ where: { slug } });
+    if (existing) continue;
+    const prefix = def.brand.replace(/[^A-Z]/gi, '').slice(0, 3).toUpperCase() + String(count + 1).padStart(3, '0');
     const parent = await prisma.category.findUnique({ where: { id: catIds.get(def.category)! } });
     const product = await prisma.product.create({
       data: {
@@ -321,12 +321,17 @@ async function main() {
   console.log(`✓ ${coupons.length} coupons`);
 
   // Banners
+  const bannerImages = [
+    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#312e81', '#7c3aed')),
+    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#9a3412', '#db2777')),
+    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#065f46', '#0d9488')),
+  ];
   if ((await prisma.banner.count()) === 0) {
     await prisma.banner.createMany({
       data: [
-        { title: 'New Season Collection', subtitle: 'Fresh styles for every day — up to 50% off', imageUrl: writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#312e81', '#7c3aed')), linkUrl: '/c/men', ctaText: 'Shop Now', position: BannerPosition.HERO, sortOrder: 0 },
-        { title: 'Festive Ethnic Edit', subtitle: 'Kurtas & more for every celebration', imageUrl: writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#9a3412', '#db2777')), linkUrl: '/c/women-kurtas', ctaText: 'Explore', position: BannerPosition.HERO, sortOrder: 1 },
-        { title: 'Flat ₹200 off', subtitle: 'On orders above ₹1,499. Use code FLAT200', imageUrl: writeAsset('banner-3.svg', bannerSvg('FLAT200', '#065f46', '#0d9488')), linkUrl: '/search?sort=discount', ctaText: 'Grab the deal', position: BannerPosition.OFFER, sortOrder: 0 },
+        { title: 'New Season Collection', subtitle: 'Fresh styles for every day — up to 50% off', imageUrl: bannerImages[0], linkUrl: '/c/men', ctaText: 'Shop Now', position: BannerPosition.HERO, sortOrder: 0 },
+        { title: 'Festive Ethnic Edit', subtitle: 'Kurtas & more for every celebration', imageUrl: bannerImages[1], linkUrl: '/c/women-kurtas', ctaText: 'Explore', position: BannerPosition.HERO, sortOrder: 1 },
+        { title: 'Flat ₹200 off', subtitle: 'On orders above ₹1,499. Use code FLAT200', imageUrl: bannerImages[2], linkUrl: '/search?sort=discount', ctaText: 'Grab the deal', position: BannerPosition.OFFER, sortOrder: 0 },
       ],
     });
   }
