@@ -25,8 +25,8 @@ export default function NotificationsPage() {
         {data.items.map((n) => (
           <li key={n.id} className={`p-4 text-sm ${n.readAt ? '' : 'bg-brand-50/50'}`}>
             <p className="font-semibold">{n.title}</p>
-            <p className="text-gray-700">{n.body}</p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="text-ink-700">{n.body}</p>
+            <p className="mt-1 text-xs text-ink-500">
               {formatDate(n.createdAt, true)}
               {n.data?.orderNumber && (
                 <>

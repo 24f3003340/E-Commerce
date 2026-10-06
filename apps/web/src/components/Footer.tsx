@@ -1,95 +1,60 @@
-'use client';
-
 import Link from 'next/link';
 import type { Category } from '@/lib/types';
-import { Icon } from './icons';
 import { Logo } from './Header';
 
 const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
-const PAYMENT_METHODS = ['UPI', 'Visa', 'Mastercard', 'RuPay', 'Net Banking', 'Wallets', 'Cash on Delivery'];
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
-    <footer className="mt-12">
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="block w-full bg-navy-700 py-3.5 text-center text-sm font-medium text-white hover:bg-navy-700/90"
-      >
-        Back to top
-      </button>
-
-      <div className="bg-navy-900 text-gray-300">
-        <div className="container grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <Logo />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
-              India&apos;s fashion destination for men, women and kids. Original products, easy returns and fast delivery across India.
+    <footer className="mt-20 bg-ink-900 text-ink-200">
+      <div className="container py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div>
+            <Logo light />
+            <p className="mt-4 max-w-sm font-display text-2xl font-bold leading-snug text-white">
+              Easy clothes for easy days. <span className="text-brand-400">Made to be lived in.</span>
             </p>
-            <div className="mt-5 grid max-w-sm grid-cols-3 gap-3 text-center text-xs">
-              {(
-                [
-                  ['truck', 'Fast delivery'],
-                  ['returns', 'Easy returns'],
-                  ['shield', 'Secure payments'],
-                ] as const
-              ).map(([icon, label]) => (
-                <div key={label} className="rounded-md bg-white/5 px-2 py-3">
-                  <Icon name={icon} className="mx-auto h-5 w-5 text-accent-400" />
-                  <p className="mt-1.5 text-gray-300">{label}</p>
-                </div>
-              ))}
-            </div>
+            <p className="mt-3 max-w-sm text-sm text-ink-300">Free delivery over ₹999, 7-day returns and cash on delivery — no fuss.</p>
           </div>
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Shop</p>
+            <p className="mb-4 text-sm font-bold text-white">Shop</p>
             <ul className="space-y-2.5 text-sm">
               {categories.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/c/${c.slug}`} className="hover:text-white hover:underline">
+                  <Link href={`/c/${c.slug}`} className="hover:text-white">
                     {c.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/search?sort=discount" className="hover:text-white hover:underline">
-                  Today&apos;s Deals
+                <Link href="/search?sort=discount" className="text-brand-300 hover:text-brand-200">
+                  Sale
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Help</p>
+            <p className="mb-4 text-sm font-bold text-white">Help</p>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/track" className="hover:text-white hover:underline">Track your order</Link></li>
-              <li><Link href="/account/orders" className="hover:text-white hover:underline">Your orders</Link></li>
-              <li><Link href="/account/returns" className="hover:text-white hover:underline">Returns & refunds</Link></li>
-              <li><Link href="/account" className="hover:text-white hover:underline">Your account</Link></li>
-              <li><Link href="/wishlist" className="hover:text-white hover:underline">Wishlist</Link></li>
+              <li><Link href="/track" className="hover:text-white">Track an order</Link></li>
+              <li><Link href="/account/orders" className="hover:text-white">My orders</Link></li>
+              <li><Link href="/account/returns" className="hover:text-white">Returns & refunds</Link></li>
+              <li><Link href="/account" className="hover:text-white">My account</Link></li>
             </ul>
           </div>
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-white">Policies</p>
-            <ul className="space-y-2.5 text-sm text-gray-400">
-              <li>7-day return policy</li>
-              <li>Free shipping over ₹999</li>
-              <li>Cash on delivery available</li>
-              <li>Secure checkout</li>
+            <p className="mb-4 text-sm font-bold text-white">The good stuff</p>
+            <ul className="space-y-2.5 text-sm">
+              <li>Free delivery over ₹999</li>
+              <li>Easy 7-day returns</li>
+              <li>Cash on delivery</li>
+              <li>UPI, cards & net banking</li>
             </ul>
           </div>
         </div>
-
-        <div className="border-t border-white/10">
-          <div className="container flex flex-col items-center justify-between gap-4 py-5 text-xs text-gray-400 md:flex-row">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="mr-1">We accept</span>
-              {PAYMENT_METHODS.map((m) => (
-                <span key={m} className="rounded border border-white/15 bg-white/5 px-2 py-1 font-semibold text-gray-200">
-                  {m}
-                </span>
-              ))}
-            </div>
-            <p>© {new Date().getFullYear()} {STORE_NAME}. All rights reserved.</p>
-          </div>
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs text-ink-300 sm:flex-row sm:items-center">
+          <p>© {new Date().getFullYear()} {STORE_NAME}. Made with ♥ in India.</p>
+          <p>Secure checkout · UPI · Cards · Net banking · Wallets · COD</p>
         </div>
       </div>
     </footer>

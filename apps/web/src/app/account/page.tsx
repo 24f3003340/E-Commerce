@@ -47,7 +47,7 @@ export default function AccountPage() {
           </div>
           <div className="sm:col-span-2">
             <label className="label">Email</label>
-            <input className="input bg-gray-50" value={user?.email ?? ''} disabled />
+            <input className="input bg-ink-50" value={user?.email ?? ''} disabled />
           </div>
           <button className="btn-primary w-fit">Save profile</button>
         </form>
@@ -78,7 +78,7 @@ export default function AccountPage() {
         {!addresses ? (
           <Spinner />
         ) : addresses.length === 0 ? (
-          <p className="text-sm text-gray-500">No saved addresses yet.</p>
+          <p className="text-sm text-ink-500">No saved addresses yet.</p>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2">
             {addresses.map((a) => (
@@ -86,7 +86,7 @@ export default function AccountPage() {
                 <p className="font-semibold">
                   {a.name} {a.isDefault && <span className="chip ml-2 border-brand-100 bg-brand-50 text-brand-700">Default</span>}
                 </p>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-ink-500">
                   {a.line1}
                   {a.line2 ? `, ${a.line2}` : ''}
                   <br />

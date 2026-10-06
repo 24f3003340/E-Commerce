@@ -61,7 +61,7 @@ export function SalesChart({ data, title = 'Sales' }: { data: SalesPoint[]; titl
             : '';
           return (
             <g key={d.day}>
-              {path && <path d={path} fill={hover === i ? '#1d4ed8' : '#2563eb'} />}
+              {path && <path d={path} fill={hover === i ? '#a93a23' : '#d24d31'} />}
               {i % labelEvery === 0 && (
                 <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="#6b7280">
                   {shortDay(d.day)}

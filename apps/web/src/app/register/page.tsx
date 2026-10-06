@@ -60,13 +60,13 @@ function RegisterForm() {
               Password
             </label>
             <input id="password" type="password" required minLength={8} className="input" value={form.password} onChange={set('password')} autoComplete="new-password" />
-            <p className="mt-1 text-xs text-gray-500">At least 8 characters with letters and numbers.</p>
+            <p className="mt-1 text-xs text-ink-500">At least 8 characters with letters and numbers.</p>
           </div>
         </div>
         <button className="btn-primary mt-6 w-full" disabled={busy}>
           {busy ? 'Creating account…' : 'Create account'}
         </button>
-        <p className="mt-4 text-center text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-ink-500">
           Already have an account?{' '}
           <Link href="/login" className="font-semibold text-brand-700">
             Login

@@ -32,13 +32,13 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       {category.children.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {category.children.map((c) => (
-            <Link key={c.id} href={`/c/${c.slug}`} className="chip border-gray-300 hover:border-gray-900">
+            <Link key={c.id} href={`/c/${c.slug}`} className="rounded-full border border-ink-200 bg-white px-4 py-1.5 text-sm font-semibold hover:border-ink-900">
               {c.name}
             </Link>
           ))}
         </div>
       )}
-      <ProductListing searchParams={await searchParams} category={slug} title={category.breadcrumbs.map((b) => b.name).join(' → ')} />
+      <ProductListing searchParams={await searchParams} category={slug} title={category.name} />
     </div>
   );
 }
