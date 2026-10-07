@@ -13,6 +13,6 @@ import { OrdersService } from './orders.service';
   imports: [CartModule, CouponsModule, CatalogModule],
   controllers: [OrdersController, AdminOrdersController, PaymentsController, ShippingController],
   providers: [OrdersService, RazorpayGateway, ShippingService],
-  exports: [OrdersService, RazorpayGateway],
+  exports: [OrdersService, RazorpayGateway, ShippingService],
 })
 export class OrdersModule {}

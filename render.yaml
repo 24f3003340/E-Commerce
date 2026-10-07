@@ -28,16 +28,16 @@ services:
         generateValue: true
       - key: JWT_ADMIN_ACCESS_SECRET
         generateValue: true
+      - key: JWT_SELLER_ACCESS_SECRET
+        generateValue: true
       - key: SHIPPING_WEBHOOK_TOKEN
         generateValue: true
       # Allow the two Vercel apps (and their preview URLs). Replace with exact
       # domains once you have custom domains, e.g. https://www.yourstore.com
       - key: CORS_ORIGINS
         value: https://*.vercel.app
-      # Demo only: keeps the test payment dialog until Razorpay keys are added.
-      # Set to "false" (or remove) when going live.
-      - key: ALLOW_MOCK_PAYMENTS
-        value: "true"
+      # Checkout is cash on delivery only until the three RAZORPAY_* keys below are set; online
+      # payment (UPI / cards / net banking) then switches on by itself.
       - key: SEED_ADMIN_EMAIL
         value: admin@example.com
       # Change this in the Render dashboard → Environment, then log in to the admin panel
@@ -55,6 +55,9 @@ services:
         sync: false
       # Your website URL, e.g. https://www.yourstore.com (used in emails)
       - key: STOREFRONT_URL
+        sync: false
+      # Admin app URL, e.g. https://admin.yourstore.com — sellers use <ADMIN_URL>/seller
+      - key: ADMIN_URL
         sync: false
       # Cloudflare R2 / S3 for product images (uploads on Render's disk are lost on redeploy)
       - key: S3_ENDPOINT

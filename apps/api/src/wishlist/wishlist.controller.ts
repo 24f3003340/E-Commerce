@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ProductStatus } from '@prisma/client';
+import { isLiveProduct } from '../catalog/visibility';
 import { toListingItem } from '../catalog/products.service';
 import { UserPrincipal } from '../common/auth.types';
 import { CurrentUser } from '../common/decorators';
@@ -24,6 +24,7 @@ export class WishlistController {
             slug: true,
             brand: true,
             status: true,
+            seller: { select: { status: true } },
             minPrice: true,
             maxMrp: true,
             discountPct: true,
@@ -38,7 +39,7 @@ export class WishlistController {
       },
     });
     return rows
-      .filter((r) => r.product.status === ProductStatus.ACTIVE)
+      .filter((r) => isLiveProduct(r.product))
       .map((r) => toListingItem(r.product));
   }
 

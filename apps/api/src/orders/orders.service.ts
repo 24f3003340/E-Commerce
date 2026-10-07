@@ -17,6 +17,7 @@ import {
   Prisma,
   RefundStatus,
 } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { CartService, cartItemIssue, toPricedLines, variantImage, variantLabel } from '../cart/cart.service';
 import { ProductsService } from '../catalog/products.service';
 import { CacheService } from '../common/cache.service';
@@ -31,9 +32,11 @@ import { GatewayOrder, RazorpayGateway } from '../payments/razorpay.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminOrderQueryDto, CheckoutDto } from './orders.dto';
 import { canTransition, CUSTOMER_CANCELLABLE, STATUS_NOTIFICATIONS } from './order-state';
+import { allocate, groupBySeller } from './split';
 
 export const orderDetailInclude = {
   items: true,
+  seller: { select: { id: true, storeName: true, slug: true } },
   history: { orderBy: { createdAt: 'asc' } },
   shipments: { include: { events: { orderBy: { occurredAt: 'desc' } } }, orderBy: { createdAt: 'desc' } },
   payments: {
@@ -83,14 +86,22 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
 
   // ───────────── Checkout ─────────────
 
+  /**
+   * Places the cart as orders. Marketplace carts become one order per seller (sharing a checkoutId)
+   * so each seller sees and fulfils only their own items; the coupon discount, shipping and COD fee
+   * are shared between those orders in proportion to their value.
+   */
   async checkout(userId: string, dto: CheckoutDto) {
+    if (dto.paymentMethod === PaymentMethod.ONLINE && !config.onlinePaymentsEnabled) {
+      throw new BadRequestException('Online payment is coming soon. Please choose Cash on Delivery.');
+    }
     const settings = await this.settings.get();
     const address = await this.prisma.address.findFirst({ where: { id: dto.addressId, userId } });
     if (!address) throw new NotFoundException('Address not found');
     const serviceability = await this.products.serviceability(address.pincode);
     if (!serviceability.serviceable) throw new BadRequestException('Sorry, we do not deliver to this pincode yet');
 
-    const order = await this.prisma.$transaction(
+    const orders = await this.prisma.$transaction(
       async (tx) => {
         const items = await this.cart.items(userId, tx);
         if (!items.length) throw new BadRequestException('Your cart is empty');
@@ -144,108 +155,141 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
           }
         }
 
-        const orderNumber = await nextSequenceNumber(tx, 'ORD');
-        const created = await tx.order.create({
-          data: {
-            orderNumber,
-            userId,
-            status: OrderStatus.PENDING_PAYMENT,
-            paymentMethod: dto.paymentMethod,
-            subtotal,
-            discount,
-            shippingFee: shipping,
-            codFee,
-            total,
-            couponId,
-            couponCode,
-            deliveryMethod,
-            notes: dto.notes,
-            shippingAddress: {
-              name: address.name,
-              phone: address.phone,
-              line1: address.line1,
-              line2: address.line2,
-              landmark: address.landmark,
-              city: address.city,
-              state: address.state,
-              pincode: address.pincode,
-              country: address.country,
+        const groups = groupBySeller(items, (i) => i.variant.product.sellerId);
+        const sellerIds = groups.map((g) => g.sellerId).filter((id): id is string => !!id);
+        const sellers = await tx.seller.findMany({ where: { id: { in: sellerIds } }, select: { id: true, commissionPct: true } });
+        const groupSubtotals = groups.map((g) => subtotalOf(toPricedLines(g.items)));
+        const discounts = allocate(discount, groupSubtotals);
+        const shippings = allocate(shipping, groupSubtotals);
+        const codFees = allocate(codFee, groupSubtotals);
+        const checkoutId = groups.length > 1 ? randomUUID() : null;
+        const shippingAddress = {
+          name: address.name,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2,
+          landmark: address.landmark,
+          city: address.city,
+          state: address.state,
+          pincode: address.pincode,
+          country: address.country,
+        };
+
+        const created = [];
+        for (const [idx, group] of groups.entries()) {
+          const seller = sellers.find((s) => s.id === group.sellerId);
+          const orderNumber = await nextSequenceNumber(tx, 'ORD');
+          const orderTotal = groupSubtotals[idx] - discounts[idx] + shippings[idx] + codFees[idx];
+          const order = await tx.order.create({
+            data: {
+              orderNumber,
+              userId,
+              sellerId: group.sellerId,
+              checkoutId,
+              commissionPct: seller ? (seller.commissionPct ?? settings.defaultCommissionPct) : 0,
+              status: OrderStatus.PENDING_PAYMENT,
+              paymentMethod: dto.paymentMethod,
+              subtotal: groupSubtotals[idx],
+              discount: discounts[idx],
+              shippingFee: shippings[idx],
+              codFee: codFees[idx],
+              total: orderTotal,
+              couponId,
+              couponCode,
+              deliveryMethod,
+              notes: dto.notes,
+              shippingAddress,
+              items: {
+                create: group.items.map((i) => ({
+                  productId: i.variant.productId,
+                  variantId: i.variantId,
+                  productName: i.variant.product.name,
+                  productSlug: i.variant.product.slug,
+                  variantLabel: variantLabel(i.variant),
+                  sku: i.variant.sku,
+                  imageUrl: variantImage(i),
+                  unitPrice: i.variant.price,
+                  mrp: i.variant.mrp,
+                  quantity: i.quantity,
+                  total: i.variant.price * i.quantity,
+                })),
+              },
+              history: { create: { status: OrderStatus.PENDING_PAYMENT, actor: 'customer', note: 'Order placed' } },
             },
-            items: {
-              create: items.map((i) => ({
-                productId: i.variant.productId,
-                variantId: i.variantId,
-                productName: i.variant.product.name,
-                productSlug: i.variant.product.slug,
-                variantLabel: variantLabel(i.variant),
-                sku: i.variant.sku,
-                imageUrl: variantImage(i),
-                unitPrice: i.variant.price,
-                mrp: i.variant.mrp,
-                quantity: i.quantity,
-                total: i.variant.price * i.quantity,
-              })),
-            },
-            history: { create: { status: OrderStatus.PENDING_PAYMENT, actor: 'customer', note: 'Order placed' } },
-          },
-        });
-        await tx.inventoryMovement.createMany({
-          data: items.map((i) => ({
-            variantId: i.variantId,
-            change: -i.quantity,
-            reason: InventoryReason.ORDER_RESERVED,
-            reference: orderNumber,
-          })),
-        });
-        if (couponId) {
-          await tx.couponUsage.create({ data: { couponId, userId, orderId: created.id, discount } });
+          });
+          await tx.inventoryMovement.createMany({
+            data: group.items.map((i) => ({
+              variantId: i.variantId,
+              change: -i.quantity,
+              reason: InventoryReason.ORDER_RESERVED,
+              reference: orderNumber,
+            })),
+          });
+          // One coupon use per checkout, recorded on its first order
+          if (couponId && idx === 0) {
+            await tx.couponUsage.create({ data: { couponId, userId, orderId: order.id, discount } });
+          }
+          if (isCod) {
+            await tx.payment.create({
+              data: { orderId: order.id, provider: PaymentProvider.COD, amount: orderTotal, status: PaymentRecordStatus.CREATED },
+            });
+            await this.confirmInTx(tx, order.id, 'system', 'Cash on delivery order confirmed');
+          }
+          created.push(order);
         }
         await this.cart.clear(userId, tx);
-
-        if (isCod) {
-          await tx.payment.create({
-            data: { orderId: created.id, provider: PaymentProvider.COD, amount: total, status: PaymentRecordStatus.CREATED },
-          });
-          await this.confirmInTx(tx, created.id, 'system', 'Cash on delivery order confirmed');
-        }
         return created;
       },
       { timeout: 20_000 },
     );
     await this.cache.delByPrefix('catalog:');
 
+    const numbers = orders.map((o) => o.orderNumber);
+    const summaries = await Promise.all(orders.map((o) => this.orderSummaryHtml(o.id)));
     await this.notifications.notify(
-      order.userId,
+      userId,
       'ORDER_PLACED',
       'Order placed',
-      `Thanks for shopping with us! Your order ${order.orderNumber} has been placed.`,
-      { orderNumber: order.orderNumber },
-      await this.orderSummaryHtml(order.id),
+      orders.length === 1
+        ? `Thanks for shopping with us! Your order ${numbers[0]} has been placed.`
+        : `Thanks for shopping with us! Your items come from ${orders.length} sellers, so they were placed as ${orders.length} orders: ${numbers.join(', ')}.`,
+      { orderNumber: numbers[0], orderNumbers: numbers },
+      summaries.join('<hr style="border:none;border-top:1px solid #eee;margin:20px 0">'),
     );
-    if (order.paymentMethod === PaymentMethod.COD) void this.alertStore(order.id);
+    if (dto.paymentMethod === PaymentMethod.COD) for (const o of orders) void this.alertStore(o.id);
 
-    if (order.paymentMethod === PaymentMethod.ONLINE) {
-      const payment = await this.createGatewayPayment(order.id);
-      return { order: await this.customerOrder(userId, order.orderNumber), payment };
-    }
-    return { order: await this.customerOrder(userId, order.orderNumber), payment: null };
+    const placed = await Promise.all(numbers.map((n) => this.customerOrder(userId, n)));
+    const payment = dto.paymentMethod === PaymentMethod.ONLINE ? await this.createGatewayPayment(orders[0].id) : null;
+    return { order: placed[0], orders: placed, payment };
   }
 
-  /** Creates a gateway order for a pending online order (also used for "retry payment"). */
+  /**
+   * Creates one gateway order paying for every still-unpaid online order of the same checkout (the
+   * per-seller orders of one cart). Also used for "retry payment".
+   */
   async createGatewayPayment(orderId: string): Promise<GatewayOrder & { orderNumber: string; prefill: Record<string, string> }> {
+    if (!config.onlinePaymentsEnabled) throw new BadRequestException('Online payment is coming soon');
     const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { user: true } });
     if (order.status !== OrderStatus.PENDING_PAYMENT || order.paymentMethod !== PaymentMethod.ONLINE) {
       throw new BadRequestException('This order is not awaiting payment');
     }
-    const gatewayOrder = await this.gateway.createOrder(order.total, order.orderNumber, { orderNumber: order.orderNumber });
-    await this.prisma.payment.create({
-      data: {
-        orderId: order.id,
+    const group = order.checkoutId
+      ? await this.prisma.order.findMany({
+          where: { checkoutId: order.checkoutId, status: OrderStatus.PENDING_PAYMENT, paymentMethod: PaymentMethod.ONLINE },
+          orderBy: { createdAt: 'asc' },
+        })
+      : [order];
+    const amount = group.reduce((s, o) => s + o.total, 0);
+    const numbers = group.map((o) => o.orderNumber);
+    const gatewayOrder = await this.gateway.createOrder(amount, numbers[0], { orderNumbers: numbers.join(',').slice(0, 250) });
+    await this.prisma.payment.createMany({
+      data: group.map((o) => ({
+        orderId: o.id,
         provider: gatewayOrder.provider === 'MOCK' ? PaymentProvider.MOCK : PaymentProvider.RAZORPAY,
         providerOrderId: gatewayOrder.providerOrderId,
-        amount: order.total,
+        amount: o.total,
         currency: gatewayOrder.currency,
-      },
+      })),
     });
     return {
       ...gatewayOrder,
@@ -256,59 +300,75 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
 
   // ───────────── Payment outcomes (called from verified gateway callbacks / webhooks) ─────────────
 
-  /** Idempotent: safe to call from both the browser callback and the webhook. */
+  /**
+   * Idempotent: safe to call from both the browser callback and the webhook. One gateway payment
+   * can cover several orders of the same checkout; each of them is confirmed.
+   */
   async markPaid(confirmation: PaymentConfirmation, source: string) {
     const result = await this.prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.findUnique({
+      const payments = await tx.payment.findMany({
         where: { providerOrderId: confirmation.providerOrderId },
         include: { order: true },
+        orderBy: { createdAt: 'asc' },
       });
-      if (!payment) throw new NotFoundException('Payment not found');
-      if (payment.status === PaymentRecordStatus.CAPTURED) return { order: payment.order, changed: false, lateRefund: false };
-      if (confirmation.amount !== undefined && confirmation.amount !== payment.amount) {
-        this.logger.error(`Amount mismatch for ${payment.providerOrderId}: ${confirmation.amount} != ${payment.amount}`);
+      if (!payments.length) throw new NotFoundException('Payment not found');
+      const first = payments[0].order;
+      if (payments.every((p) => p.status === PaymentRecordStatus.CAPTURED)) return { orders: [first], confirmed: [], lateRefunds: [] };
+      const expected = payments.reduce((s, p) => s + p.amount, 0);
+      if (confirmation.amount !== undefined && confirmation.amount !== expected) {
+        this.logger.error(`Amount mismatch for ${confirmation.providerOrderId}: ${confirmation.amount} != ${expected}`);
         throw new BadRequestException('Payment amount mismatch');
       }
-      const claimed = await tx.payment.updateMany({
-        where: { id: payment.id, status: { not: PaymentRecordStatus.CAPTURED } },
-        data: {
-          status: PaymentRecordStatus.CAPTURED,
-          providerPaymentId: confirmation.providerPaymentId,
-          method: confirmation.method,
-          rawPayload: (confirmation.raw ?? undefined) as Prisma.InputJsonValue | undefined,
-        },
-      });
-      if (claimed.count === 0) return { order: payment.order, changed: false, lateRefund: false };
-
-      if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
-        // Paid after the order was cancelled/expired (or paid twice) — refund automatically.
-        await tx.refund.create({
-          data: { orderId: payment.orderId, paymentId: payment.id, amount: payment.amount, status: RefundStatus.PENDING },
+      const confirmed: typeof first[] = [];
+      const lateRefunds: string[] = [];
+      for (const payment of payments) {
+        const claimed = await tx.payment.updateMany({
+          where: { id: payment.id, status: { not: PaymentRecordStatus.CAPTURED } },
+          data: {
+            status: PaymentRecordStatus.CAPTURED,
+            providerPaymentId: confirmation.providerPaymentId,
+            method: confirmation.method,
+            rawPayload: (confirmation.raw ?? undefined) as Prisma.InputJsonValue | undefined,
+          },
         });
-        return { order: payment.order, changed: false, lateRefund: true, paymentId: payment.id };
+        if (claimed.count === 0) continue;
+        if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
+          // Paid after the order was cancelled/expired (or paid twice) — refund automatically.
+          await tx.refund.create({
+            data: { orderId: payment.orderId, paymentId: payment.id, amount: payment.amount, status: RefundStatus.PENDING },
+          });
+          lateRefunds.push(payment.orderId);
+          continue;
+        }
+        await tx.order.update({ where: { id: payment.orderId }, data: { paymentStatus: PaymentStatus.PAID } });
+        await this.confirmInTx(tx, payment.orderId, source, `Payment received via ${confirmation.method ?? 'online payment'}`);
+        confirmed.push(payment.order);
       }
-      await tx.order.update({ where: { id: payment.orderId }, data: { paymentStatus: PaymentStatus.PAID } });
-      await this.confirmInTx(tx, payment.orderId, source, `Payment received via ${confirmation.method ?? 'online payment'}`);
-      return { order: payment.order, changed: true, lateRefund: false };
+      return { orders: [first], confirmed, lateRefunds };
     });
 
-    if (result.changed) {
-      await this.notify(result.order.userId, 'PAYMENT_SUCCESS', 'Payment successful', `We received your payment for order ${result.order.orderNumber}.`, result.order.orderNumber);
-      void this.alertStore(result.order.id);
+    if (result.confirmed.length) {
+      const numbers = result.confirmed.map((o) => o.orderNumber).join(', ');
+      await this.notify(result.confirmed[0].userId, 'PAYMENT_SUCCESS', 'Payment successful', `We received your payment for order ${numbers}.`, result.confirmed[0].orderNumber);
+      for (const o of result.confirmed) void this.alertStore(o.id);
     }
-    if (result.lateRefund) await this.processPendingRefunds(result.order.id);
-    return result.order;
+    for (const orderId of result.lateRefunds) await this.processPendingRefunds(orderId);
+    return result.orders[0];
   }
 
   async markPaymentFailed(providerOrderId: string, reason: string, raw?: unknown) {
-    const payment = await this.prisma.payment.findUnique({ where: { providerOrderId }, include: { order: true } });
-    if (!payment || payment.status !== PaymentRecordStatus.CREATED) return;
-    await this.prisma.payment.update({
-      where: { id: payment.id },
+    const payments = await this.prisma.payment.findMany({
+      where: { providerOrderId, status: PaymentRecordStatus.CREATED },
+      include: { order: true },
+    });
+    if (!payments.length) return;
+    await this.prisma.payment.updateMany({
+      where: { id: { in: payments.map((p) => p.id) }, status: PaymentRecordStatus.CREATED },
       data: { status: PaymentRecordStatus.FAILED, rawPayload: (raw ?? { reason }) as Prisma.InputJsonValue },
     });
-    // The order stays PENDING_PAYMENT so the customer can retry; it expires automatically.
-    await this.notify(payment.order.userId, 'PAYMENT_FAILED', 'Payment failed', `Payment for order ${payment.order.orderNumber} failed. You can retry from your orders page.`, payment.order.orderNumber);
+    // The orders stay PENDING_PAYMENT so the customer can retry; they expire automatically.
+    const order = payments[0].order;
+    await this.notify(order.userId, 'PAYMENT_FAILED', 'Payment failed', `Payment for order ${payments.map((p) => p.order.orderNumber).join(', ')} failed. You can retry from your orders page.`, order.orderNumber);
   }
 
   // ───────────── Status changes ─────────────
@@ -402,9 +462,15 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
           reference: order.orderNumber,
         })),
       });
+      // The coupon is used once per checkout, so give it back only when every order of the
+      // checkout (one per seller) has been cancelled.
       if (order.couponId) {
-        await tx.couponUsage.deleteMany({ where: { orderId } });
-        await tx.coupon.update({ where: { id: order.couponId }, data: { usedCount: { decrement: 1 } } });
+        const checkout = order.checkoutId ? { checkoutId: order.checkoutId } : { id: orderId };
+        const live = await tx.order.count({ where: { ...checkout, status: { not: OrderStatus.CANCELLED } } });
+        if (live === 0) {
+          const removed = await tx.couponUsage.deleteMany({ where: { order: checkout } });
+          if (removed.count) await tx.coupon.update({ where: { id: order.couponId }, data: { usedCount: { decrement: 1 } } });
+        }
       }
       const captured = order.payments.find(
         (p) => p.status === PaymentRecordStatus.CAPTURED && p.provider !== PaymentProvider.COD,
@@ -547,6 +613,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     const p = paginate(query.page, query.limit);
     const q = query.q?.trim();
     const where: Prisma.OrderWhereInput = {
+      ...(query.sellerId ? { sellerId: query.sellerId === 'store' ? null : query.sellerId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.paymentStatus ? { paymentStatus: query.paymentStatus } : {}),
       ...(query.paymentMethod ? { paymentMethod: query.paymentMethod } : {}),
@@ -575,7 +642,11 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
         orderBy: { createdAt: 'desc' },
         skip: p.skip,
         take: p.take,
-        include: { user: { select: { id: true, name: true, email: true } }, _count: { select: { items: true } } },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          seller: { select: { id: true, storeName: true } },
+          _count: { select: { items: true } },
+        },
       }),
       this.prisma.order.count({ where }),
     ]);
@@ -591,10 +662,29 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     return order;
   }
 
+  // ───────────── Marketplace seller views ─────────────
+
+  /** A seller's own orders (never other sellers' or the store's). */
+  async sellerOrders(sellerId: string, query: AdminOrderQueryDto) {
+    return this.adminList({ ...query, sellerId });
+  }
+
+  async sellerOrder(sellerId: string, id: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, sellerId },
+      include: { ...orderDetailInclude, user: { select: { name: true } } },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
   async findForInvoice(where: Prisma.OrderWhereUniqueInput) {
     const order = await this.prisma.order.findUnique({
       where,
-      include: { items: { include: { variant: { select: { product: { select: { hsnCode: true } } } } } } },
+      include: {
+        items: { include: { variant: { select: { product: { select: { hsnCode: true } } } } } },
+        seller: { select: { storeName: true, gstin: true, addressLine1: true, addressLine2: true, city: true, state: true, pincode: true, email: true, phone: true } },
+      },
     });
     if (!order) throw new NotFoundException('Order not found');
     return { ...order, items: order.items.map((i) => ({ ...i, hsn: i.variant.product.hsnCode })) };
@@ -624,17 +714,35 @@ ${line('Shipping', o.shippingFee ? rupee(o.shippingFee) : 'FREE')}${o.codFee ? l
 <p style="margin-top:16px;font-size:13px;color:#555"><b>Delivering to:</b> ${escapeHtml(a.name)}, ${escapeHtml(a.line1)}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} – ${escapeHtml(a.pincode)}<br><b>Payment:</b> ${o.paymentMethod === PaymentMethod.COD ? 'Cash on delivery' : 'Paid online'}</p>`;
   }
 
-  /** Emails the store team when an order is confirmed (COD placed or online payment received). */
+  /**
+   * Emails the store team — and the marketplace seller, if the order is theirs — when an order is
+   * confirmed (COD placed or online payment received).
+   */
   private async alertStore(orderId: string) {
     try {
       const settings = await this.settings.get();
-      if (!settings.orderAlertEmail) return;
-      const o = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { user: { select: { name: true } } } });
-      const html = await this.email.layout(
-        `New order ${o.orderNumber}`,
-        `<p>${escapeHtml(o.user.name)} placed an order (${o.paymentMethod === PaymentMethod.COD ? 'COD' : 'paid online'}).</p>${await this.orderSummaryHtml(orderId)}`,
-      );
-      await this.email.send(settings.orderAlertEmail, `🛍 New order ${o.orderNumber} — ₹${(o.total / 100).toFixed(2)}`, html, `New order ${o.orderNumber}`);
+      const o = await this.prisma.order.findUniqueOrThrow({
+        where: { id: orderId },
+        include: { user: { select: { name: true } }, seller: { select: { email: true, storeName: true } } },
+      });
+      const summary = await this.orderSummaryHtml(orderId);
+      const payment = o.paymentMethod === PaymentMethod.COD ? 'COD' : 'paid online';
+      const subject = `🛍 New order ${o.orderNumber} — ₹${(o.total / 100).toFixed(2)}`;
+      if (settings.orderAlertEmail) {
+        const html = await this.email.layout(
+          `New order ${o.orderNumber}`,
+          `<p>${escapeHtml(o.user.name)} placed an order (${payment})${o.seller ? ` from seller <b>${escapeHtml(o.seller.storeName)}</b>` : ''}.</p>${summary}`,
+        );
+        await this.email.send(settings.orderAlertEmail, subject, html, `New order ${o.orderNumber}`);
+      }
+      if (o.seller) {
+        const html = await this.email.layout(
+          `New order ${o.orderNumber}`,
+          `<p>Hi ${escapeHtml(o.seller.storeName)}, you have a new order (${payment}). Please pack it and add the shipment details from your seller panel.</p>${summary}`,
+          { label: 'Open seller panel', url: `${config.sellerPanelUrl}/orders/${o.id}` },
+        );
+        await this.email.send(o.seller.email, subject, html, `New order ${o.orderNumber}: ${config.sellerPanelUrl}/orders/${o.id}`);
+      }
     } catch (err) {
       this.logger.warn(`Store alert failed for ${orderId}: ${(err as Error).message}`);
     }

@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuditService } from './audit.service';
 import { CacheService } from './cache.service';
 import { EmailService } from './email.service';
-import { AdminAuthGuard, OptionalUserGuard, UserAuthGuard } from './guards';
+import { AdminAuthGuard, OptionalUserGuard, SellerAuthGuard, UserAuthGuard } from './guards';
 import { SettingsService } from './settings.service';
 
 @Global()
@@ -17,6 +17,7 @@ import { SettingsService } from './settings.service';
     UserAuthGuard,
     OptionalUserGuard,
     AdminAuthGuard,
+    SellerAuthGuard,
   ],
   exports: [
     JwtModule,
@@ -27,6 +28,7 @@ import { SettingsService } from './settings.service';
     UserAuthGuard,
     OptionalUserGuard,
     AdminAuthGuard,
+    SellerAuthGuard,
   ],
 })
 export class CommonModule {}

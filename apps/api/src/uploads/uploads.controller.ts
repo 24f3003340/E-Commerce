@@ -35,36 +35,44 @@ function s3Client() {
 }
 
 /**
- * Stores product / banner images. In production configure S3-compatible storage (Cloudflare R2,
- * AWS S3, DigitalOcean Spaces) via the S3_* variables so images survive redeploys; otherwise
- * files go to local disk and are served from /uploads (development only).
+ * Stores an uploaded product / banner image and returns its public URL. In production configure
+ * S3-compatible storage (Cloudflare R2, AWS S3, DigitalOcean Spaces) via the S3_* variables so
+ * images survive redeploys; otherwise files go to local disk and are served from /uploads
+ * (development only).
  */
+export async function storeImage(file?: Express.Multer.File): Promise<{ url: string }> {
+  if (!file) throw new BadRequestException('No file uploaded');
+  const ext = detectImageType(file.buffer);
+  if (!ext) throw new BadRequestException('Only JPG, PNG and WEBP images are allowed');
+  const name = `${Date.now()}-${randomBytes(8).toString('hex')}.${ext}`;
+  if (config.storage.enabled) {
+    const key = `uploads/${name}`;
+    await s3Client().send(
+      new PutObjectCommand({
+        Bucket: config.storage.bucket,
+        Key: key,
+        Body: file.buffer,
+        ContentType: MIME[ext],
+        CacheControl: 'public, max-age=31536000, immutable',
+      }),
+    );
+    return { url: `${config.storage.publicUrl}/${key}` };
+  }
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await fs.writeFile(join(UPLOAD_DIR, name), file.buffer);
+  return { url: `${config.publicApiUrl}/uploads/${name}` };
+}
+
+export const imageUpload = () =>
+  UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: MAX_BYTES, files: 1 } }));
+
 @UseGuards(AdminAuthGuard)
 @AdminRoles(AdminRole.PRODUCT_MANAGER, AdminRole.MARKETING_MANAGER)
 @Controller('admin/uploads')
 export class UploadsController {
   @Post()
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: MAX_BYTES, files: 1 } }))
-  async upload(@UploadedFile() file?: Express.Multer.File) {
-    if (!file) throw new BadRequestException('No file uploaded');
-    const ext = detectImageType(file.buffer);
-    if (!ext) throw new BadRequestException('Only JPG, PNG and WEBP images are allowed');
-    const name = `${Date.now()}-${randomBytes(8).toString('hex')}.${ext}`;
-    if (config.storage.enabled) {
-      const key = `uploads/${name}`;
-      await s3Client().send(
-        new PutObjectCommand({
-          Bucket: config.storage.bucket,
-          Key: key,
-          Body: file.buffer,
-          ContentType: MIME[ext],
-          CacheControl: 'public, max-age=31536000, immutable',
-        }),
-      );
-      return { url: `${config.storage.publicUrl}/${key}` };
-    }
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    await fs.writeFile(join(UPLOAD_DIR, name), file.buffer);
-    return { url: `${config.publicApiUrl}/uploads/${name}` };
+  @imageUpload()
+  upload(@UploadedFile() file?: Express.Multer.File) {
+    return storeImage(file);
   }
 }

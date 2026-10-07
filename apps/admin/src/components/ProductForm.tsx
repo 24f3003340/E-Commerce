@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { api, ApiError, uploadImage } from '@/lib/api';
+import { adminClient } from '@/lib/api';
 import { flattenCategories } from '@/lib/categories';
+import { ApiError, type ApiClient } from '@/lib/client';
 import type { Category } from '@/lib/types';
-import { useAdmin } from './AdminShell';
 import { Field } from './ui';
 
 const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL ?? 'http://localhost:3000';
@@ -42,7 +42,10 @@ export interface ProductRecord {
   videoUrl: string | null;
   hsnCode: string | null;
   tags: string[];
-  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'ACTIVE' | 'REJECTED' | 'ARCHIVED';
+  reviewNote?: string | null;
+  sellerId?: string | null;
+  seller?: { id: string; storeName: string; status: string } | null;
   isFeatured: boolean;
   categories: { categoryId: string; isPrimary: boolean }[];
   images: { url: string; alt: string | null; color: string | null }[];
@@ -52,9 +55,28 @@ export interface ProductRecord {
 const toRupees = (p: number) => String(p / 100);
 const toPaise = (r: string) => Math.round(Number(r) * 100);
 
-export function ProductForm({ product }: { product?: ProductRecord }) {
+/**
+ * Product editor shared by the admin panel and the marketplace seller panel. Sellers cannot feature
+ * products, and "Publish" sends their product for review when the marketplace requires approval.
+ */
+export function ProductForm({
+  product,
+  toast,
+  mode = 'admin',
+  client = adminClient,
+}: {
+  product?: ProductRecord;
+  toast: (text: string, error?: boolean) => void;
+  mode?: 'admin' | 'seller';
+  client?: ApiClient;
+}) {
   const router = useRouter();
-  const { toast } = useAdmin();
+  const { api, uploadImage } = client;
+  const seller = mode === 'seller';
+  const apiBase = seller ? '/seller' : '/admin';
+  const pageBase = seller ? '/seller/products' : '/products';
+  // Sellers ask to "publish"; whether that means live or "in review" is decided by the API
+  const initialStatus = seller && (product?.status === 'PENDING_APPROVAL' || product?.status === 'REJECTED') ? 'ACTIVE' : (product?.status ?? 'DRAFT');
   const [tree, setTree] = useState<Category[]>([]);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
@@ -66,7 +88,7 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
     videoUrl: product?.videoUrl ?? '',
     hsnCode: product?.hsnCode ?? '',
     tags: product?.tags.join(', ') ?? '',
-    status: product?.status ?? 'DRAFT',
+    status: initialStatus,
     isFeatured: product?.isFeatured ?? false,
     specs: Object.entries(product?.specifications ?? {}).map(([k, v]) => `${k}: ${v}`).join('\n'),
     sizeChart: product?.sizeChart ? JSON.stringify(product.sizeChart, null, 2) : '',
@@ -92,8 +114,8 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
   const [gen, setGen] = useState({ colors: '', sizes: 'S, M, L, XL', price: '', mrp: '', stock: '10', skuPrefix: '' });
 
   useEffect(() => {
-    api<Category[]>('/admin/categories').then(setTree);
-  }, []);
+    api<Category[]>(`${apiBase}/categories`).then(setTree);
+  }, [api, apiBase]);
   const options = flattenCategories(tree);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -106,7 +128,8 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
     const colors = gen.colors.split(',').map((s) => s.trim()).filter(Boolean);
     const sizes = gen.sizes.split(',').map((s) => s.trim()).filter(Boolean);
     if (!gen.price || !gen.mrp) return toast('Enter price and MRP for the generator', true);
-    const prefix = (gen.skuPrefix || form.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 6) || 'SKU').toUpperCase();
+    // SKUs are unique across the whole marketplace, so the default prefix gets a short random tag
+    const prefix = (gen.skuPrefix || `${form.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 6) || 'SKU'}${Math.random().toString(36).slice(2, 5)}`).toUpperCase();
     const rows: VariantRow[] = [];
     for (const c of colors.length ? colors : ['']) {
       const [name, hex] = c.split(':').map((s) => s.trim());
@@ -187,9 +210,9 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
     };
     setBusy(true);
     try {
-      const saved = await api<ProductRecord>(product ? `/admin/products/${product.id}` : '/admin/products', { method: product ? 'PUT' : 'POST', body });
-      toast('Product saved');
-      if (!product) router.replace(`/products/${saved.id}`);
+      const saved = await api<ProductRecord>(product ? `${apiBase}/products/${product.id}` : `${apiBase}/products`, { method: product ? 'PUT' : 'POST', body });
+      toast(saved.status === 'PENDING_APPROVAL' ? 'Saved and sent for review' : 'Product saved');
+      if (!product) router.replace(`${pageBase}/${saved.id}`);
       else window.location.reload();
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Could not save', true);
@@ -223,14 +246,26 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
 
         <section className="card space-y-4 p-5">
           <h2 className="font-bold">Organisation</h2>
-          <Field label="Status">
+          {product && product.status !== 'DRAFT' && product.status !== 'ARCHIVED' && product.status !== 'ACTIVE' && (
+            <p className={`rounded-md p-3 text-sm ${product.status === 'REJECTED' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800'}`}>
+              {product.status === 'REJECTED' ? <>Not approved{product.reviewNote ? `: ${product.reviewNote}` : ''}. {seller ? 'Fix it and save with “Publish” to send it again.' : ''}</> : 'Waiting for review by the marketplace team.'}
+            </p>
+          )}
+          <Field label="Status" hint={seller ? 'Changing name, description, photos or category sends a live product for review again. Price and stock changes go live immediately.' : undefined}>
             <select className="input" value={form.status} onChange={set('status')}>
               <option value="DRAFT">Draft (hidden)</option>
-              <option value="ACTIVE">Active (visible in store)</option>
+              {seller ? (
+                <option value="ACTIVE">Publish (goes live after approval)</option>
+              ) : (
+                <>
+                  <option value="ACTIVE">Active (visible in store)</option>
+                  {(product?.status === 'PENDING_APPROVAL' || product?.status === 'REJECTED') && <option value={product.status}>{product.status === 'REJECTED' ? 'Rejected' : 'Waiting for approval'}</option>}
+                </>
+              )}
               <option value="ARCHIVED">Archived</option>
             </select>
           </Field>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={set('isFeatured')} /> Featured / trending</label>
+          {!seller && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={set('isFeatured')} /> Featured / trending</label>}
           <Field label="Primary category">
             <select className="input" required value={primaryCategory} onChange={(e) => setPrimaryCategory(e.target.value)}>
               <option value="">Select…</option>
@@ -321,7 +356,7 @@ export function ProductForm({ product }: { product?: ProductRecord }) {
       </section>
 
       <div className="sticky bottom-0 -mx-4 flex justify-end gap-2 border-t bg-white/95 px-4 py-3 lg:-mx-8 lg:px-8">
-        <button type="button" className="btn-outline" onClick={() => router.push('/products')}>Cancel</button>
+        <button type="button" className="btn-outline" onClick={() => router.push(pageBase)}>Cancel</button>
         <button className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save product'}</button>
       </div>
     </form>

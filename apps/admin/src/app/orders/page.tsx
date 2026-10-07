@@ -17,12 +17,13 @@ interface OrderRow {
   total: number;
   createdAt: string;
   user: { name: string; email: string };
+  seller: { id: string; storeName: string } | null;
   _count: { items: number };
 }
 
 function Orders() {
   const params = useSearchParams();
-  const [filters, setFilters] = useState({ q: '', status: params.get('status') ?? '', paymentStatus: '', paymentMethod: '', from: '', to: '' });
+  const [filters, setFilters] = useState({ q: '', status: params.get('status') ?? '', sellerId: params.get('sellerId') ?? '', paymentStatus: '', paymentMethod: '', from: '', to: '' });
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Paginated<OrderRow> | null>(null);
 
@@ -40,7 +41,11 @@ function Orders() {
 
   return (
     <div>
-      <PageHeader title="Orders" subtitle={data ? `${data.total} orders` : undefined} />
+      <PageHeader
+        title="Orders"
+        subtitle={data ? `${data.total} orders${filters.sellerId ? (filters.sellerId === 'store' ? ' · own store only' : ' · one seller') : ''}` : undefined}
+        actions={filters.sellerId ? <button className="btn-outline btn-sm" onClick={() => setFilters((f) => ({ ...f, sellerId: '' }))}>Show all sellers</button> : undefined}
+      />
       <div className="card mb-4 grid gap-3 p-4 md:grid-cols-6">
         <input className="input md:col-span-2" placeholder="Order ID, customer name, email, phone" value={filters.q} onChange={set('q')} aria-label="Search orders" />
         <select className="input" value={filters.status} onChange={set('status')} aria-label="Order status">
@@ -70,6 +75,7 @@ function Orders() {
                 <th>Order</th>
                 <th>Date</th>
                 <th>Customer</th>
+                <th>Sold by</th>
                 <th>Items</th>
                 <th>Payment</th>
                 <th>Status</th>
@@ -82,6 +88,7 @@ function Orders() {
                   <td><Link href={`/orders/${o.id}`} className="font-semibold text-brand-700">{o.orderNumber}</Link></td>
                   <td className="whitespace-nowrap">{formatDate(o.createdAt, true)}</td>
                   <td>{o.user.name}<span className="block text-xs text-gray-500">{o.user.email}</span></td>
+                  <td className="text-xs">{o.seller ? <Link href={`/sellers/${o.seller.id}`} className="text-brand-700">{o.seller.storeName}</Link> : <span className="text-gray-500">Own store</span>}</td>
                   <td>{o._count.items}</td>
                   <td>
                     <span className="mr-1 text-xs text-gray-500">{o.paymentMethod}</span>

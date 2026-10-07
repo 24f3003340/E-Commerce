@@ -47,7 +47,7 @@ export function usePayment(): { pay: (p: GatewayPayment) => Promise<PaymentResul
         name: STORE_NAME,
         description: `Order ${payment.orderNumber}`,
         prefill: payment.prefill,
-        theme: { color: '#4f46e5' },
+        theme: { color: '#2e3f8f' },
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
             const res = await api<{ ok: boolean; pending?: boolean }>('/payments/razorpay/verify', { method: 'POST', body: response });

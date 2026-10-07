@@ -1,5 +1,7 @@
 import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ProductStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { isLiveProduct } from '../catalog/visibility';
+import { config } from '../common/config';
 import { SettingsService } from '../common/settings.service';
 import { DeliveryMethod, PricedLine, shippingFee, subtotalOf } from '../coupons/coupon-math';
 import { CouponsService } from '../coupons/coupons.service';
@@ -15,6 +17,8 @@ const cartItemInclude = {
           name: true,
           slug: true,
           status: true,
+          sellerId: true,
+          seller: { select: { status: true, storeName: true } },
           images: { orderBy: { sortOrder: 'asc' }, select: { url: true, color: true } },
           categories: { select: { categoryId: true } },
         },
@@ -29,7 +33,7 @@ export type CartIssue = 'UNAVAILABLE' | 'OUT_OF_STOCK' | 'INSUFFICIENT_STOCK';
 
 export function cartItemIssue(item: CartItemRow): CartIssue | undefined {
   const { variant } = item;
-  if (!variant.isActive || variant.product.status !== ProductStatus.ACTIVE) return 'UNAVAILABLE';
+  if (!variant.isActive || !isLiveProduct(variant.product)) return 'UNAVAILABLE';
   if (variant.stock <= 0) return 'OUT_OF_STOCK';
   if (variant.stock < item.quantity) return 'INSUFFICIENT_STOCK';
   return undefined;
@@ -106,6 +110,7 @@ export class CartService {
         issue: cartItemIssue(i),
         lineTotal: i.variant.price * i.quantity,
         product: { id: i.variant.product.id, name: i.variant.product.name, slug: i.variant.product.slug },
+        soldBy: i.variant.product.seller?.storeName ?? null,
         variant: {
           id: i.variant.id,
           sku: i.variant.sku,
@@ -129,6 +134,9 @@ export class CartService {
         total,
         freeShippingThreshold: settings.freeShippingThreshold,
         codAvailable: settings.codEnabled && total <= settings.codMaxOrderValue,
+        onlinePaymentsAvailable: config.onlinePaymentsEnabled,
+        // Items from different sellers are delivered as separate orders / packages
+        packageCount: new Set(available.map((i) => i.variant.product.sellerId ?? 'store')).size,
       },
       coupon: appliedCoupon ? { code: appliedCoupon } : undefined,
       couponError,
@@ -139,9 +147,9 @@ export class CartService {
   async add(userId: string, variantId: string, quantity: number) {
     const variant = await this.prisma.productVariant.findUnique({
       where: { id: variantId },
-      include: { product: { select: { status: true } } },
+      include: { product: { select: { status: true, seller: { select: { status: true } } } } },
     });
-    if (!variant || !variant.isActive || variant.product.status !== ProductStatus.ACTIVE) {
+    if (!variant || !variant.isActive || !isLiveProduct(variant.product)) {
       throw new NotFoundException('Product is not available');
     }
     const cart = await this.prisma.cart.upsert({ where: { userId }, create: { userId }, update: {} });

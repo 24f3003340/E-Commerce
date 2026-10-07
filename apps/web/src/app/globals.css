@@ -19,7 +19,7 @@
     @apply btn bg-brand-600 text-white hover:bg-brand-700;
   }
   .btn-cart {
-    @apply btn bg-accent-400 text-gray-900 shadow-sm hover:bg-accent-500;
+    @apply btn border-2 border-brand-600 bg-white text-brand-700 shadow-sm hover:bg-brand-50;
   }
   .btn-buy {
     @apply btn bg-buy-500 text-white shadow-sm hover:bg-buy-600;

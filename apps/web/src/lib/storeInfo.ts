@@ -15,6 +15,9 @@ export interface StoreInfo {
   codEnabled: boolean;
   codFee: number;
   defaultReturnWindowDays: number;
+  /** Online payments switch on once Razorpay keys are added on the API */
+  onlinePayments: boolean;
+  sellerRegistrationOpen: boolean;
 }
 
 const FALLBACK: StoreInfo = {
@@ -31,6 +34,8 @@ const FALLBACK: StoreInfo = {
   codEnabled: true,
   codFee: 4900,
   defaultReturnWindowDays: 7,
+  onlinePayments: false,
+  sellerRegistrationOpen: true,
 };
 
 /** Public store details maintained from Admin → Settings. */

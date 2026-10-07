@@ -101,6 +101,7 @@ function AccountCart() {
                 {item.product.name}
               </Link>
               <p className="text-sm text-gray-500">{item.variant.label}</p>
+              {item.soldBy && <p className="text-xs text-gray-500">Sold by {item.soldBy}</p>}
               <Price price={item.variant.price} mrp={item.variant.mrp} size="sm" />
               {item.issue && <p className="mt-1 text-xs font-semibold text-red-600">{ISSUE_TEXT[item.issue]}</p>}
               <div className="mt-2 flex items-center gap-3">

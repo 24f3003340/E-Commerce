@@ -177,8 +177,8 @@ export class PaymentsController {
   }
 
   private async ownPayment(userId: string, providerOrderId: string) {
-    const payment = await this.prisma.payment.findUnique({ where: { providerOrderId }, include: { order: true } });
-    if (!payment || payment.order.userId !== userId) throw new NotFoundException('Payment not found');
+    const payment = await this.prisma.payment.findFirst({ where: { providerOrderId, order: { userId } } });
+    if (!payment) throw new NotFoundException('Payment not found');
     return payment;
   }
 }

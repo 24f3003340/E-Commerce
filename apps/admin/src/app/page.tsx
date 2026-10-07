@@ -16,6 +16,8 @@ interface Dashboard {
   pendingOrders: number;
   returns: number;
   lowStock: number;
+  pendingSellers: number;
+  pendingProducts: number;
   recentOrders: { id: string; orderNumber: string; customer: string; total: number; status: string; paymentStatus: string; createdAt: string }[];
   salesSeries: SalesPoint[];
 }
@@ -51,6 +53,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Dashboard" subtitle={`Welcome back, ${admin.name}`} />
+      {(data.pendingSellers > 0 || data.pendingProducts > 0) && (
+        <div className="flex flex-wrap gap-3">
+          {data.pendingSellers > 0 && canAccess(admin.role, 'sellers') && (
+            <Link href="/sellers?status=PENDING" className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
+              {data.pendingSellers} seller{data.pendingSellers > 1 ? 's' : ''} waiting for approval →
+            </Link>
+          )}
+          {data.pendingProducts > 0 && canAccess(admin.role, 'products') && (
+            <Link href="/products?status=PENDING_APPROVAL" className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
+              {data.pendingProducts} seller product{data.pendingProducts > 1 ? 's' : ''} to review →
+            </Link>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-7">
         <Tile label="Today's sales" value={inr(data.todaySales)} />
         <Tile label="Orders today" value={data.ordersToday} href={canOrders ? '/orders' : undefined} />

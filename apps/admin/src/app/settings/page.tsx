@@ -28,6 +28,10 @@ interface Settings {
   defaultHsn: string;
   orderAlertEmail: string;
   whatsappNumber: string;
+  sellerRegistrationOpen: boolean;
+  defaultCommissionPct: number;
+  sellerProductApproval: boolean;
+  sellerPayoutHoldDays: number;
 }
 
 const MONEY: (keyof Settings)[] = ['freeShippingThreshold', 'standardShippingFee', 'expressShippingFee', 'codFee', 'codMaxOrderValue', 'gstHighRateAbove'];
@@ -128,6 +132,12 @@ export default function SettingsPage() {
         <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" checked={s.codEnabled} onChange={(e) => setS({ ...s, codEnabled: e.target.checked })} /> Cash on delivery enabled</label>
         <Field label="Blocked pincode prefixes" hint="Comma separated, e.g. 79, 744"><input className="input" value={s.blockedPincodePrefixes.join(', ')} onChange={(e) => setS({ ...s, blockedPincodePrefixes: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
         <Field label="Metro pincode prefixes (faster delivery)"><input className="input" value={s.metroPincodePrefixes.join(', ')} onChange={(e) => setS({ ...s, metroPincodePrefixes: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
+
+        <h2 className="pt-2 font-bold md:col-span-2">Marketplace sellers</h2>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.sellerRegistrationOpen} onChange={(e) => setS({ ...s, sellerRegistrationOpen: e.target.checked })} /> Sellers can register from the seller panel</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={s.sellerProductApproval} onChange={(e) => setS({ ...s, sellerProductApproval: e.target.checked })} /> Seller products need approval before going live</label>
+        <Field label="Default commission (%)" hint="Kept from the item value of every seller order. You can set a different rate per seller."><input className="input" type="number" min={0} max={100} step="0.5" value={s.defaultCommissionPct} onChange={num('defaultCommissionPct')} /></Field>
+        <Field label="Payout hold (days after delivery)" hint="Keep it longer than the return window so returns are settled before you pay sellers"><input className="input" type="number" min={0} max={90} value={s.sellerPayoutHoldDays} onChange={num('sellerPayoutHoldDays')} /></Field>
 
         <h2 className="pt-2 font-bold md:col-span-2">Returns</h2>
         <Field label="Default return window (days)" hint="Categories can override this"><input className="input" type="number" min={0} value={s.defaultReturnWindowDays} onChange={num('defaultReturnWindowDays')} /></Field>

@@ -13,9 +13,11 @@ export class InventoryService {
     private readonly cache: CacheService,
   ) {}
 
-  async list(params: { q?: string; lowStock?: boolean; page?: number; limit?: number }) {
+  /** `sellerId` limits the list to one marketplace seller's products. */
+  async list(params: { q?: string; lowStock?: boolean; page?: number; limit?: number; sellerId?: string }) {
     const { page, limit, skip, take } = paginate(params.page, params.limit);
     const where: Prisma.ProductVariantWhereInput = {
+      ...(params.sellerId ? { product: { sellerId: params.sellerId } } : {}),
       ...(params.lowStock ? { stock: { lte: LOW_STOCK_THRESHOLD }, isActive: true } : {}),
       ...(params.q
         ? {
@@ -32,7 +34,7 @@ export class InventoryService {
         orderBy: [{ stock: 'asc' }, { sku: 'asc' }],
         skip,
         take,
-        include: { product: { select: { id: true, name: true, status: true } } },
+        include: { product: { select: { id: true, name: true, status: true, seller: { select: { id: true, storeName: true } } } } },
       }),
       this.prisma.productVariant.count({ where }),
     ]);

@@ -6,6 +6,7 @@ import { csv, paginate, paginated, slugify } from '../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminProductQueryDto, ProductDto, ProductQueryDto } from './catalog.dto';
 import { CategoriesService } from './categories.service';
+import { LIVE_PRODUCT, liveProduct } from './visibility';
 
 const listingSelect = {
   id: true,
@@ -27,6 +28,10 @@ const listingSelect = {
 } satisfies Prisma.ProductSelect;
 
 type ListingRow = Prisma.ProductGetPayload<{ select: typeof listingSelect }>;
+
+export interface SellerOwner {
+  sellerId: string;
+}
 
 export function toListingItem(p: ListingRow) {
   const colors = new Map<string, string | null>();
@@ -70,7 +75,7 @@ export class ProductsService {
   }
 
   private async buildWhere(query: ProductQueryDto, opts: { skipVariantFilters?: boolean } = {}) {
-    const and: Prisma.ProductWhereInput[] = [{ status: ProductStatus.ACTIVE }];
+    const and: Prisma.ProductWhereInput[] = [LIVE_PRODUCT];
 
     if (query.category) {
       const category = (await this.categories.all()).find((c) => c.slug === query.category);
@@ -197,7 +202,7 @@ export class ProductsService {
   sitemap() {
     return this.cache.wrap('catalog:sitemap', 600, () =>
       this.prisma.product.findMany({
-        where: { status: ProductStatus.ACTIVE },
+        where: LIVE_PRODUCT,
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
         take: 50000,
@@ -210,13 +215,12 @@ export class ProductsService {
     if (term.length < 2) return { products: [], categories: [] };
     const [products, categories] = await Promise.all([
       this.prisma.product.findMany({
-        where: {
-          status: ProductStatus.ACTIVE,
+        where: liveProduct({
           OR: [
             { name: { contains: term, mode: 'insensitive' } },
             { brand: { contains: term, mode: 'insensitive' } },
           ],
-        },
+        }),
         select: { name: true, slug: true, images: { take: 1, select: { url: true } } },
         orderBy: { soldCount: 'desc' },
         take: 6,
@@ -233,8 +237,9 @@ export class ProductsService {
   async detail(slug: string) {
     return this.cache.wrap(`catalog:product:${slug}`, 60, async () => {
       const product = await this.prisma.product.findFirst({
-        where: { slug, status: ProductStatus.ACTIVE },
+        where: liveProduct({ slug }),
         include: {
+          seller: { select: { storeName: true, slug: true } },
           images: { orderBy: { sortOrder: 'asc' } },
           variants: { where: { isActive: true }, orderBy: [{ color: 'asc' }, { createdAt: 'asc' }] },
           categories: { include: { category: true } },
@@ -247,11 +252,10 @@ export class ProductsService {
         primary ? this.categories.breadcrumbs(primary.categoryId) : [],
         primary
           ? this.prisma.product.findMany({
-              where: {
-                status: ProductStatus.ACTIVE,
+              where: liveProduct({
                 id: { not: product.id },
                 categories: { some: { categoryId: primary.categoryId } },
-              },
+              }),
               orderBy: { soldCount: 'desc' },
               take: 8,
               select: listingSelect,
@@ -283,6 +287,8 @@ export class ProductsService {
         sizeChart: product.sizeChart,
         videoUrl: product.videoUrl,
         tags: product.tags,
+        // Marketplace seller; null when sold by the store itself
+        seller: product.seller,
         price: product.minPrice,
         mrp: product.maxMrp,
         discountPct: product.discountPct,
@@ -344,6 +350,7 @@ export class ProductsService {
     const { page, limit, skip, take } = paginate(query.page, query.limit);
     const where: Prisma.ProductWhereInput = {
       ...(query.status ? { status: query.status } : {}),
+      ...(query.sellerId ? { sellerId: query.sellerId === 'store' ? null : query.sellerId } : {}),
       ...(query.categoryId ? { categories: { some: { categoryId: query.categoryId } } } : {}),
       ...(query.q
         ? {
@@ -362,6 +369,7 @@ export class ProductsService {
         skip,
         take,
         include: {
+          seller: { select: { id: true, storeName: true } },
           images: { take: 1, orderBy: { sortOrder: 'asc' } },
           variants: { select: { id: true, stock: true, reserved: true, isActive: true } },
           categories: { include: { category: { select: { name: true } } } },
@@ -376,6 +384,8 @@ export class ProductsService {
         slug: p.slug,
         brand: p.brand,
         status: p.status,
+        reviewNote: p.reviewNote,
+        seller: p.seller,
         isFeatured: p.isFeatured,
         price: p.minPrice,
         mrp: p.maxMrp,
@@ -395,6 +405,7 @@ export class ProductsService {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
+        seller: { select: { id: true, storeName: true, status: true } },
         images: { orderBy: { sortOrder: 'asc' } },
         variants: { orderBy: [{ color: 'asc' }, { createdAt: 'asc' }] },
         categories: true,
@@ -404,13 +415,20 @@ export class ProductsService {
     return product;
   }
 
-  async create(dto: ProductDto, adminId: string) {
+  /**
+   * @param actorId admin id, or `seller:<id>` for marketplace sellers (stored on stock movements)
+   * @param owner   set for marketplace sellers: the product belongs to them and its status is
+   *                decided by the marketplace's approval rules
+   */
+  async create(dto: ProductDto, actorId: string, owner?: SellerOwner) {
     this.validateVariants(dto);
+    await this.assertSkusFree(dto);
     const slug = await this.uniqueSlug(dto.slug || dto.name);
     const product = await this.prisma.$transaction(async (tx) => {
       const created = await tx.product.create({
         data: {
           ...this.productFields(dto),
+          ...(owner ? { sellerId: owner.sellerId, isFeatured: false, status: await this.sellerStatus(dto.status), reviewNote: null } : {}),
           slug,
           categories: {
             create: dto.categoryIds.map((categoryId, i) => ({ categoryId, isPrimary: i === 0 })),
@@ -424,7 +442,7 @@ export class ProductsService {
         });
         if (v.stock) {
           await tx.inventoryMovement.create({
-            data: { variantId: variant.id, change: v.stock, reason: InventoryReason.RESTOCK, note: 'Initial stock', adminId },
+            data: { variantId: variant.id, change: v.stock, reason: InventoryReason.RESTOCK, note: 'Initial stock', adminId: actorId },
           });
         }
       }
@@ -435,13 +453,21 @@ export class ProductsService {
     return this.adminGet(product.id);
   }
 
-  async update(id: string, dto: ProductDto, adminId: string) {
+  async update(id: string, dto: ProductDto, actorId: string, owner?: SellerOwner) {
     this.validateVariants(dto);
     const existing = await this.adminGet(id);
+    if (owner && existing.sellerId !== owner.sellerId) throw new NotFoundException('Product not found');
+    await this.assertSkusFree(dto, id);
     const slug = dto.slug && slugify(dto.slug) !== existing.slug ? await this.uniqueSlug(dto.slug) : existing.slug;
+    const sellerFields = owner
+      ? {
+          isFeatured: existing.isFeatured,
+          ...(await this.sellerUpdateStatus(existing, dto)),
+        }
+      : {};
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.product.update({ where: { id }, data: { ...this.productFields(dto), slug } });
+      await tx.product.update({ where: { id }, data: { ...this.productFields(dto), ...sellerFields, slug } });
 
       await tx.productCategory.deleteMany({ where: { productId: id } });
       await tx.productCategory.createMany({
@@ -467,7 +493,7 @@ export class ProductsService {
           keepIds.add(created.id);
           if (v.stock) {
             await tx.inventoryMovement.create({
-              data: { variantId: created.id, change: v.stock, reason: InventoryReason.RESTOCK, note: 'Initial stock', adminId },
+              data: { variantId: created.id, change: v.stock, reason: InventoryReason.RESTOCK, note: 'Initial stock', adminId: actorId },
             });
           }
         }
@@ -485,8 +511,11 @@ export class ProductsService {
     return this.adminGet(id);
   }
 
-  async setStatus(id: string, status: ProductStatus) {
-    await this.prisma.product.update({ where: { id }, data: { status } });
+  async setStatus(id: string, status: ProductStatus, reviewNote?: string) {
+    await this.prisma.product.update({
+      where: { id },
+      data: { status, ...(status === ProductStatus.REJECTED ? { reviewNote: reviewNote ?? null } : status === ProductStatus.ACTIVE ? { reviewNote: null } : {}) },
+    });
     await this.categories.invalidate();
     return { ok: true };
   }
@@ -520,6 +549,52 @@ export class ProductsService {
       where: { id: productId },
       data: { minPrice: cheapest.price, maxMrp: cheapest.mrp, discountPct },
     });
+  }
+
+  /** SKUs are unique across the whole marketplace, so check other products before saving. */
+  private async assertSkusFree(dto: ProductDto, productId?: string) {
+    const taken = await this.prisma.productVariant.findFirst({
+      where: { sku: { in: dto.variants.map((v) => v.sku.toUpperCase()) }, ...(productId ? { productId: { not: productId } } : {}) },
+      select: { sku: true },
+    });
+    if (taken) throw new BadRequestException(`SKU ${taken.sku} is already used by another product. Please choose a different SKU.`);
+  }
+
+  /** Status a seller's product gets: "publish" means "submit for review" when approval is on. */
+  private async sellerStatus(requested: ProductStatus | undefined): Promise<ProductStatus> {
+    if (requested === ProductStatus.ARCHIVED) return ProductStatus.ARCHIVED;
+    if (requested !== ProductStatus.ACTIVE && requested !== ProductStatus.PENDING_APPROVAL) return ProductStatus.DRAFT;
+    const { sellerProductApproval } = await this.settings.get();
+    return sellerProductApproval ? ProductStatus.PENDING_APPROVAL : ProductStatus.ACTIVE;
+  }
+
+  /**
+   * A live product stays live when the seller only changes prices, stock or variants. Changing what
+   * shoppers read or see (name, description, photos, category…) sends it back for review.
+   */
+  private async sellerUpdateStatus(existing: Awaited<ReturnType<ProductsService['adminGet']>>, dto: ProductDto) {
+    const status = await this.sellerStatus(dto.status);
+    if (status !== ProductStatus.PENDING_APPROVAL || existing.status !== ProductStatus.ACTIVE) {
+      return { status, ...(status === ProductStatus.PENDING_APPROVAL ? { reviewNote: null } : {}) };
+    }
+    const before = this.productFields({
+      ...dto,
+      name: existing.name,
+      description: existing.description,
+      brand: existing.brand ?? undefined,
+      material: existing.material ?? undefined,
+      specifications: (existing.specifications ?? undefined) as Record<string, string> | undefined,
+      sizeChart: (existing.sizeChart ?? undefined) as Record<string, string>[] | undefined,
+      videoUrl: existing.videoUrl ?? undefined,
+    });
+    const after = this.productFields(dto);
+    const sameText = (['name', 'description', 'brand', 'material', 'videoUrl'] as const).every((k) => before[k] === after[k]) &&
+      JSON.stringify(before.specifications) === JSON.stringify(after.specifications) &&
+      JSON.stringify(before.sizeChart) === JSON.stringify(after.sizeChart);
+    const sameImages = JSON.stringify(existing.images.map((i) => i.url)) === JSON.stringify(dto.images.map((i) => i.url));
+    const sameCategories =
+      JSON.stringify(existing.categories.map((c) => c.categoryId).sort()) === JSON.stringify([...dto.categoryIds].sort());
+    return sameText && sameImages && sameCategories ? { status: ProductStatus.ACTIVE } : { status, reviewNote: null };
   }
 
   private validateVariants(dto: ProductDto) {

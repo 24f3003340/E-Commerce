@@ -27,6 +27,8 @@ interface OrderDetail {
   createdAt: string;
   shippingAddress: Record<string, string>;
   user: { id: string; name: string; email: string; phone: string | null };
+  seller: { id: string; storeName: string } | null;
+  commissionPct: number;
   items: { id: string; productName: string; variantLabel: string; sku: string; imageUrl: string | null; unitPrice: number; quantity: number; total: number; returnedQuantity: number }[];
   history: { id: string; status: string; note: string | null; actor: string; createdAt: string }[];
   payments: { id: string; provider: string; status: string; amount: number; method: string | null; providerPaymentId: string | null; createdAt: string }[];
@@ -131,7 +133,7 @@ export default function OrderDetailPage() {
                   <span>
                     <span className="font-semibold">{ORDER_STATUS_LABEL[h.status as OrderStatus] ?? h.status}</span>
                     {h.note && <span className="text-gray-600"> — {h.note}</span>}
-                    <span className="block text-xs text-gray-500">{formatDate(h.createdAt, true)} · by {h.actor.startsWith('admin:') ? 'admin' : h.actor}</span>
+                    <span className="block text-xs text-gray-500">{formatDate(h.createdAt, true)} · by {h.actor.split(':')[0]}</span>
                   </span>
                 </li>
               ))}
@@ -178,6 +180,18 @@ export default function OrderDetailPage() {
               </p>
             )}
             {order.cancelReason && <p className="text-sm text-gray-600">Cancel reason: {order.cancelReason}</p>}
+          </section>
+
+          <section className="card space-y-1 p-5 text-sm">
+            <h2 className="mb-1 font-bold">Sold by</h2>
+            {order.seller ? (
+              <p>
+                <Link href={`/sellers/${order.seller.id}`} className="font-semibold text-brand-700">{order.seller.storeName}</Link>
+                <span className="block text-xs text-gray-500">Marketplace seller · commission {order.commissionPct}% · the seller packs and ships this order</span>
+              </p>
+            ) : (
+              <p className="text-gray-600">Own store</p>
+            )}
           </section>
 
           <section className="card space-y-1 p-5 text-sm">

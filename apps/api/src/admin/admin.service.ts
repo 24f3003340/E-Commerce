@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OrderStatus, ProductStatus, ReturnStatus } from '@prisma/client';
+import { OrderStatus, ProductStatus, ReturnStatus, SellerStatus } from '@prisma/client';
 import { LOW_STOCK_THRESHOLD } from '../catalog/inventory.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -20,7 +20,7 @@ export class AdminService {
   async dashboard() {
     const today = startOfIstDay();
     const revenueWhere = { status: { notIn: NON_REVENUE } };
-    const [todaySales, ordersToday, customers, products, pendingOrders, returns, lowStock, recentOrders, series] =
+    const [todaySales, ordersToday, customers, products, pendingOrders, returns, lowStock, recentOrders, series, pendingSellers, pendingProducts] =
       await Promise.all([
         this.prisma.order.aggregate({ where: { ...revenueWhere, createdAt: { gte: today } }, _sum: { total: true } }),
         this.prisma.order.count({ where: { ...revenueWhere, createdAt: { gte: today } } }),
@@ -43,6 +43,8 @@ export class AdminService {
           include: { user: { select: { name: true } } },
         }),
         this.dailySales(new Date(today.getTime() - 13 * 86_400_000), new Date(today.getTime() + 86_400_000)),
+        this.prisma.seller.count({ where: { status: SellerStatus.PENDING } }),
+        this.prisma.product.count({ where: { status: ProductStatus.PENDING_APPROVAL } }),
       ]);
     return {
       todaySales: todaySales._sum.total ?? 0,
@@ -52,6 +54,8 @@ export class AdminService {
       pendingOrders,
       returns,
       lowStock,
+      pendingSellers,
+      pendingProducts,
       recentOrders: recentOrders.map((o) => ({
         id: o.id,
         orderNumber: o.orderNumber,

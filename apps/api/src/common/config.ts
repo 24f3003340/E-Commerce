@@ -22,10 +22,10 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   /**
-   * The mock payment gateway is never available in production unless explicitly enabled
-   * (useful for a public demo deployment before Razorpay keys are added).
+   * The mock payment gateway (a fake "pay" dialog) is only for local development and tests. It is
+   * never available in production, so real customers can never mark an order paid without paying.
    */
-  allowMockPayments: !isProduction || process.env.ALLOW_MOCK_PAYMENTS === 'true',
+  allowMockPayments: !isProduction,
   redisUrl: process.env.REDIS_URL || undefined,
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET', isProduction ? undefined : 'dev-access-secret'),
@@ -33,6 +33,10 @@ export const config = {
       'JWT_ADMIN_ACCESS_SECRET',
       isProduction ? undefined : 'dev-admin-access-secret',
     ),
+    /** Marketplace seller panel. Falls back to a key derived from the customer secret. */
+    get sellerAccessSecret(): string {
+      return process.env.JWT_SELLER_ACCESS_SECRET || `${this.accessSecret}:seller-panel`;
+    },
     accessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
     refreshTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30),
   },
@@ -44,6 +48,16 @@ export const config = {
       return Boolean(this.keyId && this.keySecret);
     },
   },
+  /**
+   * Online payments (UPI / cards / net banking) are offered only once Razorpay keys are set —
+   * until then checkout is cash on delivery only and the storefront shows "Coming soon".
+   * Local development uses the mock gateway instead.
+   */
+  get onlinePaymentsEnabled(): boolean {
+    return this.razorpay.enabled || this.allowMockPayments;
+  },
+  /** Seller panel URL (the admin app's /seller pages), used in seller emails. */
+  sellerPanelUrl: `${(process.env.ADMIN_URL || 'http://localhost:3001').replace(/\/$/, '')}/seller`,
   shippingWebhookToken: process.env.SHIPPING_WEBHOOK_TOKEN || '',
   /**
    * S3-compatible object storage for uploaded images (Cloudflare R2, AWS S3, DigitalOcean Spaces…).

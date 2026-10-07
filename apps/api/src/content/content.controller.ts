@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AdminRole, BannerPosition } from '@prisma/client';
-import { IsBoolean, IsDateString, IsEmail, IsEnum, IsInt, IsOptional, IsString, MaxLength, Min, IsArray } from 'class-validator';
+import { IsBoolean, IsDateString, IsEmail, IsEnum, IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, IsArray } from 'class-validator';
 import { AuditService } from '../common/audit.service';
 import { CacheService } from '../common/cache.service';
+import { config } from '../common/config';
 import { AdminPrincipal } from '../common/auth.types';
 import { AdminRoles, CurrentAdmin } from '../common/decorators';
 import { AdminAuthGuard } from '../common/guards';
@@ -77,6 +78,10 @@ class SettingsDto implements Partial<StoreSettings> {
   @IsOptional() @IsString() @MaxLength(10) defaultHsn?: string;
   @IsOptional() @IsString() @MaxLength(120) orderAlertEmail?: string;
   @IsOptional() @IsString() @MaxLength(20) whatsappNumber?: string;
+  @IsOptional() @IsBoolean() sellerRegistrationOpen?: boolean;
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @Max(100) defaultCommissionPct?: number;
+  @IsOptional() @IsBoolean() sellerProductApproval?: boolean;
+  @IsOptional() @IsInt() @Min(0) @Max(90) sellerPayoutHoldDays?: number;
 }
 
 const bannerData = (dto: BannerDto) => ({
@@ -130,6 +135,9 @@ export class ContentController {
       address: s.invoiceAddress,
       gstin: s.gstin,
       whatsappNumber: s.whatsappNumber,
+      // Online payments switch on automatically once Razorpay keys are configured
+      onlinePayments: config.onlinePaymentsEnabled,
+      sellerRegistrationOpen: s.sellerRegistrationOpen,
     };
   }
 }

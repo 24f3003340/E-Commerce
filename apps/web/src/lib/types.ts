@@ -87,6 +87,8 @@ export interface ProductDetail {
   variants: Variant[];
   breadcrumbs: { id: string; name: string; slug: string }[];
   returnPolicy: { isReturnable: boolean; returnWindowDays: number };
+  /** Marketplace seller; null when sold by the store itself */
+  seller: { storeName: string; slug: string } | null;
   reviews: Review[];
   ratingBreakdown: Record<string, number>;
   related: ListingProduct[];
@@ -130,6 +132,8 @@ export interface CartItem {
   issue?: CartIssue;
   lineTotal: number;
   product: { id: string; name: string; slug: string };
+  /** Marketplace seller's store name; null when sold by the store itself */
+  soldBy: string | null;
   variant: { id: string; sku: string; color: string | null; size: string | null; label: string; price: number; mrp: number; maxQuantity: number };
   image: string | null;
 }
@@ -145,6 +149,10 @@ export interface CartSummary {
   total: number;
   freeShippingThreshold: number;
   codAvailable: boolean;
+  /** False until Razorpay keys are configured — checkout shows "Coming soon" */
+  onlinePaymentsAvailable: boolean;
+  /** Items from different sellers arrive as separate orders / packages */
+  packageCount: number;
 }
 
 export interface Cart {
@@ -192,6 +200,7 @@ export interface Order {
   codFee: number;
   total: number;
   couponCode: string | null;
+  seller: { id: string; storeName: string; slug: string } | null;
   shippingAddress: Address;
   createdAt: string;
   deliveredAt: string | null;

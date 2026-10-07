@@ -5,7 +5,7 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
-export const metadata: Metadata = { title: 'StyleKart Seller Admin', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'StyleKart Admin', robots: { index: false, follow: false } };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
