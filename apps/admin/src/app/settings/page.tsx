@@ -75,6 +75,47 @@ function TwoFactor() {
   );
 }
 
+interface SystemStatus {
+  imageStorage: 'cloud' | 'local';
+  imageStorageUrl: string | null;
+  courier: boolean;
+  courierPickupLocation: string | null;
+  onlinePayments: boolean;
+  email: boolean;
+}
+
+/** Which outside services are connected. They are switched on with Render environment variables. */
+function Connections() {
+  const [st, setSt] = useState<SystemStatus | null>(null);
+  useEffect(() => {
+    api<SystemStatus>('/admin/system-status').then(setSt).catch(() => undefined);
+  }, []);
+  if (!st) return null;
+  const rows: [string, boolean, string, string][] = [
+    ['Product photo storage', st.imageStorage === 'cloud', `Cloudflare R2 — ${st.imageStorageUrl ?? ''}`, 'Server disk — photos are lost on every redeploy. Add the S3_* variables (Cloudflare R2).'],
+    ['Courier (Shiprocket)', st.courier, `Connected — store pickup location “${st.courierPickupLocation ?? ''}”`, 'Not connected — add SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD. Until then enter courier AWBs by hand.'],
+    ['Online payments (Razorpay)', st.onlinePayments, 'Live — customers can pay by UPI / card', 'Coming soon — checkout is cash on delivery only. Add the RAZORPAY_* keys.'],
+    ['Emails (Resend)', st.email, 'Sending order and account emails', 'Not sending — add RESEND_API_KEY.'],
+  ];
+  return (
+    <section className="card space-y-3 p-5">
+      <h2 className="font-bold">Connected services</h2>
+      <ul className="divide-y divide-gray-100 text-sm">
+        {rows.map(([label, on, good, bad]) => (
+          <li key={label} className="flex flex-wrap items-start gap-3 py-2.5">
+            <span className={`chip ${on ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>{on ? 'Connected' : 'Not set up'}</span>
+            <span className="min-w-0 flex-1">
+              <span className="font-semibold">{label}</span>
+              <span className="block text-gray-600">{on ? good : bad}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-gray-500">Set these in Render → stylekart-api → Environment, then redeploy. Step-by-step guide: docs/LAUNCH.md.</p>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const { admin, toast } = useAdmin();
   const [s, setS] = useState<Settings | null>(null);
@@ -91,6 +132,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Settings" />
+      <Connections />
       <form
         className="card grid gap-4 p-5 md:grid-cols-2"
         onSubmit={async (e) => {

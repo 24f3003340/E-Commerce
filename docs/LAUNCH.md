@@ -71,17 +71,33 @@ hai ki kahan kya daalna hai.
 
 ## 5. Product photos ka storage — Cloudflare R2
 
-Render ke server par upload ki gayi photos har redeploy par mit jaati hain, isliye R2 zaroori hai
-(10 GB tak free).
+Render ke server par upload ki gayi photos har redeploy/restart par mit jaati hain, isliye R2 zaroori hai
+(10 GB storage aur downloads free). Code tayyar hai — sirf account aur keys chahiye.
 
-- [ ] Cloudflare → **R2 → Create bucket** (jaise `stylekart-images`).
-- [ ] Bucket → **Settings → Public access**: custom domain `images.stylekart.in` jodiye (ya r2.dev URL on kariye).
-- [ ] **R2 → Manage API tokens → Create** (Object Read & Write, sirf is bucket ke liye).
-- [ ] Render mein daaliye:
-      `S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`, `S3_REGION=auto`,
-      `S3_BUCKET=stylekart-images`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
-      `S3_PUBLIC_URL=https://images.stylekart.in`.
-- [ ] Admin mein ek photo upload karke check kariye ki URL `images.stylekart.in/...` wala aa raha hai.
+- [ ] [dash.cloudflare.com](https://dash.cloudflare.com) par free account banaiye → left menu **R2 Object Storage**
+      → pehli baar *Purchase R2 / Enable* (free plan, card verification maang sakta hai, charge nahi hota).
+- [ ] **Create bucket** → naam `stylekart-images`, location *Automatic* → Create.
+- [ ] Bucket → **Settings → Public access**:
+      - domain ho to **Custom Domains → Connect** `images.stylekart.in` (best, CDN cache ke saath), ya
+      - abhi ke liye **R2.dev subdomain → Allow Access** — `https://pub-xxxx.r2.dev` jaisa URL milega.
+- [ ] R2 overview page → **Manage R2 API Tokens → Create API token** → permission *Object Read & Write*,
+      *Apply to specific bucket* = `stylekart-images` → Create. **Access Key ID** aur **Secret Access Key**
+      copy kar lijiye (secret dobara nahi dikhega). Usi page par *S3 endpoint* bhi dikhta hai:
+      `https://<account-id>.r2.cloudflarestorage.com`.
+- [ ] Render → `stylekart-api` → **Environment** mein daaliye, phir **Save, rebuild and deploy**:
+
+| Variable | Value |
+|---|---|
+| `S3_ENDPOINT` | `https://<account-id>.r2.cloudflarestorage.com` |
+| `S3_REGION` | `auto` |
+| `S3_BUCKET` | `stylekart-images` |
+| `S3_ACCESS_KEY_ID` | token ka Access Key ID |
+| `S3_SECRET_ACCESS_KEY` | token ka Secret Access Key |
+| `S3_PUBLIC_URL` | `https://images.stylekart.in` ya `https://pub-xxxx.r2.dev` (aakhir mein `/` nahi) |
+
+- [ ] Admin → **Settings → Connected services** mein *Product photo storage* "Connected" dikhna chahiye.
+      Phir ek product photo upload karke dekhiye ki image URL R2 wala aa raha hai.
+- [ ] R2 se pehle upload ki gayi photos (agar koi hon) dobara upload karni hongi.
 
 ## 6. Hosting ko production plan par
 
@@ -90,13 +106,35 @@ Render ke server par upload ki gayi photos har redeploy par mit jaati hain, isli
 - [ ] Render `stylekart-cache` (Redis) free plan theek hai.
 - [ ] [UptimeRobot](https://uptimerobot.com) (free) par `https://api.stylekart.in/health` aur website ka monitor lagaiye — site down hone par SMS/email aayega.
 
-## 7. Shipping — Shiprocket (ya koi aggregator)
+## 7. Courier — Shiprocket
 
-- [ ] Shiprocket account + KYC + pickup address.
-- [ ] Order aane par: Shiprocket mein shipment banaiye → AWB number Admin → Order → **Create shipment** mein daaliye. Customer ko tracking dikhne lagegi.
-- [ ] Shiprocket webhook (tracking updates) URL `https://api.stylekart.in/shipping/webhook`,
-      header `x-webhook-token` = Render ka `SHIPPING_WEBHOOK_TOKEN`. (Unka payload format alag ho sakta hai —
-      zarurat ho to `apps/api/src/shipping/shipping.controller.ts` mein mapping jodni hogi.)
+Website Shiprocket se judi hai: order page par **Book courier** dabate hi Shiprocket order banta hai,
+sabse sasta/recommended courier chunkar **AWB** milta hai, **pickup** schedule hota hai aur **label**
+download ho jaata hai. Courier ke scan hote hi order apne aap *Shipped → Out for delivery → Delivered*
+hota hai (COD ka payment bhi Delivered par "Paid" ho jaata hai). Seller apne panel se khud book kar
+sakte hain — pickup unke apne address se hota hai.
+
+- [ ] [shiprocket.in](https://www.shiprocket.in) par account + **KYC** (PAN/GST, bank). Wallet mein kuch
+      balance daaliye (shipping charge wahi se katta hai). **COD remittance** ke liye bank account verify kariye —
+      COD ka paisa Shiprocket aapke account mein bhejta hai.
+- [ ] **Settings → Pickup Addresses** → apna godown/dukaan address jodiye, nickname **`Primary`** rakhiye
+      (ya jo rakhein wahi Render mein `SHIPROCKET_PICKUP_LOCATION` mein daaliye). Phone OTP se verify kariye.
+- [ ] **Settings → API → Configure → Create an API User** → ek *alag* email (jaise `api@stylekart.in`) aur
+      password. Main login mat use kariye.
+- [ ] Render → Environment: `SHIPROCKET_EMAIL` = API user ka email, `SHIPROCKET_PASSWORD` = uska password.
+- [ ] **Settings → API → Webhooks** (tracking): URL `https://api.stylekart.in/shipping/courier-updates`
+      (abhi `https://stylekart-api.onrender.com/shipping/courier-updates`), **Token** mein Render ka
+      `SHIPROCKET_WEBHOOK_TOKEN` value copy-paste kariye → Save / Test.
+- [ ] Save + redeploy ke baad Admin → Settings → Connected services mein *Courier (Shiprocket)* "Connected".
+- [ ] **Marketplace sellers**: seller pehli baar "Book courier pickup" dabata hai to uska pickup address
+      Shiprocket mein `SK-<store-name>` naam se apne aap jud jaata hai. **Shiprocket naye pickup address ko
+      OTP se verify karwata hai** — Shiprocket dashboard → Pickup Addresses mein us address ko verify kar
+      dijiye (ya seller ke phone par aaya OTP daaliye), warna us seller ki booking fail hogi.
+- [ ] Ek test order par **Book courier** → label print → courier pickup → tracking update check kariye.
+- [ ] Order cancel karne par Shiprocket booking bhi apne aap cancel hoti hai. Agar kabhi error aaye to
+      Shiprocket dashboard se manually cancel kar dijiye.
+- [ ] Bina Shiprocket ke bhi kaam chalta hai: "Shipped another way? Enter AWB" se courier ka naam aur AWB
+      haath se daal sakte hain.
 
 ## 8. Marketplace — bahar ke sellers
 

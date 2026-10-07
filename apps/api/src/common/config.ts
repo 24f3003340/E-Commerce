@@ -60,6 +60,23 @@ export const config = {
   sellerPanelUrl: `${(process.env.ADMIN_URL || 'http://localhost:3001').replace(/\/$/, '')}/seller`,
   shippingWebhookToken: process.env.SHIPPING_WEBHOOK_TOKEN || '',
   /**
+   * Shiprocket courier aggregator (https://www.shiprocket.in). Use an API user from Shiprocket →
+   * Settings → API → Configure. When not configured, shipments are entered by hand (courier + AWB).
+   */
+  shiprocket: {
+    email: process.env.SHIPROCKET_EMAIL || '',
+    password: process.env.SHIPROCKET_PASSWORD || '',
+    /** Pickup location nickname (Shiprocket → Settings → Pickup addresses) for the store's own orders */
+    pickupLocation: process.env.SHIPROCKET_PICKUP_LOCATION || 'Primary',
+    /** Token Shiprocket sends in the x-api-key header of tracking webhooks */
+    webhookToken: process.env.SHIPROCKET_WEBHOOK_TOKEN || process.env.SHIPPING_WEBHOOK_TOKEN || '',
+    /** Only changed for tests against a stand-in server */
+    apiBase: (process.env.SHIPROCKET_API_BASE || 'https://apiv2.shiprocket.in/v1/external').replace(/\/$/, ''),
+    get enabled() {
+      return Boolean(this.email && this.password);
+    },
+  },
+  /**
    * S3-compatible object storage for uploaded images (Cloudflare R2, AWS S3, DigitalOcean Spaces…).
    * When not configured, uploads are written to the local disk (fine for development only).
    */

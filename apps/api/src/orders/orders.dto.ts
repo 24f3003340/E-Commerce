@@ -1,6 +1,6 @@
 import { OrderStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsDateString, IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
 
 export class CheckoutDto {
   @IsString()
@@ -105,4 +105,19 @@ export class CreateShipmentDto {
   @IsOptional()
   @IsUrl()
   trackingUrl?: string;
+}
+
+/** Package details for booking a courier pickup (weight in kg, sizes in cm). */
+export class BookCourierDto {
+  @IsNumber({ maxDecimalPlaces: 3 }) @Min(0.05) @Max(50)
+  weightKg: number;
+
+  @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  lengthCm: number;
+
+  @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  breadthCm: number;
+
+  @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  heightCm: number;
 }

@@ -2,7 +2,14 @@ import { Body, Controller, Headers, HttpCode, Post, UnauthorizedException } from
 import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
 import { timingSafeEqual } from 'crypto';
 import { config } from '../common/config';
+import { mapShiprocketWebhook } from './shiprocket.mapper';
 import { ShippingService } from './shipping.service';
+
+function tokenMatches(expectedToken: string, given: string | undefined) {
+  const expected = Buffer.from(expectedToken);
+  const actual = Buffer.from(given ?? '');
+  return expected.length > 0 && expected.length === actual.length && timingSafeEqual(expected, actual);
+}
 
 class ShippingWebhookDto {
   @IsString()
@@ -39,11 +46,22 @@ export class ShippingController {
   @HttpCode(200)
   @Post('webhook')
   webhook(@Headers('x-webhook-token') token: string | undefined, @Body() dto: ShippingWebhookDto) {
-    const expected = Buffer.from(config.shippingWebhookToken);
-    const given = Buffer.from(token ?? '');
-    if (!expected.length || expected.length !== given.length || !timingSafeEqual(expected, given)) {
-      throw new UnauthorizedException('Invalid webhook token');
-    }
+    if (!tokenMatches(config.shippingWebhookToken, token)) throw new UnauthorizedException('Invalid webhook token');
     return this.shipping.applyUpdate(dto);
+  }
+
+  /**
+   * Shiprocket tracking webhook (Shiprocket → Settings → API → Webhooks). Shiprocket rejects URLs
+   * containing "shiprocket", "sr" or "kr", hence the neutral path. It sends the token configured
+   * there in the x-api-key header.
+   */
+  @HttpCode(200)
+  @Post('courier-updates')
+  courierUpdates(@Headers('x-api-key') token: string | undefined, @Body() body: unknown) {
+    if (!tokenMatches(config.shiprocket.webhookToken, token)) throw new UnauthorizedException('Invalid webhook token');
+    const update = mapShiprocketWebhook(body);
+    // Shiprocket's "test webhook" button sends an empty payload; answer 200 so it can be saved
+    if (!update) return { ok: true, ignored: true };
+    return this.shipping.applyUpdate(update);
   }
 }

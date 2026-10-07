@@ -30,7 +30,7 @@ import { AdminAuthGuard, SellerAuthGuard } from '../common/guards';
 import { SettingsService } from '../common/settings.service';
 import { renderInvoice } from '../orders/invoice';
 import { allowedNextStatuses } from '../orders/order-state';
-import { AdminOrderQueryDto, CreateShipmentDto } from '../orders/orders.dto';
+import { AdminOrderQueryDto, BookCourierDto, CreateShipmentDto } from '../orders/orders.dto';
 import { OrdersService } from '../orders/orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ShippingService } from '../shipping/shipping.service';
@@ -245,6 +245,14 @@ export class SellerOrdersController {
     return this.detail(seller, id);
   }
 
+  /** Book a pickup with the courier aggregator from the seller's own pickup address. */
+  @Post(':id/courier')
+  async bookCourier(@CurrentSeller() seller: SellerPrincipal, @Param('id') id: string, @Body() dto: BookCourierDto) {
+    await this.orders.sellerOrder(seller.id, id);
+    await this.shipping.bookCourier(id, dto, actor(seller));
+    return this.detail(seller, id);
+  }
+
   @Get(':id/invoice')
   @Header('Content-Type', 'text/html; charset=utf-8')
   async invoice(@CurrentSeller() seller: SellerPrincipal, @Param('id') id: string) {
@@ -256,7 +264,11 @@ export class SellerOrdersController {
   private async detail(seller: SellerPrincipal, id: string) {
     const { payments: _payments, refunds: _refunds, ...order } = await this.orders.sellerOrder(seller.id, id);
     const sellerSteps: OrderStatus[] = [...SELLER_ORDER_STATUSES, OrderStatus.SHIPPED];
-    return { ...order, allowedNextStatuses: allowedNextStatuses(order.status).filter((s) => sellerSteps.includes(s)) };
+    return {
+      ...order,
+      allowedNextStatuses: allowedNextStatuses(order.status).filter((s) => sellerSteps.includes(s)),
+      courierEnabled: this.shipping.courierEnabled,
+    };
   }
 }
 
