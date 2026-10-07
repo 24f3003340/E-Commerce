@@ -29,6 +29,7 @@ import { shippingFee, subtotalOf } from '../coupons/coupon-math';
 import { CouponsService } from '../coupons/coupons.service';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { GatewayOrder, RazorpayGateway } from '../payments/razorpay.gateway';
+import { ShiprocketClient } from '../shipping/shiprocket.client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminOrderQueryDto, CheckoutDto } from './orders.dto';
 import { canTransition, CUSTOMER_CANCELLABLE, STATUS_NOTIFICATIONS } from './order-state';
@@ -72,6 +73,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     private readonly notifications: NotificationsService,
     private readonly cache: CacheService,
     private readonly email: EmailService,
+    private readonly courier: ShiprocketClient,
   ) {}
 
   onModuleInit() {
@@ -484,9 +486,28 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
       return order;
     });
     await this.cache.delByPrefix('catalog:');
+    await this.cancelCourierBooking(orderId);
     await this.processPendingRefunds(orderId);
     await this.notify(order.userId, 'ORDER_CANCELLED', 'Order cancelled', `Your order ${order.orderNumber} has been cancelled.`, order.orderNumber);
     return this.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: orderDetailInclude });
+  }
+
+  /** A packed order may already be booked with the courier; call the pickup off there too. */
+  private async cancelCourierBooking(orderId: string) {
+    const booked = await this.prisma.shipment.findMany({
+      where: { orderId, provider: 'SHIPROCKET', providerOrderId: { not: null }, status: { not: 'CANCELLED' } },
+    });
+    for (const s of booked) {
+      try {
+        await this.courier.cancelOrders([s.providerOrderId!]);
+        await this.prisma.shipment.update({
+          where: { id: s.id },
+          data: { status: 'CANCELLED', events: { create: { status: 'CANCELLED', note: 'Courier booking cancelled' } } },
+        });
+      } catch (err) {
+        this.logger.error(`Could not cancel courier booking ${s.awb} of order ${orderId}: ${(err as Error).message} — cancel it in Shiprocket`);
+      }
+    }
   }
 
   /** Sends pending refunds of an order to the gateway (original payment method). */

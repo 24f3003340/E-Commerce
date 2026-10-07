@@ -72,6 +72,17 @@ services:
         sync: false
       - key: S3_PUBLIC_URL
         sync: false
+      # Shiprocket courier aggregator (API user from Shiprocket → Settings → API → Configure)
+      - key: SHIPROCKET_EMAIL
+        sync: false
+      - key: SHIPROCKET_PASSWORD
+        sync: false
+      # Nickname of the store's own pickup address in Shiprocket
+      - key: SHIPROCKET_PICKUP_LOCATION
+        value: Primary
+      # Paste the same value as the "Token" of the Shiprocket tracking webhook
+      - key: SHIPROCKET_WEBHOOK_TOKEN
+        generateValue: true
 
   - type: keyvalue
     name: stylekart-cache

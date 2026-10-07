@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '@/components/AdminShell';
+import { CourierBookingModal } from '@/components/CourierBooking';
 import { Badge, Field, Modal, PageHeader, Spinner } from '@/components/ui';
 import { api, ApiError, openHtml } from '@/lib/api';
 import { formatDate, humanize, inr, ORDER_STATUS_LABEL } from '@/lib/format';
@@ -32,7 +33,8 @@ interface OrderDetail {
   items: { id: string; productName: string; variantLabel: string; sku: string; imageUrl: string | null; unitPrice: number; quantity: number; total: number; returnedQuantity: number }[];
   history: { id: string; status: string; note: string | null; actor: string; createdAt: string }[];
   payments: { id: string; provider: string; status: string; amount: number; method: string | null; providerPaymentId: string | null; createdAt: string }[];
-  shipments: { id: string; carrier: string; awb: string | null; trackingUrl: string | null; status: string; events: { id: string; status: string; location: string | null; occurredAt: string }[] }[];
+  shipments: { id: string; carrier: string; awb: string | null; trackingUrl: string | null; labelUrl: string | null; provider: string; status: string; events: { id: string; status: string; location: string | null; occurredAt: string }[] }[];
+  courierEnabled: boolean;
   refunds: { id: string; amount: number; status: string; mode: string; createdAt: string }[];
   returns: { id: string; returnNumber: string; status: string }[];
   allowedNextStatuses: OrderStatus[];
@@ -45,6 +47,7 @@ export default function OrderDetailPage() {
   const [status, setStatus] = useState<OrderStatus | ''>('');
   const [note, setNote] = useState('');
   const [shipOpen, setShipOpen] = useState(false);
+  const [courierOpen, setCourierOpen] = useState(false);
   const [ship, setShip] = useState({ carrier: 'Delhivery', awb: '', trackingUrl: '' });
 
   const load = useCallback(() => api<OrderDetail>(`/admin/orders/${id}`).then(setOrder), [id]);
@@ -54,14 +57,18 @@ export default function OrderDetailPage() {
 
   if (!order) return <Spinner />;
   const a = order.shippingAddress;
+  const activeShipment = order.shipments.find((s) => s.status !== 'CANCELLED');
+  const canBookCourier = order.courierEnabled && !activeShipment && ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(order.status);
 
   const run = async (fn: () => Promise<unknown>, msg: string) => {
     try {
       await fn();
       toast(msg);
       await load();
+      return true;
     } catch (err) {
       toast(err instanceof ApiError ? err.message : 'Action failed', true);
+      return false;
     }
   };
 
@@ -146,6 +153,10 @@ export default function OrderDetailPage() {
               {order.shipments.map((s) => (
                 <div key={s.id} className="mb-3 text-sm">
                   <p className="font-semibold">{s.carrier} · AWB {s.awb} <Badge value={s.status} /></p>
+                  <p className="mt-1 flex gap-3 text-xs">
+                    {s.labelUrl && <a href={s.labelUrl} target="_blank" rel="noreferrer" className="font-semibold text-brand-700">Download label ↗</a>}
+                    {s.trackingUrl && <a href={s.trackingUrl} target="_blank" rel="noreferrer" className="font-semibold text-brand-700">Track ↗</a>}
+                  </p>
                   <ul className="mt-1 text-xs text-gray-600">
                     {s.events.map((e) => (
                       <li key={e.id}>{formatDate(e.occurredAt, true)} — {humanize(e.status)}{e.location ? `, ${e.location}` : ''}</li>
@@ -170,8 +181,13 @@ export default function OrderDetailPage() {
                 </select>
                 <input className="input" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
                 <button className="btn-primary w-full" disabled={!status} onClick={updateStatus}>Update status</button>
-                {order.allowedNextStatuses.includes('SHIPPED') && (
-                  <button className="btn-dark w-full" onClick={() => setShipOpen(true)}>Create shipment & mark shipped</button>
+                {canBookCourier && (
+                  <button className="btn-dark w-full" onClick={() => setCourierOpen(true)}>Book courier (Shiprocket)</button>
+                )}
+                {order.allowedNextStatuses.includes('SHIPPED') && activeShipment?.provider !== 'SHIPROCKET' && (
+                  <button className={canBookCourier ? 'btn-outline w-full' : 'btn-dark w-full'} onClick={() => setShipOpen(true)}>
+                    {canBookCourier ? 'Shipped another way? Enter AWB' : 'Create shipment & mark shipped'}
+                  </button>
                 )}
               </>
             ) : (
@@ -234,6 +250,12 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
+      {courierOpen && (
+        <CourierBookingModal
+          onClose={() => setCourierOpen(false)}
+          onBook={(size) => run(() => api(`/admin/orders/${id}/courier`, { method: 'POST', body: size }), 'Courier booked — AWB assigned')}
+        />
+      )}
       {shipOpen && (
         <Modal title="Create shipment" onClose={() => setShipOpen(false)}>
           <form

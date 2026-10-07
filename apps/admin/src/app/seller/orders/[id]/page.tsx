@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { CourierBookingModal } from '@/components/CourierBooking';
 import { useSeller } from '@/components/SellerShell';
 import { Badge, Field, Modal, PageHeader, Spinner } from '@/components/ui';
 import { ApiError } from '@/lib/client';
@@ -25,7 +26,8 @@ interface SellerOrder {
   user: { name: string };
   items: { id: string; productName: string; variantLabel: string; sku: string; imageUrl: string | null; unitPrice: number; quantity: number; total: number; returnedQuantity: number }[];
   history: { id: string; status: string; note: string | null; actor: string; createdAt: string }[];
-  shipments: { id: string; carrier: string; awb: string | null; trackingUrl: string | null; status: string }[];
+  shipments: { id: string; carrier: string; awb: string | null; trackingUrl: string | null; labelUrl: string | null; provider: string; status: string }[];
+  courierEnabled: boolean;
   returns: { id: string; returnNumber: string; status: string }[];
   allowedNextStatuses: OrderStatus[];
 }
@@ -42,6 +44,7 @@ export default function SellerOrderPage() {
   const [shipOpen, setShipOpen] = useState(false);
   const [ship, setShip] = useState({ carrier: 'Delhivery', awb: '', trackingUrl: '' });
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [courierOpen, setCourierOpen] = useState(false);
   const [reason, setReason] = useState('');
 
   const load = useCallback(() => sellerApi<SellerOrder>(`/seller/orders/${id}`).then(setOrder), [id]);
@@ -50,6 +53,8 @@ export default function SellerOrderPage() {
   }, [load]);
   if (!order) return <Spinner />;
   const a = order.shippingAddress;
+  const activeShipment = order.shipments.find((s) => s.status !== 'CANCELLED');
+  const canBookCourier = order.courierEnabled && !activeShipment && ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(order.status);
   const commission = Math.round((order.subtotal * order.commissionPct) / 100);
 
   const run = async (fn: () => Promise<unknown>, msg: string) => {
@@ -134,8 +139,16 @@ export default function SellerOrderPage() {
                 {order.allowedNextStatuses.filter((s) => s === 'PROCESSING' || s === 'PACKED').slice(0, 1).map((s) => (
                   <button key={s} className="btn-primary w-full" onClick={() => void move(s)}>{NEXT_LABEL[s]}</button>
                 ))}
-                {order.allowedNextStatuses.includes('SHIPPED') && (
-                  <button className="btn-dark w-full" onClick={() => setShipOpen(true)}>Add AWB & mark shipped</button>
+                {canBookCourier && (
+                  <button className="btn-dark w-full" onClick={() => setCourierOpen(true)}>Book courier pickup</button>
+                )}
+                {order.allowedNextStatuses.includes('SHIPPED') && activeShipment?.provider !== 'SHIPROCKET' && (
+                  <button className={canBookCourier ? 'btn-outline w-full' : 'btn-dark w-full'} onClick={() => setShipOpen(true)}>
+                    {canBookCourier ? 'Shipped yourself? Enter AWB' : 'Add AWB & mark shipped'}
+                  </button>
+                )}
+                {activeShipment?.provider === 'SHIPROCKET' && order.status === 'PACKED' && (
+                  <p className="rounded-md bg-brand-50 p-2 text-xs text-brand-900">Pickup booked. Stick the label on the parcel and hand it to the courier — the order turns “Shipped” on its own when the courier scans it.</p>
                 )}
                 {order.allowedNextStatuses.includes('CANCELLED') && (
                   <button className="btn-outline w-full text-red-600" onClick={() => setCancelOpen(true)}>Cannot fulfil — cancel order</button>
@@ -154,6 +167,7 @@ export default function SellerOrderPage() {
             {order.shipments.map((s) => (
               <p key={s.id} className="text-sm">
                 {s.carrier} · AWB <span className="font-mono">{s.awb}</span> <Badge value={s.status} />
+                {s.labelUrl && <a href={s.labelUrl} target="_blank" rel="noreferrer" className="ml-1 font-semibold text-brand-700">Label ↗</a>}
                 {s.trackingUrl && <a href={s.trackingUrl} target="_blank" rel="noreferrer" className="ml-1 text-brand-700">Track ↗</a>}
               </p>
             ))}
@@ -174,6 +188,12 @@ export default function SellerOrderPage() {
         </div>
       </div>
 
+      {courierOpen && (
+        <CourierBookingModal
+          onClose={() => setCourierOpen(false)}
+          onBook={(size) => run(() => sellerApi(`/seller/orders/${id}/courier`, { method: 'POST', body: size }), 'Pickup booked — AWB assigned')}
+        />
+      )}
       {shipOpen && (
         <Modal title="Ship order" onClose={() => setShipOpen(false)}>
           <form

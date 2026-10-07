@@ -162,6 +162,8 @@ model Seller {
   commissionPct     Float?
   approvedAt        DateTime?
   lastLoginAt       DateTime?
+  // Pickup location nickname registered with the courier aggregator (Shiprocket)
+  courierPickup     String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   products          Product[]
@@ -608,18 +610,23 @@ model WebhookEvent {
 }
 
 model Shipment {
-  id          String          @id @default(cuid())
-  orderId     String
-  carrier     String
-  awb         String?         @unique
-  trackingUrl String?
-  status      String          @default("CREATED")
-  shippedAt   DateTime?
-  deliveredAt DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  events      ShipmentEvent[]
+  id                 String          @id @default(cuid())
+  orderId            String
+  carrier            String
+  awb                String?         @unique
+  trackingUrl        String?
+  status             String          @default("CREATED")
+  // MANUAL (AWB typed in) or SHIPROCKET (booked through the courier aggregator)
+  provider           String          @default("MANUAL")
+  providerOrderId    String?
+  providerShipmentId String?
+  labelUrl           String?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events             ShipmentEvent[]
 
   @@index([orderId])
   @@map("shipments")

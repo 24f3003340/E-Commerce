@@ -185,6 +185,19 @@ export class AdminContentController {
     return { ok: true };
   }
 
+  /** Which outside services are connected — shown on the admin Settings page. */
+  @Get('system-status')
+  systemStatus() {
+    return {
+      imageStorage: config.storage.enabled ? 'cloud' : 'local',
+      imageStorageUrl: config.storage.enabled ? config.storage.publicUrl : null,
+      courier: config.shiprocket.enabled,
+      courierPickupLocation: config.shiprocket.enabled ? config.shiprocket.pickupLocation : null,
+      onlinePayments: config.razorpay.enabled,
+      email: Boolean(config.email.resendApiKey),
+    };
+  }
+
   @Get('settings')
   getSettings() {
     return this.settings.get();

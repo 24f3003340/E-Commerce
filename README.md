@@ -141,6 +141,10 @@ admin users with roles, TOTP two-factor login, audit logs.
 dashboard, products (same editor, sent for approval), inventory, own orders (accept → pack → ship
 with AWB → invoice / packing slip, cancel), earnings & payout history, profile.
 
+**Courier** — Shiprocket integration: book pickup with AWB + label from the admin or seller order
+page (sellers ship from their own pickup address), automatic tracking updates via webhook
+(`POST /shipping/courier-updates`), courier booking cancelled with the order.
+
 **Backend** — marketplace (sellers, approval, per-seller orders, commission, payouts), JWT access + rotating refresh tokens, role-based admin permissions, rate limiting,
 input validation, atomic stock reservation, Razorpay signature + webhook verification
 (idempotent), shipping aggregator webhook, auto-expiry of unpaid orders, notifications

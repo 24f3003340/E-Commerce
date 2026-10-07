@@ -30,6 +30,9 @@ function s3Client() {
     region: config.storage.region,
     endpoint: config.storage.endpoint || undefined,
     credentials: { accessKeyId: config.storage.accessKeyId, secretAccessKey: config.storage.secretAccessKey },
+    // Cloudflare R2 does not accept every newer AWS checksum header; only send them when required
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
   return s3;
 }

@@ -10,6 +10,7 @@ import { renderInvoice } from './invoice';
 import { allowedNextStatuses } from './order-state';
 import {
   AdminOrderQueryDto,
+  BookCourierDto,
   CancelOrderDto,
   CheckoutDto,
   CreateShipmentDto,
@@ -96,7 +97,7 @@ export class AdminOrdersController {
   @Get(':id')
   async get(@Param('id') id: string) {
     const order = await this.orders.adminGet(id);
-    return { ...order, allowedNextStatuses: allowedNextStatuses(order.status) };
+    return { ...order, allowedNextStatuses: allowedNextStatuses(order.status), courierEnabled: this.shipping.courierEnabled };
   }
 
   @Get(':id/invoice')
@@ -119,6 +120,14 @@ export class AdminOrdersController {
   async createShipment(@Param('id') id: string, @Body() dto: CreateShipmentDto, @CurrentAdmin() admin: AdminPrincipal) {
     const shipment = await this.shipping.create(id, dto, `admin:${admin.id}`);
     await this.audit.log(admin, 'create', 'shipment', shipment.id, { orderId: id, ...dto });
+    return shipment;
+  }
+
+  @AdminRoles(AdminRole.ORDER_MANAGER)
+  @Post(':id/courier')
+  async bookCourier(@Param('id') id: string, @Body() dto: BookCourierDto, @CurrentAdmin() admin: AdminPrincipal) {
+    const shipment = await this.shipping.bookCourier(id, dto, `admin:${admin.id}`);
+    await this.audit.log(admin, 'book_courier', 'shipment', shipment.id, { orderId: id, awb: shipment.awb, ...dto });
     return shipment;
   }
 
