@@ -167,7 +167,7 @@ async function main() {
   // Category images
   for (const root of CATEGORY_TREE) {
     const shape = { men: 'tshirt', women: 'dress', kids: 'tshirt', footwear: 'shoe', accessories: 'bag' }[root.slug] ?? 'tshirt';
-    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#2563eb'));
+    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#2e3f8f'));
     await prisma.category.update({ where: { slug: root.slug }, data: { imageUrl: url } });
   }
 
@@ -283,7 +283,7 @@ async function main() {
 
   // Banners
   const bannerImages = [
-    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#0a1c36', '#2563eb', ['tshirt', 'dress', 'shoe'])),
+    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#1f2a5a', '#c2512f', ['tshirt', 'dress', 'shoe'])),
     writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#7c2d12', '#db2777', ['kurta', 'dress', 'sandal'])),
     writeAsset('banner-3.svg', bannerSvg('FLAT200', '#064e3b', '#0d9488', ['bag', 'shirt', 'watch'])),
   ];

@@ -273,7 +273,7 @@ export default function CheckoutPage() {
             <p className="text-xs font-semibold text-emerald-700">You save {inr(s.productDiscount + s.couponDiscount)} on this order</p>
           )}
           {s.packageCount > 1 && (
-            <p className="rounded-md bg-blue-50 p-2 text-xs text-blue-900">
+            <p className="rounded-md bg-brand-50 p-2 text-xs text-brand-900">
               Your items come from {s.packageCount} sellers, so they will be placed as {s.packageCount} orders and may arrive in separate packages.
             </p>
           )}

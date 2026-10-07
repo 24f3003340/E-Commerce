@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   description: 'Shop the latest fashion for men, women and kids. Free delivery over ₹999, easy 7-day returns, COD and secure payments.',
 };
 
-export const viewport: Viewport = { themeColor: '#0a1c36' };
+export const viewport: Viewport = { themeColor: '#1f2a5a' };
 
 export const dynamic = 'force-dynamic';
 

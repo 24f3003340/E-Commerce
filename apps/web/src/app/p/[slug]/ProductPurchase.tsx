@@ -358,7 +358,7 @@ export function ProductPurchase({ product }: { product: ProductDetail }) {
         </div>
 
         <p className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-          <Icon name="store" className="h-4 w-4" /> Sold by <span className="font-semibold text-brand-700">{process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart'} Retail</span>
+          <Icon name="store" className="h-4 w-4" /> Sold by <span className="font-semibold text-brand-700">{product.seller?.storeName ?? `${process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart'} Retail`}</span>
         </p>
 
         {product.specifications && Object.keys(product.specifications).length > 0 && (
