@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { AdminRole, BannerPosition, CouponType, InventoryReason, PrismaClient, ProductStatus } from '@prisma/client';
+import { AdminRole, BannerPosition, CouponType, InventoryReason, PrismaClient, ProductStatus, SellerStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import { bannerSvg, productSvg, type Shape } from './artwork';
@@ -268,6 +268,64 @@ async function main() {
       update: {},
     });
     console.log('✓ demo customer customer@example.com / Customer@123');
+  }
+
+  // Test accounts for trying the live site (admin, approved seller, buyer). Only created when
+  // SEED_TEST_ACCOUNTS_PASSWORD is set, so the password never lives in the repository.
+  const testPassword = process.env.SEED_TEST_ACCOUNTS_PASSWORD;
+  if (testPassword) {
+    const testHash = await bcrypt.hash(testPassword, 12);
+    await prisma.admin.upsert({
+      where: { email: 'testadmin@example.com' },
+      create: { email: 'testadmin@example.com', name: 'Test Admin', role: AdminRole.ADMIN, passwordHash: testHash },
+      update: { passwordHash: testHash, isActive: true },
+    });
+    await prisma.seller.upsert({
+      where: { email: 'testseller@example.com' },
+      create: {
+        email: 'testseller@example.com',
+        name: 'Test Seller',
+        phone: '9000000001',
+        passwordHash: testHash,
+        storeName: 'Test Seller Store',
+        slug: 'test-seller-store',
+        description: 'Testing account — not a real store',
+        gstin: '27ABCDE1234F1Z5',
+        pan: 'ABCDE1234F',
+        addressLine1: '12 Test Market, Andheri East',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400069',
+        bankAccountName: 'Test Seller',
+        bankAccountNumber: '123456789012',
+        bankIfsc: 'HDFC0001234',
+        status: SellerStatus.APPROVED,
+        approvedAt: new Date(),
+      },
+      update: { passwordHash: testHash },
+    });
+    await prisma.user.upsert({
+      where: { email: 'testbuyer@example.com' },
+      create: {
+        name: 'Test Buyer',
+        email: 'testbuyer@example.com',
+        phone: '9000000002',
+        passwordHash: testHash,
+        addresses: {
+          create: {
+            name: 'Test Buyer',
+            phone: '9000000002',
+            line1: '45 Test Colony, Koramangala',
+            city: 'Bengaluru',
+            state: 'Karnataka',
+            pincode: '560034',
+            isDefault: true,
+          },
+        },
+      },
+      update: { passwordHash: testHash, isActive: true },
+    });
+    console.log('✓ test accounts testadmin@ / testseller@ / testbuyer@example.com');
   }
 
   // Coupons
