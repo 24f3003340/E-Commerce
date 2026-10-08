@@ -18,9 +18,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const { ready, user } = useRequireAuth();
   const pathname = usePathname();
   if (!ready) return <Spinner />;
+  // minmax(0, …) columns + min-w-0 stop the scrollable tab bar from widening the page on phones
   return (
-    <div className="container grid gap-8 py-8 lg:grid-cols-[220px_1fr]">
-      <aside>
+    <div className="container grid grid-cols-1 gap-8 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside className="min-w-0">
         <p className="text-sm text-gray-500">Hello,</p>
         <p className="mb-4 font-bold">{user?.name}</p>
         <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:gap-1">
@@ -38,7 +39,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           ))}
         </nav>
       </aside>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

@@ -83,30 +83,32 @@ export default function SellerOrderPage() {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="space-y-6 xl:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="min-w-0 space-y-6 xl:col-span-2">
           <section className="card p-5">
             <h2 className="mb-3 font-bold">Items to pack</h2>
-            <table className="table">
-              <thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Qty</th><th className="text-right">Total</th></tr></thead>
-              <tbody>
-                {order.items.map((i) => (
-                  <tr key={i.id}>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={i.imageUrl ?? ''} alt="" className="h-12 w-10 rounded bg-gray-100 object-cover" />
-                        <span>{i.productName}<span className="block text-xs text-gray-500">{i.variantLabel}{i.returnedQuantity ? ` · ${i.returnedQuantity} returned` : ''}</span></span>
-                      </div>
-                    </td>
-                    <td className="font-mono text-xs">{i.sku}</td>
-                    <td>{inr(i.unitPrice)}</td>
-                    <td className="font-semibold">{i.quantity}</td>
-                    <td className="text-right">{inr(i.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead><tr><th>Product</th><th>SKU</th><th>Price</th><th>Qty</th><th className="text-right">Total</th></tr></thead>
+                <tbody>
+                  {order.items.map((i) => (
+                    <tr key={i.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={i.imageUrl ?? ''} alt="" className="h-12 w-10 rounded bg-gray-100 object-cover" />
+                          <span>{i.productName}<span className="block text-xs text-gray-500">{i.variantLabel}{i.returnedQuantity ? ` · ${i.returnedQuantity} returned` : ''}</span></span>
+                        </div>
+                      </td>
+                      <td className="font-mono text-xs">{i.sku}</td>
+                      <td>{inr(i.unitPrice)}</td>
+                      <td className="font-semibold">{i.quantity}</td>
+                      <td className="text-right">{inr(i.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="ml-auto mt-4 max-w-xs space-y-1 text-sm">
               <div className="flex justify-between"><span>Item value</span><span>{inr(order.subtotal)}</span></div>
               <div className="flex justify-between text-gray-600"><span>Commission ({order.commissionPct}%)</span><span>−{inr(commission)}</span></div>
