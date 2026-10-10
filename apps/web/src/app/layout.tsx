@@ -32,9 +32,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={inter.variable}>
       <body>
         <StoreProvider>
-          <div className="bg-navy-950 py-1.5 text-center text-xs font-medium text-white">
-            Free delivery on orders above ₹999 · Easy 7-day returns · Cash on delivery available
-          </div>
           <Header categories={categories} />
           <main className="min-h-[60vh]">{children}</main>
           <Footer categories={categories} onlinePayments={store.onlinePayments} sellerRegistrationOpen={store.sellerRegistrationOpen} />
