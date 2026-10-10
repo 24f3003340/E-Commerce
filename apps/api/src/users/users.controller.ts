@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
@@ -13,6 +14,8 @@ import {
 import { UserPrincipal } from '../common/auth.types';
 import { CurrentUser } from '../common/decorators';
 import { UserAuthGuard } from '../common/guards';
+import { OrderStatus } from '@prisma/client';
+import { randomBytes } from 'crypto';
 import { publicUser } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddressDto, UpdateProfileDto } from './users.dto';
@@ -25,6 +28,40 @@ export class UsersController {
   @Patch()
   async updateProfile(@CurrentUser() user: UserPrincipal, @Body() dto: UpdateProfileDto) {
     return publicUser(await this.prisma.user.update({ where: { id: user.id }, data: dto }));
+  }
+
+  /**
+   * Deletes the customer's account (required in-app by the App Store and Play Store). Personal
+   * data is erased and sign-in is disabled; orders stay for GST / accounting records with only the
+   * delivery-address snapshot they were placed with.
+   */
+  @Delete()
+  async deleteAccount(@CurrentUser() user: UserPrincipal) {
+    const open = await this.prisma.order.count({
+      where: { userId: user.id, status: { notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED] } },
+    });
+    if (open > 0) {
+      throw new ForbiddenException('You have orders on the way. Please delete your account after they are delivered or cancelled.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.address.deleteMany({ where: { userId: user.id } }),
+      this.prisma.cart.deleteMany({ where: { userId: user.id } }),
+      this.prisma.wishlistItem.deleteMany({ where: { userId: user.id } }),
+      this.prisma.notification.deleteMany({ where: { userId: user.id } }),
+      this.prisma.refreshToken.deleteMany({ where: { userId: user.id } }),
+      this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isActive: false,
+          name: 'Deleted user',
+          email: `deleted-${user.id}@deleted.invalid`,
+          phone: null,
+          passwordHash: randomBytes(32).toString('hex'),
+        },
+      }),
+    ]);
+    return { deleted: true };
   }
 
   @Get('addresses')
