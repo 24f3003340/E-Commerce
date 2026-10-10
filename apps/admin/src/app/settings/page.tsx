@@ -116,6 +116,84 @@ function Connections() {
   );
 }
 
+interface DemoStatus {
+  removedAt: string | null;
+  products: number;
+  coupons: number;
+  banners: number;
+}
+
+interface DemoRemoval {
+  productsDeleted: number;
+  productsArchived: number;
+  couponsDeleted: number;
+  couponsDeactivated: number;
+  bannersDeleted: number;
+}
+
+/**
+ * The sample products, coupons and banners that come with a new database. Removing them here is
+ * permanent: the API runs its seed on every start, and it skips the samples once they are removed.
+ */
+function DemoData() {
+  const { toast } = useAdmin();
+  const [st, setSt] = useState<DemoStatus | null>(null);
+  const [done, setDone] = useState<DemoRemoval | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = () => api<DemoStatus>('/admin/demo-data').then(setSt).catch(() => undefined);
+  useEffect(() => {
+    void load();
+  }, []);
+  if (!st) return null;
+
+  const left = st.products + st.coupons + st.banners;
+  const remove = async () => {
+    if (!confirm(`Remove ${st.products} sample products, ${st.coupons} sample coupons and ${st.banners} sample banners?\n\nYour own products, coupons, banners and orders are not touched. This cannot be undone.`)) return;
+    setBusy(true);
+    try {
+      setDone(await api<DemoRemoval>('/admin/demo-data/remove', { method: 'POST' }));
+      toast('Demo data removed');
+      await load();
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Could not remove demo data', true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card space-y-3 p-5">
+      <h2 className="font-bold">Demo data</h2>
+      <p className="text-sm text-gray-600">
+        A new store comes with sample products, coupons (WELCOME10, FLAT200, FOOTWEAR15) and banners so you can try everything.
+        Remove them before you open the shop to customers.
+      </p>
+      {left > 0 ? (
+        <>
+          <ul className="text-sm text-gray-700">
+            <li>{st.products} sample products live on the website</li>
+            <li>{st.coupons} sample coupons active</li>
+            <li>{st.banners} sample banners on the home page</li>
+          </ul>
+          <button className="btn-outline text-red-600" disabled={busy} onClick={() => void remove()}>
+            {busy ? 'Removing…' : 'Remove all demo data'}
+          </button>
+          <p className="text-xs text-gray-500">
+            Categories stay (rename or delete them in Categories). Sample products that already have orders are hidden instead of deleted.
+            The samples will not come back when the server restarts.
+          </p>
+        </>
+      ) : (
+        <p className="text-sm text-emerald-700">
+          {st.removedAt ? `Demo data was removed on ${new Date(st.removedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}.` : 'There is no demo data on this store.'}
+          {done && ` Deleted ${done.productsDeleted + done.productsArchived} products, ${done.couponsDeleted + done.couponsDeactivated} coupons and ${done.bannersDeleted} banners.`}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const { admin, toast } = useAdmin();
   const [s, setS] = useState<Settings | null>(null);
@@ -133,6 +211,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader title="Settings" />
       <Connections />
+      {admin.role === 'SUPER_ADMIN' && <DemoData />}
       <form
         className="card grid gap-4 p-5 md:grid-cols-2"
         onSubmit={async (e) => {

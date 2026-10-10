@@ -252,6 +252,8 @@ model Product {
   isFeatured     Boolean           @default(false)
   // null = sold by the store itself
   sellerId       String?
+  // Sample product created by the seed script; Admin → Settings → Demo data removes these
+  isDemo         Boolean           @default(false)
   // Denormalised fields for fast listing/sorting
   minPrice       Int               @default(0)
   maxMrp         Int               @default(0)
@@ -436,6 +438,8 @@ model Coupon {
   startsAt              DateTime?
   endsAt                DateTime?
   isActive              Boolean       @default(true)
+  // Sample coupon created by the seed script
+  isDemo                Boolean       @default(false)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   usages                CouponUsage[]
@@ -759,6 +763,8 @@ model Banner {
   isActive  Boolean        @default(true)
   startsAt  DateTime?
   endsAt    DateTime?
+  // Sample banner created by the seed script
+  isDemo    Boolean        @default(false)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 

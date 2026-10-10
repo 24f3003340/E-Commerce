@@ -22,6 +22,7 @@ import { AdminAuthGuard } from '../common/guards';
 import { paginate, paginated } from '../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminService } from './admin.service';
+import { DemoDataService } from './demo-data.service';
 
 class CreateAdminDto {
   @IsString()
@@ -86,6 +87,7 @@ export class AdminController {
     private readonly prisma: PrismaService,
     private readonly tokens: TokensService,
     private readonly audit: AuditService,
+    private readonly demoData: DemoDataService,
   ) {}
 
   @Get('dashboard')
@@ -100,6 +102,23 @@ export class AdminController {
       throw new BadRequestException('Invalid date');
     }
     return this.admin.salesReport(from, to);
+  }
+
+  // ───────────── Demo data ─────────────
+
+  @SuperAdminOnly()
+  @Get('demo-data')
+  demoDataStatus() {
+    return this.demoData.status();
+  }
+
+  /** Removes the sample products, coupons and banners and stops the seed from recreating them. */
+  @SuperAdminOnly()
+  @Post('demo-data/remove')
+  async removeDemoData(@CurrentAdmin() admin: AdminPrincipal) {
+    const result = await this.demoData.remove();
+    await this.audit.log(admin, 'remove', 'demo-data', undefined, result);
+    return result;
   }
 
   // ───────────── Customers ─────────────

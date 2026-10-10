@@ -169,8 +169,13 @@ bharte hain.
 
 - [ ] Admin login → Settings → **2FA on kariye** (Google Authenticator).
 - [ ] Har team member ka alag admin user banaiye, sahi role ke saath (Admin users page).
-- [ ] **Demo data hataiye**: demo products ko *Archived* kariye / delete kariye, demo coupons
-      (WELCOME10, FLAT200, FOOTWEAR15) ko apne hisaab se badaliye, demo banners badaliye.
+- [ ] **Demo data hataiye**: Super Admin se login karke Admin → **Settings → Demo data** → **Remove all demo data**
+      dabaiye. Isse demo products (jin par order nahi hain wo delete, baaki hide), demo coupons
+      (WELCOME10, FLAT200, FOOTWEAR15), demo banners aur category ki demo tasveerein ek saath hat jaati hain.
+      Server restart par wapas nahi aate (API har start par seed chalati hai, lekin hatane ke baad wo demo data
+      skip karti hai). Categories (Men, Women, Kids…) rehti hain — Admin → Categories se rename/delete kar sakte hain.
+      Apne products, coupons, banners aur orders ko ye button nahi chhoota. Naya database banane par
+      demo data fir se aa jaata hai — tab ye button dobara dabaiye.
 - [ ] Agar live database mein `customer@example.com` demo account hai, to Admin → Customers mein use **Block** kariye.
 - [ ] Apne asli products daaliye: har product ki 3–5 asli photos, sahi sizes, stock, MRP/price, HSN code.
 - [ ] Banners (1600 × 600) apne design ke daaliye.

@@ -141,6 +141,12 @@ const SIZE_CHART = [
 async function main() {
   mkdirSync(SEED_DIR, { recursive: true });
 
+  // Once the admin has removed the demo data (Admin → Settings → Demo data) the sample catalog,
+  // coupons and banners must never come back on a restart — the API runs this seed on every start.
+  const demo = await prisma.setting.findUnique({ where: { key: 'demo' } });
+  const demoRemoved = Boolean((demo?.value as { removedAt?: string } | null)?.removedAt);
+  if (demoRemoved) console.log('✓ demo data was removed by the admin — skipping sample catalog, coupons and banners');
+
   // Categories
   const catIds = new Map<string, string>();
   const createCats = async (defs: CatDef[], parentId: string | null) => {
@@ -161,19 +167,21 @@ async function main() {
       if (def.children) await createCats(def.children, cat.id);
     }
   };
-  await createCats(CATEGORY_TREE, null);
-  console.log(`✓ ${catIds.size} categories`);
+  if (!demoRemoved) {
+    await createCats(CATEGORY_TREE, null);
+    console.log(`✓ ${catIds.size} categories`);
 
-  // Category images
-  for (const root of CATEGORY_TREE) {
-    const shape = { men: 'tshirt', women: 'dress', kids: 'tshirt', footwear: 'shoe', accessories: 'bag' }[root.slug] ?? 'tshirt';
-    const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#2e3f8f'));
-    await prisma.category.update({ where: { slug: root.slug }, data: { imageUrl: url } });
+    // Category images
+    for (const root of CATEGORY_TREE) {
+      const shape = { men: 'tshirt', women: 'dress', kids: 'tshirt', footwear: 'shoe', accessories: 'bag' }[root.slug] ?? 'tshirt';
+      const url = writeAsset(`cat-${root.slug}.svg`, productSvg(shape as Shape, '#2e3f8f'));
+      await prisma.category.update({ where: { slug: root.slug }, data: { imageUrl: url } });
+    }
   }
 
   // Products
   let count = 0;
-  for (const def of PRODUCTS) {
+  for (const def of demoRemoved ? [] : PRODUCTS) {
     const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const images = def.colors.flatMap((color) => [
       { url: writeAsset(`${slug}-${color.toLowerCase().replace(/\s+/g, '-')}-1.svg`, productSvg(def.shape, COLORS[color])), alt: `${def.name} ${color}`, color },
@@ -194,6 +202,7 @@ async function main() {
         sizeChart: APPAREL_SIZES.join() === def.sizes.join() ? SIZE_CHART : undefined,
         tags: def.tags,
         status: ProductStatus.ACTIVE,
+        isDemo: true,
         isFeatured: def.featured ?? false,
         soldCount: def.sold ?? 0,
         minPrice: def.price * 100,
@@ -232,7 +241,7 @@ async function main() {
     }
     count++;
   }
-  console.log(`✓ ${count} products created`);
+  if (!demoRemoved) console.log(`✓ ${count} products created`);
 
   // Admin
   const email = (process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com').toLowerCase();
@@ -329,32 +338,36 @@ async function main() {
   }
 
   // Coupons
-  const coupons = [
+  const coupons = demoRemoved ? [] : [
     { code: 'WELCOME10', description: '10% off on your first order (up to ₹300)', type: CouponType.PERCENT, value: 10, maxDiscount: 30000, minOrderValue: 49900, firstOrderOnly: true },
     { code: 'FLAT200', description: '₹200 off on orders above ₹1,499', type: CouponType.FLAT, value: 20000, minOrderValue: 149900, perUserLimit: 3 },
     { code: 'FOOTWEAR15', description: '15% off on footwear', type: CouponType.PERCENT, value: 15, maxDiscount: 75000, minOrderValue: 0, applicableCategoryIds: [catIds.get('footwear')!] },
   ];
-  for (const c of coupons) {
-    await prisma.coupon.upsert({ where: { code: c.code }, create: c, update: {} });
+  if (!demoRemoved) {
+    for (const c of coupons) {
+      await prisma.coupon.upsert({ where: { code: c.code }, create: { ...c, isDemo: true }, update: {} });
+    }
+    console.log(`✓ ${coupons.length} coupons`);
   }
-  console.log(`✓ ${coupons.length} coupons`);
 
   // Banners
-  const bannerImages = [
-    writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#1f2a5a', '#c2512f', ['tshirt', 'dress', 'shoe'])),
-    writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#7c2d12', '#db2777', ['kurta', 'dress', 'sandal'])),
-    writeAsset('banner-3.svg', bannerSvg('FLAT200', '#064e3b', '#0d9488', ['bag', 'shirt', 'watch'])),
-  ];
-  if ((await prisma.banner.count()) === 0) {
+  const bannerImages = demoRemoved
+    ? []
+    : [
+        writeAsset('banner-1.svg', bannerSvg('NEW SEASON', '#1f2a5a', '#c2512f', ['tshirt', 'dress', 'shoe'])),
+        writeAsset('banner-2.svg', bannerSvg('FESTIVE EDIT', '#7c2d12', '#db2777', ['kurta', 'dress', 'sandal'])),
+        writeAsset('banner-3.svg', bannerSvg('FLAT200', '#064e3b', '#0d9488', ['bag', 'shirt', 'watch'])),
+      ];
+  if (!demoRemoved && (await prisma.banner.count()) === 0) {
     await prisma.banner.createMany({
       data: [
-        { title: 'New Season Collection', subtitle: 'Fresh styles for every day — up to 50% off', imageUrl: bannerImages[0], linkUrl: '/c/men', ctaText: 'Shop Now', position: BannerPosition.HERO, sortOrder: 0 },
-        { title: 'Festive Ethnic Edit', subtitle: 'Kurtas & more for every celebration', imageUrl: bannerImages[1], linkUrl: '/c/women-kurtas', ctaText: 'Explore', position: BannerPosition.HERO, sortOrder: 1 },
-        { title: 'Flat ₹200 off', subtitle: 'On orders above ₹1,499. Use code FLAT200', imageUrl: bannerImages[2], linkUrl: '/search?sort=discount', ctaText: 'Grab the deal', position: BannerPosition.OFFER, sortOrder: 0 },
+        { title: 'New Season Collection', subtitle: 'Fresh styles for every day — up to 50% off', imageUrl: bannerImages[0], linkUrl: '/c/men', ctaText: 'Shop Now', position: BannerPosition.HERO, sortOrder: 0, isDemo: true },
+        { title: 'Festive Ethnic Edit', subtitle: 'Kurtas & more for every celebration', imageUrl: bannerImages[1], linkUrl: '/c/women-kurtas', ctaText: 'Explore', position: BannerPosition.HERO, sortOrder: 1, isDemo: true },
+        { title: 'Flat ₹200 off', subtitle: 'On orders above ₹1,499. Use code FLAT200', imageUrl: bannerImages[2], linkUrl: '/search?sort=discount', ctaText: 'Grab the deal', position: BannerPosition.OFFER, sortOrder: 0, isDemo: true },
       ],
     });
   }
-  console.log('✓ banners');
+  if (!demoRemoved) console.log('✓ banners');
 }
 
 main()
