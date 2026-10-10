@@ -88,15 +88,20 @@ export class ProductsService {
     if (q) {
       // Version 1 search: PostgreSQL ILIKE over name / brand / category / SKU / tags.
       // Swap for OpenSearch / Elasticsearch once the catalog grows.
+      // name / brand / SKU use the pg_trgm GIN indexes; category names are matched against the
+      // (small, cached) category list first so the product query never scans categories per row.
       const words = q.split(/\s+/).filter(Boolean).slice(0, 5);
+      const allCategories = await this.categories.all();
       for (const word of words) {
+        const needle = word.toLowerCase();
+        const categoryIds = allCategories.filter((c) => c.name.toLowerCase().includes(needle)).map((c) => c.id);
         and.push({
           OR: [
             { name: { contains: word, mode: 'insensitive' } },
             { brand: { contains: word, mode: 'insensitive' } },
-            { tags: { has: word.toLowerCase() } },
+            { tags: { has: needle } },
             { variants: { some: { sku: { equals: word, mode: 'insensitive' } } } },
-            { categories: { some: { category: { name: { contains: word, mode: 'insensitive' } } } } },
+            ...(categoryIds.length ? [{ categories: { some: { categoryId: { in: categoryIds } } } }] : []),
           ],
         });
       }
@@ -164,18 +169,19 @@ export class ProductsService {
       { category: query.category, q: query.q },
       { skipVariantFilters: true },
     );
+    // groupBy (SQL GROUP BY + LIMIT), not findMany({ distinct }): Prisma applies `distinct` in
+    // memory after loading every matching row, which reads the whole catalog on large stores.
     const [brands, variants, price] = await Promise.all([
-      this.prisma.product.findMany({
+      this.prisma.product.groupBy({
+        by: ['brand'],
         where: { ...base, brand: { not: null } },
-        distinct: ['brand'],
-        select: { brand: true },
         orderBy: { brand: 'asc' },
         take: 50,
       }),
-      this.prisma.productVariant.findMany({
+      this.prisma.productVariant.groupBy({
+        by: ['size', 'color', 'colorHex'],
         where: { isActive: true, product: base },
-        distinct: ['size', 'color'],
-        select: { size: true, color: true, colorHex: true },
+        orderBy: [{ size: 'asc' }, { color: 'asc' }],
         take: 500,
       }),
       this.prisma.product.aggregate({ where: base, _min: { minPrice: true }, _max: { minPrice: true } }),

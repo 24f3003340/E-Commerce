@@ -38,6 +38,10 @@ model User {
   refreshTokens RefreshToken[]
   resetTokens   PasswordResetToken[]
 
+  // Admin customer / order search ("contains" on name, email, phone)
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "users_name_trgm_idx", type: Gin)
+  @@index([email(ops: raw("gin_trgm_ops"))], map: "users_email_trgm_idx", type: Gin)
+  @@index([phone(ops: raw("gin_trgm_ops"))], map: "users_phone_trgm_idx", type: Gin)
   @@map("users")
 }
 
@@ -267,6 +271,10 @@ model Product {
   @@index([status, createdAt])
   @@index([sellerId, status])
   @@index([brand])
+  // Trigram indexes (pg_trgm) keep case-insensitive "contains" search fast on large catalogs
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "products_name_trgm_idx", type: Gin)
+  @@index([brand(ops: raw("gin_trgm_ops"))], map: "products_brand_trgm_idx", type: Gin)
+  @@index([tags], type: Gin)
   @@map("products")
 }
 
@@ -306,6 +314,7 @@ model ProductVariant {
   @@index([productId])
   @@index([color])
   @@index([size])
+  @@index([sku(ops: raw("gin_trgm_ops"))], map: "product_variants_sku_trgm_idx", type: Gin)
   @@map("product_variants")
 }
 
@@ -523,6 +532,8 @@ model Order {
   @@index([status, createdAt])
   @@index([sellerId, createdAt])
   @@index([checkoutId])
+  @@index([createdAt])
+  @@index([orderNumber(ops: raw("gin_trgm_ops"))], map: "orders_orderNumber_trgm_idx", type: Gin)
   @@map("orders")
 }
 
