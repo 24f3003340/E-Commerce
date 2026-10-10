@@ -557,6 +557,8 @@ model OrderItem {
   returnItems      ReturnItem[]
 
   @@index([orderId])
+  // Lets Postgres check the variant foreign key without scanning every order item when a product is deleted
+  @@index([variantId])
   @@map("order_items")
 }
 
