@@ -5,7 +5,7 @@ import type { Category } from '@/lib/types';
 import { Icon } from './icons';
 import { Logo } from './Header';
 
-const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX';
 const ONLINE_METHODS = ['UPI', 'Visa', 'Mastercard', 'RuPay', 'Net Banking', 'Wallets'];
 /** Seller panel (part of the admin app), e.g. https://admin.yourstore.com/seller */
 const SELLER_URL = `${(process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001').replace(/\/$/, '')}/seller`;
@@ -25,7 +25,7 @@ export function Footer({ categories, onlinePayments, sellerRegistrationOpen }: {
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
-              India&apos;s fashion destination for men, women and kids. Original products, easy returns and fast delivery across India.
+              India&apos;s online dukaan for fashion, footwear, accessories and more — from trusted sellers, with easy returns and fast delivery across India.
             </p>
             <div className="mt-5 grid max-w-sm grid-cols-3 gap-3 text-center text-xs">
               {(

@@ -21,8 +21,8 @@ export interface StoreInfo {
 }
 
 const FALLBACK: StoreInfo = {
-  storeName: process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart',
-  legalName: process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart',
+  storeName: process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX',
+  legalName: process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX',
   supportEmail: 'support@example.com',
   supportPhone: '',
   address: '',

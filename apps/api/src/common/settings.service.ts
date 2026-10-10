@@ -48,7 +48,7 @@ export interface StoreSettings {
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  storeName: 'StyleKart',
+  storeName: 'DukaanX',
   supportEmail: 'support@example.com',
   supportPhone: '+91 90000 00000',
   freeShippingThreshold: 99900,
@@ -62,7 +62,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   metroPincodePrefixes: ['11', '40', '56', '60', '50', '70', '41', '38'],
   gstin: '',
   invoiceAddress: 'Registered office address',
-  legalName: 'StyleKart Retail',
+  legalName: 'DukaanX Retail',
   sellerState: 'Karnataka',
   // Apparel GST slabs change from time to time — confirm the current rates with your CA.
   gstRateLow: 5,

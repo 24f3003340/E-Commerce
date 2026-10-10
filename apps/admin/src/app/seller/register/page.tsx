@@ -22,8 +22,9 @@ export default function SellerRegisterPage() {
     <div className="min-h-screen bg-page">
       <div className="bg-gradient-to-br from-navy-950 via-navy-900 to-brand-900 px-4 py-10 text-white">
         <div className="mx-auto max-w-3xl">
-          <p className="text-2xl font-extrabold italic tracking-tight">StyleKart</p>
-          <h1 className="mt-3 text-3xl font-bold">Sell on StyleKart</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+<img src="/brand/logo-on-dark.svg" alt="DukaanX" width={156} height={30} className="h-[30px] w-auto" />
+          <h1 className="mt-3 text-3xl font-bold">Sell on DukaanX</h1>
           <p className="mt-2 max-w-xl text-white/80">Reach customers across India. List your products for free, ship orders from your own address and get paid to your bank account after delivery.</p>
           <ol className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
             {['Register with your GST & bank details', 'We verify and approve your store', 'Add products, receive orders, get paid'].map((s, i) => (

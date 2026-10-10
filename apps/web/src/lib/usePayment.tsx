@@ -24,7 +24,7 @@ function loadRazorpay(): Promise<void> {
   });
 }
 
-const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX';
 
 /**
  * Opens Razorpay Checkout (or a mock dialog in development) for a gateway order created by the

@@ -22,7 +22,7 @@
     @apply btn border-2 border-brand-600 bg-white text-brand-700 shadow-sm hover:bg-brand-50;
   }
   .btn-buy {
-    @apply btn bg-buy-500 text-white shadow-sm hover:bg-buy-600;
+    @apply btn bg-buy-500 text-navy-950 shadow-sm hover:bg-buy-600;
   }
   .btn-outline {
     @apply btn border border-gray-300 bg-white text-gray-900 hover:border-gray-500 hover:bg-gray-50;

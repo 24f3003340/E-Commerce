@@ -1,4 +1,4 @@
-# StyleKart — Market Launch Checklist
+# DukaanX — Market Launch Checklist
 
 Website ka code launch ke liye tayyar hai. Neeche woh kaam hain jo **aapko apne accounts mein** karne
 hain (inke liye aapki KYC, payment ya domain chahiye). Isi kram mein kariye — har step ke saath likha
@@ -24,24 +24,24 @@ hai ki kahan kya daalna hai.
 
 ## 2. Apna domain
 
-- [ ] Domain kharidiye (GoDaddy / Hostinger / Cloudflare), jaise `stylekart.in`.
-- [ ] Vercel `e-commerce-web` → **Settings → Domains** → `www.stylekart.in` (aur `stylekart.in`) jodiye.
-- [ ] Vercel `e-commerce-admin` → Domains → `admin.stylekart.in`.
-- [ ] Render `stylekart-api` → **Settings → Custom Domains** → `api.stylekart.in`.
+- [ ] Domain kharidiye (GoDaddy / Hostinger / Cloudflare), jaise `dukaanx.in`.
+- [ ] Vercel `e-commerce-web` → **Settings → Domains** → `www.dukaanx.in` (aur `dukaanx.in`) jodiye.
+- [ ] Vercel `e-commerce-admin` → Domains → `admin.dukaanx.in`.
+- [ ] Render `stylekart-api` → **Settings → Custom Domains** → `api.dukaanx.in`.
 - [ ] DNS records wahi daaliye jo Vercel/Render dikhate hain. HTTPS apne aap lag jaata hai.
 - [ ] Domain lagne ke baad variables update kariye:
 
 | Kahan | Variable | Value |
 |---|---|---|
-| Vercel web | `NEXT_PUBLIC_API_URL`, `API_URL` | `https://api.stylekart.in` |
-| Vercel web | `NEXT_PUBLIC_SITE_URL` | `https://www.stylekart.in` |
-| Vercel web | `NEXT_PUBLIC_ADMIN_URL` | `https://admin.stylekart.in` (footer ka "Sell on StyleKart" link) |
-| Vercel admin | `NEXT_PUBLIC_API_URL` | `https://api.stylekart.in` |
-| Vercel admin | `NEXT_PUBLIC_STORE_URL` | `https://www.stylekart.in` |
-| Render API | `STOREFRONT_URL` | `https://www.stylekart.in` |
-| Render API | `CORS_ORIGINS` | `https://www.stylekart.in,https://stylekart.in,https://admin.stylekart.in` |
-| Render API | `PUBLIC_API_URL` | `https://api.stylekart.in` |
-| Render API | `ADMIN_URL` | `https://admin.stylekart.in` (seller emails ke links) |
+| Vercel web | `NEXT_PUBLIC_API_URL`, `API_URL` | `https://api.dukaanx.in` |
+| Vercel web | `NEXT_PUBLIC_SITE_URL` | `https://www.dukaanx.in` |
+| Vercel web | `NEXT_PUBLIC_ADMIN_URL` | `https://admin.dukaanx.in` (footer ka "Sell on DukaanX" link) |
+| Vercel admin | `NEXT_PUBLIC_API_URL` | `https://api.dukaanx.in` |
+| Vercel admin | `NEXT_PUBLIC_STORE_URL` | `https://www.dukaanx.in` |
+| Render API | `STOREFRONT_URL` | `https://www.dukaanx.in` |
+| Render API | `CORS_ORIGINS` | `https://www.dukaanx.in,https://dukaanx.in,https://admin.dukaanx.in` |
+| Render API | `PUBLIC_API_URL` | `https://api.dukaanx.in` |
+| Render API | `ADMIN_URL` | `https://admin.dukaanx.in` (seller emails ke links) |
 
 ## 3. Payment gateway — Razorpay (live)
 
@@ -54,7 +54,7 @@ hai ki kahan kya daalna hai.
       details dekhti hai, jo ab website par hain.
 - [ ] Activation ke baad **Settings → API Keys → Live key** banaiye. Render mein daaliye:
       `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`.
-- [ ] **Settings → Webhooks → Add**: URL `https://api.stylekart.in/payments/razorpay/webhook`,
+- [ ] **Settings → Webhooks → Add**: URL `https://api.dukaanx.in/payments/razorpay/webhook`,
       events `payment.captured`, `payment.failed`, `order.paid`, ek secret banaiye aur wahi Render mein
       `RAZORPAY_WEBHOOK_SECRET` mein daaliye.
 - [ ] **Payment capture → Automatic** on rakhiye.
@@ -63,9 +63,9 @@ hai ki kahan kya daalna hai.
 
 ## 4. Emails — Resend
 
-- [ ] [resend.com](https://resend.com) par account → **Domains → Add** `stylekart.in` → jo DNS records
+- [ ] [resend.com](https://resend.com) par account → **Domains → Add** `dukaanx.in` → jo DNS records
       (SPF, DKIM) dikhaye woh domain mein daaliye → Verify.
-- [ ] API key banaiye. Render mein: `RESEND_API_KEY`, aur `EMAIL_FROM` = `StyleKart <orders@stylekart.in>`.
+- [ ] API key banaiye. Render mein: `RESEND_API_KEY`, aur `EMAIL_FROM` = `DukaanX <orders@dukaanx.in>`.
 - [ ] Admin → Settings → **New order alert email** mein apna email daaliye — har naye order ki mail aayegi.
 - [ ] Website par "Forgot password" chala kar dekhiye ki email aa raha hai.
 
@@ -78,7 +78,7 @@ Render ke server par upload ki gayi photos har redeploy/restart par mit jaati ha
       → pehli baar *Purchase R2 / Enable* (free plan, card verification maang sakta hai, charge nahi hota).
 - [ ] **Create bucket** → naam `stylekart-images`, location *Automatic* → Create.
 - [ ] Bucket → **Settings → Public access**:
-      - domain ho to **Custom Domains → Connect** `images.stylekart.in` (best, CDN cache ke saath), ya
+      - domain ho to **Custom Domains → Connect** `images.dukaanx.in` (best, CDN cache ke saath), ya
       - abhi ke liye **R2.dev subdomain → Allow Access** — `https://pub-xxxx.r2.dev` jaisa URL milega.
 - [ ] R2 overview page → **Manage R2 API Tokens → Create API token** → permission *Object Read & Write*,
       *Apply to specific bucket* = `stylekart-images` → Create. **Access Key ID** aur **Secret Access Key**
@@ -93,7 +93,7 @@ Render ke server par upload ki gayi photos har redeploy/restart par mit jaati ha
 | `S3_BUCKET` | `stylekart-images` |
 | `S3_ACCESS_KEY_ID` | token ka Access Key ID |
 | `S3_SECRET_ACCESS_KEY` | token ka Secret Access Key |
-| `S3_PUBLIC_URL` | `https://images.stylekart.in` ya `https://pub-xxxx.r2.dev` (aakhir mein `/` nahi) |
+| `S3_PUBLIC_URL` | `https://images.dukaanx.in` ya `https://pub-xxxx.r2.dev` (aakhir mein `/` nahi) |
 
 - [ ] Admin → **Settings → Connected services** mein *Product photo storage* "Connected" dikhna chahiye.
       Phir ek product photo upload karke dekhiye ki image URL R2 wala aa raha hai.
@@ -104,7 +104,11 @@ Render ke server par upload ki gayi photos har redeploy/restart par mit jaati ha
 - [ ] Render `stylekart-api` → **Starter plan** (free plan 15 min baad so jaata hai, pehli request 30–60 sec leti hai).
 - [ ] Render `stylekart-db` → **paid PostgreSQL** (free database 30 din mein expire hota hai; paid mein daily backups milte hain).
 - [ ] Render `stylekart-cache` (Redis) free plan theek hai.
-- [ ] [UptimeRobot](https://uptimerobot.com) (free) par `https://api.stylekart.in/health` aur website ka monitor lagaiye — site down hone par SMS/email aayega.
+- [ ] **Kitna data sambhal sakta hai?** 2 lakh products / 8 lakh variants / 5 lakh orders par test kiya:
+      product list ~0.3 sec, search ~1 sec (pehli baar; phir 60 sec Redis cache), admin order list ~0.05 sec.
+      Isse aage (10 lakh+ products ya bahut traffic) ke liye: Render API ke 2+ instances, database plan
+      bada (RAM zyada), aur search ke liye Meilisearch / OpenSearch.
+- [ ] [UptimeRobot](https://uptimerobot.com) (free) par `https://api.dukaanx.in/health` aur website ka monitor lagaiye — site down hone par SMS/email aayega.
 
 ## 7. Courier — Shiprocket
 
@@ -119,10 +123,10 @@ sakte hain — pickup unke apne address se hota hai.
       COD ka paisa Shiprocket aapke account mein bhejta hai.
 - [ ] **Settings → Pickup Addresses** → apna godown/dukaan address jodiye, nickname **`Primary`** rakhiye
       (ya jo rakhein wahi Render mein `SHIPROCKET_PICKUP_LOCATION` mein daaliye). Phone OTP se verify kariye.
-- [ ] **Settings → API → Configure → Create an API User** → ek *alag* email (jaise `api@stylekart.in`) aur
+- [ ] **Settings → API → Configure → Create an API User** → ek *alag* email (jaise `api@dukaanx.in`) aur
       password. Main login mat use kariye.
 - [ ] Render → Environment: `SHIPROCKET_EMAIL` = API user ka email, `SHIPROCKET_PASSWORD` = uska password.
-- [ ] **Settings → API → Webhooks** (tracking): URL `https://api.stylekart.in/shipping/courier-updates`
+- [ ] **Settings → API → Webhooks** (tracking): URL `https://api.dukaanx.in/shipping/courier-updates`
       (abhi `https://stylekart-api.onrender.com/shipping/courier-updates`), **Token** mein Render ka
       `SHIPROCKET_WEBHOOK_TOKEN` value copy-paste kariye → Save / Test.
 - [ ] Save + redeploy ke baad Admin → Settings → Connected services mein *Courier (Shiprocket)* "Connected".
@@ -138,8 +142,8 @@ sakte hain — pickup unke apne address se hota hai.
 
 ## 8. Marketplace — bahar ke sellers
 
-Sellers **`https://admin.stylekart.in/seller/register`** par khud register karte hain (website footer
-mein "Sell on StyleKart" link hai). Wahan woh GSTIN, PAN, pickup address aur bank / UPI details
+Sellers **`https://admin.dukaanx.in/seller/register`** par khud register karte hain (website footer
+mein "Sell on DukaanX" link hai). Wahan woh GSTIN, PAN, pickup address aur bank / UPI details
 bharte hain.
 
 - [ ] Admin → Settings → **Marketplace sellers**: default commission % (jaise 10%), *Seller products
@@ -185,7 +189,7 @@ bharte hain.
 
 ## 11. Launch ke baad marketing
 
-- [ ] [Google Search Console](https://search.google.com/search-console) → domain verify → `https://www.stylekart.in/sitemap.xml` submit.
+- [ ] [Google Search Console](https://search.google.com/search-console) → domain verify → `https://www.dukaanx.in/sitemap.xml` submit.
 - [ ] Google Analytics 4 property banaiye → Measurement ID (`G-XXXX`) Vercel web mein `NEXT_PUBLIC_GA_ID`.
 - [ ] Google Merchant Center (free listings), Instagram / Facebook shop.
 - [ ] Pehle 50 customers ke liye ek launch coupon (Admin → Coupons).

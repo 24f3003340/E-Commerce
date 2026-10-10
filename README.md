@@ -1,4 +1,4 @@
-# StyleKart — Multi-category E-Commerce Platform
+# DukaanX — Multi-category E-Commerce Platform
 
 Clothing se shuru hone wala **multi-seller marketplace** (Meesho / Flipkart jaisa): bahar ke sellers
 khud register karke apne products bechte hain, aur aapki apni dukaan ke products bhi saath mein
@@ -8,8 +8,9 @@ chalte hain. Ek central backend API saare clients ko serve karta hai:
               Backend API (NestJS)
              /        |         \
    Customer Website  Mobile App   Admin Panel
-     (Next.js)     (React Native,   (Next.js)
-                    phase 4)
+     (Next.js)     (Expo / React   (Next.js)
+                    Native: Android
+                    + iOS)
                        |
         PostgreSQL · Redis · Object storage · Razorpay · Shipping · Notifications
 ```
@@ -19,11 +20,25 @@ chalte hain. Ek central backend API saare clients ko serve karta hai:
 | Backend API | `apps/api` | 4000 | NestJS 11, Prisma 6, PostgreSQL, Redis |
 | Customer website | `apps/web` | 3000 | Next.js 15, React 19, Tailwind CSS |
 | Admin panel + Seller panel (`/seller`) | `apps/admin` | 3001 | Next.js 15, React 19, Tailwind CSS |
+| Mobile app (Android + iOS) | `apps/mobile` | 8081 | Expo SDK 57, React Native, Expo Router |
 
 Full technical blueprint (architecture, database, API list, flows, security, roadmap):
 **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**
 
 **Going live?** Follow the step-by-step launch checklist: **[docs/LAUNCH.md](docs/LAUNCH.md)**
+
+**Mobile app** (run on your phone, build, publish to Play Store / App Store): **[docs/MOBILE.md](docs/MOBILE.md)**.
+`apps/mobile` has its own `package-lock.json` and is not an npm workspace — run `npm install` inside it.
+
+## Brand
+
+Logo files (SVG for web/print, 1024px app icon) are in **[docs/brand](docs/brand)**: `logo.svg` (light
+backgrounds), `logo-on-dark.svg`, `logo-tagline*.svg`, `mark*.svg` and `favicon.svg`. Colours: deep teal
+`#0b3b36`, teal `#12796b`, amber `#f29e0c`, cream `#fff8ec`; wordmark font Poppins ExtraBold (converted to
+outlines, no font needed). The website and admin use them from `public/brand/`, the app from `apps/mobile/assets/`.
+
+The store name shown in emails and invoices comes from Admin → Settings (`storeName`) and on the website
+from `NEXT_PUBLIC_STORE_NAME` (Vercel) — set both to `DukaanX` on an existing deployment.
 
 ## Quick start (local)
 
@@ -63,7 +78,7 @@ Demo coupons: `WELCOME10` (first order), `FLAT200` (orders ≥ ₹1,499), `FOOTW
 ### Marketplace sellers
 
 - Sellers sign up at **http://localhost:3001/seller/register** (linked from the website footer as
-  "Sell on StyleKart") with GSTIN, PAN, pickup address and bank / UPI details.
+  "Sell on DukaanX") with GSTIN, PAN, pickup address and bank / UPI details.
 - Admin → **Sellers** approves / rejects / suspends them and sets a per-seller commission (default
   in Admin → Settings → Marketplace). Seller products go to **Products → Waiting for approval**.
 - A cart with items from several sellers becomes **one order per seller**; each seller sees and
@@ -117,7 +132,7 @@ Framework, install and build commands come from each app's `vercel.json`.
 - Checkout is cash on delivery only until the `RAZORPAY_*` keys are added in Render; online
   payment then turns on automatically (the mock payment dialog never runs in production).
 - Set `ADMIN_URL` (Render) and `NEXT_PUBLIC_ADMIN_URL` (Vercel web) to the admin app URL so seller
-  emails and the "Sell on StyleKart" footer link point to the seller panel.
+  emails and the "Sell on DukaanX" footer link point to the seller panel.
 - Admin-uploaded images are stored on the service disk, which is wiped on every redeploy on
   Render — move uploads to S3 / Cloudflare R2 before adding real products. The demo artwork
   lives in `apps/api/assets` and is safe.

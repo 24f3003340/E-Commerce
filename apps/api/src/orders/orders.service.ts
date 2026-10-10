@@ -633,6 +633,23 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
   async adminList(query: AdminOrderQueryDto) {
     const p = paginate(query.page, query.limit);
     const q = query.q?.trim();
+    // Customers are matched first (trigram indexes on users) so the order query can use plain
+    // indexes instead of joining users for every order row.
+    const customerIds = q
+      ? (
+          await this.prisma.user.findMany({
+            where: {
+              OR: [
+                { email: { contains: q, mode: 'insensitive' } },
+                { name: { contains: q, mode: 'insensitive' } },
+                { phone: { contains: q } },
+              ],
+            },
+            select: { id: true },
+            take: 500,
+          })
+        ).map((u) => u.id)
+      : [];
     const where: Prisma.OrderWhereInput = {
       ...(query.sellerId ? { sellerId: query.sellerId === 'store' ? null : query.sellerId } : {}),
       ...(query.status ? { status: query.status } : {}),
@@ -650,14 +667,12 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
         ? {
             OR: [
               { orderNumber: { contains: q, mode: 'insensitive' } },
-              { user: { email: { contains: q, mode: 'insensitive' } } },
-              { user: { name: { contains: q, mode: 'insensitive' } } },
-              { user: { phone: { contains: q } } },
+              ...(customerIds.length ? [{ userId: { in: customerIds } }] : []),
             ],
           }
         : {}),
     };
-    const [items, total] = await Promise.all([
+    const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -666,11 +681,18 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
         include: {
           user: { select: { id: true, name: true, email: true } },
           seller: { select: { id: true, storeName: true } },
-          _count: { select: { items: true } },
         },
       }),
       this.prisma.order.count({ where }),
     ]);
+    // Item counts for this page only (an `_count` include groups the whole order_items table)
+    const counts = await this.prisma.orderItem.groupBy({
+      by: ['orderId'],
+      where: { orderId: { in: orders.map((o) => o.id) } },
+      _count: { _all: true },
+    });
+    const countBy = new Map(counts.map((c) => [c.orderId, c._count._all]));
+    const items = orders.map((o) => ({ ...o, _count: { items: countBy.get(o.id) ?? 0 } }));
     return paginated(items, total, p.page, p.limit);
   }
 
