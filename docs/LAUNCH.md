@@ -104,6 +104,10 @@ Render ke server par upload ki gayi photos har redeploy/restart par mit jaati ha
 - [ ] Render `stylekart-api` → **Starter plan** (free plan 15 min baad so jaata hai, pehli request 30–60 sec leti hai).
 - [ ] Render `stylekart-db` → **paid PostgreSQL** (free database 30 din mein expire hota hai; paid mein daily backups milte hain).
 - [ ] Render `stylekart-cache` (Redis) free plan theek hai.
+- [ ] **Kitna data sambhal sakta hai?** 2 lakh products / 8 lakh variants / 5 lakh orders par test kiya:
+      product list ~0.3 sec, search ~1 sec (pehli baar; phir 60 sec Redis cache), admin order list ~0.05 sec.
+      Isse aage (10 lakh+ products ya bahut traffic) ke liye: Render API ke 2+ instances, database plan
+      bada (RAM zyada), aur search ke liye Meilisearch / OpenSearch.
 - [ ] [UptimeRobot](https://uptimerobot.com) (free) par `https://api.stylekart.in/health` aur website ka monitor lagaiye — site down hone par SMS/email aayega.
 
 ## 7. Courier — Shiprocket

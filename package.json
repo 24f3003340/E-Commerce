@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "description": "Multi-category e-commerce platform: NestJS API + Next.js storefront + Next.js admin panel",
   "workspaces": [
-    "apps/*"
+    "apps/api",
+    "apps/web",
+    "apps/admin"
   ],
   "scripts": {
     "dev:api": "npm run start:dev -w apps/api",

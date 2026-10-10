@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "env": { "EXPO_PUBLIC_API_URL": "http://10.0.2.2:4000", "EXPO_PUBLIC_WEB_URL": "http://10.0.2.2:3000" }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://api.stylekart.in", "EXPO_PUBLIC_WEB_URL": "https://www.stylekart.in" }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": { "EXPO_PUBLIC_API_URL": "https://api.stylekart.in", "EXPO_PUBLIC_WEB_URL": "https://www.stylekart.in" }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

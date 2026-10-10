@@ -8,8 +8,9 @@ chalte hain. Ek central backend API saare clients ko serve karta hai:
               Backend API (NestJS)
              /        |         \
    Customer Website  Mobile App   Admin Panel
-     (Next.js)     (React Native,   (Next.js)
-                    phase 4)
+     (Next.js)     (Expo / React   (Next.js)
+                    Native: Android
+                    + iOS)
                        |
         PostgreSQL · Redis · Object storage · Razorpay · Shipping · Notifications
 ```
@@ -19,11 +20,15 @@ chalte hain. Ek central backend API saare clients ko serve karta hai:
 | Backend API | `apps/api` | 4000 | NestJS 11, Prisma 6, PostgreSQL, Redis |
 | Customer website | `apps/web` | 3000 | Next.js 15, React 19, Tailwind CSS |
 | Admin panel + Seller panel (`/seller`) | `apps/admin` | 3001 | Next.js 15, React 19, Tailwind CSS |
+| Mobile app (Android + iOS) | `apps/mobile` | 8081 | Expo SDK 57, React Native, Expo Router |
 
 Full technical blueprint (architecture, database, API list, flows, security, roadmap):
 **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**
 
 **Going live?** Follow the step-by-step launch checklist: **[docs/LAUNCH.md](docs/LAUNCH.md)**
+
+**Mobile app** (run on your phone, build, publish to Play Store / App Store): **[docs/MOBILE.md](docs/MOBILE.md)**.
+`apps/mobile` has its own `package-lock.json` and is not an npm workspace — run `npm install` inside it.
 
 ## Quick start (local)
 
