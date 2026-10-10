@@ -63,7 +63,7 @@ export default function Home() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.page }}>
       <View style={[s.header, { paddingTop: insets.top + 8 }]}>
-        <Text style={s.logo}>{STORE_NAME}</Text>
+        <Image source={require('../../../assets/logo-on-dark.png')} style={s.logo} contentFit="contain" accessibilityLabel={STORE_NAME} />
         <Pressable style={s.search} onPress={() => router.push('/search')}>
           <Ionicons name="search-outline" size={18} color={colors.muted} />
           <Text style={{ color: colors.muted, marginLeft: 8 }}>Search for products, brands…</Text>
@@ -153,7 +153,7 @@ function Rail({ title, items, width, params }: { title: string; items: ListingPr
 
 const s = StyleSheet.create({
   header: { backgroundColor: colors.brandDark, paddingHorizontal: 12, paddingBottom: 12 },
-  logo: { color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  logo: { height: 28, aspectRatio: 5.708, alignSelf: 'flex-start', marginBottom: 10 },
   search: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: radius.md, height: 42, paddingHorizontal: 12 },
   bannerText: { position: 'absolute', left: 16, bottom: 16, right: 16 },
   bannerTitle: { color: '#fff', fontSize: 20, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.4)', textShadowRadius: 6 },

@@ -8,37 +8,37 @@ export default {
         sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
-        // "Neel & Mitti" palette — indigo (neel) for trust, terracotta (mitti) for action.
-        // Primary (links, selection, focus): indigo
+        // DukaanX palette (from the logo) — deep teal for trust, amber for action.
+        // Primary (links, selection, focus): teal
         brand: {
-          50: '#eef0fa',
-          100: '#dde2f5',
-          200: '#bcc5ea',
-          500: '#4a5cb0',
-          600: '#2e3f8f',
-          700: '#263578',
-          900: '#1a2456',
+          50: '#e9f5f2',
+          100: '#d2ebe6',
+          200: '#a6d6cc',
+          500: '#1a9583',
+          600: '#12796b',
+          700: '#0e6459',
+          900: '#0b3b36',
         },
-        // Header / footer: deep indigo
+        // Header / footer: deep teal
         navy: {
-          700: '#2a3770',
-          800: '#23305f',
-          900: '#1f2a5a',
-          950: '#161e45',
+          700: '#11544c',
+          800: '#0e4841',
+          900: '#0b3b36',
+          950: '#072925',
         },
-        // Highlights on the dark header (deals, badges, search): light terracotta
+        // Highlights on the dark header (deals, badges, search): amber
         accent: {
-          300: '#f6c3b0',
-          400: '#ef9a7c',
-          500: '#e07a5a',
-          600: '#c2512f',
+          300: '#fcd38a',
+          400: '#f8b739',
+          500: '#f29e0c',
+          600: '#d4840a',
         },
-        // Buy now / place order: terracotta
+        // Buy now / place order: amber with deep-teal text
         buy: {
-          500: '#c2512f',
-          600: '#a8432a',
+          500: '#f29e0c',
+          600: '#e08e06',
         },
-        page: '#f4f5f9',
+        page: '#f3f6f5',
       },
       boxShadow: {
         card: '0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08)',

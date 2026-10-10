@@ -32,7 +32,8 @@ export default function LoginPage() {
           }
         }}
       >
-        <p className="text-2xl font-extrabold italic tracking-tight text-navy-900">StyleKart</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+<img src="/brand/logo.svg" alt="DukaanX" width={156} height={30} className="h-[30px] w-auto" />
         <h1 className="mt-1 text-sm font-semibold uppercase tracking-widest text-brand-600">Marketplace Admin</h1>
         <p className="mt-1 text-sm text-gray-500">Sign in to manage the marketplace</p>
         {error && <p className="mt-4 rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>}
@@ -47,7 +48,7 @@ export default function LoginPage() {
           {busy ? 'Signing in…' : needOtp ? 'Verify & sign in' : 'Sign in'}
         </button>
         <p className="mt-4 text-center text-xs text-gray-500">
-          Selling on StyleKart? <a href="/seller/login" className="font-semibold text-brand-700">Go to the seller panel</a>
+          Selling on DukaanX? <a href="/seller/login" className="font-semibold text-brand-700">Go to the seller panel</a>
         </p>
       </form>
     </div>

@@ -15,7 +15,7 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.buy,
+        tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.muted,
         headerStyle: { backgroundColor: colors.brandDark },
         headerTintColor: '#fff',
@@ -31,7 +31,7 @@ export default function TabsLayout() {
           title: 'Bag',
           tabBarIcon: icon('bag-handle-outline'),
           tabBarBadge: cartCount > 0 ? cartCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.buy },
+          tabBarBadgeStyle: { backgroundColor: colors.buy, color: colors.onBuy },
         }}
       />
       <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: icon('person-outline') }} />

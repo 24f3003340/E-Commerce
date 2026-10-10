@@ -10,7 +10,7 @@ import { getStoreInfo } from '@/lib/storeInfo';
 import type { Category } from '@/lib/types';
 import './globals.css';
 
-const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -18,11 +18,11 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   openGraph: { type: 'website', siteName: STORE_NAME, locale: 'en_IN' },
-  title: { default: `${STORE_NAME} — Online Shopping for Fashion`, template: `%s | ${STORE_NAME}` },
-  description: 'Shop the latest fashion for men, women and kids. Free delivery over ₹999, easy 7-day returns, COD and secure payments.',
+  title: { default: `${STORE_NAME} — Shop everything. Everywhere.`, template: `%s | ${STORE_NAME}` },
+  description: 'Shop fashion, footwear and accessories for men, women and kids from trusted sellers. Free delivery over ₹999, easy 7-day returns, COD and secure payments.',
 };
 
-export const viewport: Viewport = { themeColor: '#1f2a5a' };
+export const viewport: Viewport = { themeColor: '#0b3b36' };
 
 export const dynamic = 'force-dynamic';
 

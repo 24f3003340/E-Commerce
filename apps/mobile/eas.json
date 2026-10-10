@@ -12,11 +12,11 @@
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://api.stylekart.in", "EXPO_PUBLIC_WEB_URL": "https://www.stylekart.in" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://stylekart-api.onrender.com", "EXPO_PUBLIC_WEB_URL": "https://REPLACE-WITH-YOUR-WEBSITE" }
     },
     "production": {
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://api.stylekart.in", "EXPO_PUBLIC_WEB_URL": "https://www.stylekart.in" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://stylekart-api.onrender.com", "EXPO_PUBLIC_WEB_URL": "https://REPLACE-WITH-YOUR-WEBSITE" }
     }
   },
   "submit": {

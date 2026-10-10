@@ -66,7 +66,7 @@ export default async function HomePage() {
           </Link>
         ))}
         <Link href="/search?sort=discount" className="group flex w-20 shrink-0 flex-col items-center text-center sm:w-24">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent-300 to-buy-500 text-white ring-2 ring-transparent transition group-hover:ring-brand-500 sm:h-20 sm:w-20">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent-300 to-buy-500 text-navy-950 ring-2 ring-transparent transition group-hover:ring-brand-500 sm:h-20 sm:w-20">
             <Icon name="zap" className="h-8 w-8" />
           </span>
           <span className="mt-1.5 text-xs font-semibold text-gray-800 group-hover:text-brand-700 sm:text-sm">Top Offers</span>

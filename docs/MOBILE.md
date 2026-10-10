@@ -1,4 +1,4 @@
-# StyleKart mobile app (Android + iOS)
+# DukaanX mobile app (Android + iOS)
 
 `apps/mobile` — ek hi code se **Android aur iOS dono** apps banti hain (Expo / React Native). App wahi
 backend API use karti hai jo website use karti hai, isliye products, orders, stock, sellers, coupons sab
@@ -55,13 +55,13 @@ npx expo start
 
 `apps/mobile/app.json`:
 - `name` — store par dikhne wala naam
-- `ios.bundleIdentifier` aur `android.package` — abhi `com.stylekart.app`. **Pehli upload ke baad yeh
-  kabhi nahi badal sakta**, isliye apne domain ke hisaab se final kar lijiye (jaise `in.stylekart.app`).
+- `ios.bundleIdentifier` aur `android.package` — abhi `com.dukaanx.app`. **Pehli upload ke baad yeh
+  kabhi nahi badal sakta**, isliye apne domain ke hisaab se final kar lijiye (jaise `in.dukaanx.app`).
 - `assets/icon.png` (1024×1024), `assets/android-icon-*.png`, `assets/splash-icon.png` — abhi Expo ke
   default icons hain, **apne logo se badaliye**.
 
 `apps/mobile/eas.json` → `production.env`:
-- `EXPO_PUBLIC_API_URL` = live API (`https://api.stylekart.in` ya `https://stylekart-api.onrender.com`)
+- `EXPO_PUBLIC_API_URL` = live API (`https://api.dukaanx.in` ya `https://stylekart-api.onrender.com`)
 - `EXPO_PUBLIC_WEB_URL` = live website (privacy / terms / password reset links ke liye)
 
 > API ka CORS mobile app par lagu nahi hota — Render mein kuch badalne ki zarurat nahi.
@@ -82,11 +82,11 @@ Signing keys (Android keystore, Apple certificates) EAS khud bana ke sambhalta h
 
 - [ ] Play Console → **Create app** → naam, Free, App.
 - [ ] **Store listing**: short + full description, 512×512 icon, 1024×500 feature graphic, kam se kam 2 phone screenshots.
-- [ ] **App content**: Privacy policy URL (`https://www.stylekart.in/privacy`), Ads = No, **Data safety** form
+- [ ] **App content**: Privacy policy URL (`https://www.dukaanx.in/privacy`), Ads = No, **Data safety** form
       (Name, Email, Phone, Address, Purchase history collect hote hain; encrypted in transit; user delete kar sakta hai),
       Target audience 18+, Content rating questionnaire.
 - [ ] **Account deletion URL** maangega — app mein *Account → Delete my account* hai; web URL ke liye
-      `https://www.stylekart.in/contact` de sakte hain.
+      `https://www.dukaanx.in/contact` de sakte hain.
 - [ ] `npx eas-cli@latest submit --platform android` (pehli baar Google Cloud service-account JSON key maangega —
       EAS ka link follow kariye) → Internal testing → Closed testing → Production.
 

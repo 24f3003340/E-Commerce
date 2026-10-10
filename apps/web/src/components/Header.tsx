@@ -10,7 +10,7 @@ import { usePincode } from '@/lib/usePincode';
 import type { Category } from '@/lib/types';
 import { Icon } from './icons';
 
-const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'StyleKart';
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME ?? 'DukaanX';
 
 interface Suggestions {
   products: { name: string; slug: string; images: { url: string }[] }[];
@@ -19,11 +19,12 @@ interface Suggestions {
 
 export function Logo({ light = true }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex shrink-0 flex-col leading-none" aria-label={`${STORE_NAME} home`}>
-      <span className={cn('text-[22px] font-extrabold italic tracking-tight', light ? 'text-white' : 'text-navy-900')}>
-        {STORE_NAME}
+    <Link href="/" className="flex shrink-0 flex-col items-start leading-none" aria-label={`${STORE_NAME} home`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- static SVG logo */}
+      <img src={light ? '/brand/logo-on-dark.svg' : '/brand/logo.svg'} alt={STORE_NAME} width={136} height={26} className="h-[26px] w-auto" />
+      <span className={cn('mt-1 hidden text-[9px] font-semibold uppercase tracking-[0.14em] sm:block', light ? 'text-accent-300' : 'text-brand-700')}>
+        Shop everything. Everywhere.
       </span>
-      <span className="mt-0.5 text-[10px] font-medium italic text-accent-300">Fashion for everyone</span>
     </Link>
   );
 }

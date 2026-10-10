@@ -20,7 +20,7 @@ export function Button({
   style?: ViewStyle;
 }) {
   const bg = variant === 'primary' ? colors.brand : variant === 'buy' ? colors.buy : 'transparent';
-  const fg = variant === 'primary' || variant === 'buy' ? '#fff' : colors.brand;
+  const fg = variant === 'primary' ? '#fff' : variant === 'buy' ? colors.onBuy : colors.brand;
   return (
     <Pressable
       accessibilityRole="button"

@@ -5,4 +5,4 @@ export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:400
 // Customer website, used for policy pages and password reset
 export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
-export const STORE_NAME = process.env.EXPO_PUBLIC_STORE_NAME ?? 'StyleKart';
+export const STORE_NAME = process.env.EXPO_PUBLIC_STORE_NAME ?? 'DukaanX';

@@ -1,11 +1,13 @@
-// "Neel & Mitti" palette, same as the website: indigo for trust, terracotta for action.
+// DukaanX palette, same as the website: deep teal for trust, amber for action.
 export const colors = {
-  brand: '#2e3f8f',
-  brandDark: '#1f2a5a',
-  brandLight: '#eef0fa',
-  accent: '#e07a5a',
-  buy: '#c2512f',
-  page: '#f4f5f9',
+  brand: '#12796b',
+  brandDark: '#0b3b36',
+  brandLight: '#e9f5f2',
+  accent: '#f29e0c',
+  buy: '#f29e0c',
+  // Text on amber buttons (white on amber is hard to read)
+  onBuy: '#072925',
+  page: '#f3f6f5',
   card: '#ffffff',
   text: '#0f172a',
   muted: '#64748b',
