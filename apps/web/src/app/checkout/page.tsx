@@ -206,7 +206,7 @@ export default function CheckoutPage() {
                 <input type="radio" name="payment" disabled={!s.codAvailable && method !== 'COD'} checked={method === 'COD'} onChange={() => setPaymentMethod('COD')} />
                 <span>
                   <span className="font-semibold">Cash on delivery</span>
-                  <span className="block text-gray-500">{s.codAvailable ? 'Pay in cash or UPI to the delivery partner when your order arrives (small COD fee applies)' : 'Not available for this order'}</span>
+                  <span className="block text-gray-500">{s.codAvailable ? 'Pay in cash or UPI to the delivery partner when your order arrives' : 'Not available for this order'}</span>
                 </span>
               </label>
               <label
