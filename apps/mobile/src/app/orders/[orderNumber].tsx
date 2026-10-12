@@ -121,10 +121,8 @@ export default function OrderDetail() {
 
       <Card>
         <Text style={ui.sectionTitle}>Payment</Text>
-        <Row label="Items" value={inr(order.subtotal)} />
+        <Row label="Items" value={inr(order.subtotal + order.shippingFee + order.codFee)} />
         {order.discount > 0 && <Row label={`Discount${order.couponCode ? ` (${order.couponCode})` : ''}`} value={`− ${inr(order.discount)}`} green />}
-        {order.shippingFee > 0 && <Row label="Delivery" value={inr(order.shippingFee)} />}
-        {order.codFee > 0 && <Row label="COD fee" value={inr(order.codFee)} />}
         <Row label="Total" value={inr(order.total)} bold />
         <Text style={{ color: colors.muted, marginTop: 6 }}>
           {order.paymentMethod === 'COD' ? 'Cash on delivery' : 'Paid online'} · {humanize(order.paymentStatus)}

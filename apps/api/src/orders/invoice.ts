@@ -79,7 +79,7 @@ th{background:#f6f6f6}.r{text-align:right}.muted{color:#666;font-size:13px}.grid
   }<br>${esc(a.city)}, ${esc(a.state)} - ${esc(a.pincode)}<br>Phone: ${esc(a.phone)}</div></div></div>
 <table><thead><tr><th>#</th><th>Description</th><th>HSN/SAC</th><th class="r">Qty</th><th class="r">Taxable value</th><th class="r">GST</th><th class="r">Tax</th><th class="r">Amount</th></tr></thead><tbody>${rows}</tbody></table>
 <table class="totals" style="width:340px;margin-left:auto">
-<tr><td>Items (MRP-inclusive price)</td><td class="r">${inr(order.subtotal)}</td></tr>
+<tr><td>Items (MRP-inclusive price)</td><td class="r">${inr(order.subtotal + order.shippingFee + order.codFee)}</td></tr>
 ${order.discount ? `<tr><td>Discount${order.couponCode ? ` (${esc(order.couponCode)})` : ''}</td><td class="r">-${inr(order.discount)}</td></tr>` : ''}
 <tr><td>Taxable value</td><td class="r">${inr(g.taxable)}</td></tr>
 ${g.intraState ? `<tr><td>CGST</td><td class="r">${inr(g.cgst)}</td></tr><tr><td>SGST</td><td class="r">${inr(g.sgst)}</td></tr>` : `<tr><td>IGST</td><td class="r">${inr(g.igst)}</td></tr>`}

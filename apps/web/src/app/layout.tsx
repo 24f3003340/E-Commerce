@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   openGraph: { type: 'website', siteName: STORE_NAME, locale: 'en_IN' },
   title: { default: `${STORE_NAME} — Shop everything. Everywhere.`, template: `%s | ${STORE_NAME}` },
-  description: 'Shop fashion, footwear and accessories for men, women and kids from trusted sellers. Free delivery over ₹999, easy 7-day returns, COD and secure payments.',
+  description: 'Shop fashion, footwear and accessories for men, women and kids from trusted sellers. Delivery included in the price, easy 7-day returns, COD and secure payments.',
 };
 
 export const viewport: Viewport = { themeColor: '#0b3b36' };

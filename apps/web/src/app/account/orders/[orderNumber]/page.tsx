@@ -302,24 +302,12 @@ function OrderDetail() {
               </div>
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{inr(order.subtotal)}</span>
+                <span>{inr(order.subtotal + order.shippingFee + order.codFee)}</span>
               </div>
               {order.discount > 0 && (
                 <div className="flex justify-between text-emerald-700">
                   <span>Discount {order.couponCode && `(${order.couponCode})`}</span>
                   <span>−{inr(order.discount)}</span>
-                </div>
-              )}
-              {order.shippingFee > 0 && (
-                <div className="flex justify-between">
-                  <span>Delivery</span>
-                  <span>{inr(order.shippingFee)}</span>
-                </div>
-              )}
-              {order.codFee > 0 && (
-                <div className="flex justify-between">
-                  <span>COD fee</span>
-                  <span>{inr(order.codFee)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-1 font-bold">

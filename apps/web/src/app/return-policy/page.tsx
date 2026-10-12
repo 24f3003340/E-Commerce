@@ -30,7 +30,6 @@ export default async function ReturnPolicyPage() {
         <li>Prepaid orders are refunded to the original payment method within 5–7 business days of the quality check.</li>
         <li>Cash-on-delivery orders are refunded by bank transfer / UPI to details you share with us.</li>
         <li>If you used a coupon, the refund is the amount you actually paid for the returned items.</li>
-        <li>Shipping and COD charges are non-refundable unless the item was damaged, defective or incorrect.</li>
       </ul>
       <H2>Cancellations</H2>
       <p>You can cancel an order from My Orders until it is packed. Prepaid cancellations are refunded automatically to the original payment method.</p>
