@@ -54,7 +54,7 @@ function GuestCart() {
           <span>Subtotal</span>
           <span>{inr(subtotal)}</span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">Shipping and coupons are applied at checkout.</p>
+        <p className="mt-1 text-xs text-gray-500">Coupons are applied at checkout. Delivery is included in the price.</p>
         <button className="btn-buy mt-4 w-full py-3" onClick={() => router.push('/login?next=/checkout')}>
           Login to checkout
         </button>
@@ -87,7 +87,6 @@ function AccountCart() {
     return <EmptyState title="Your cart is empty" text="Looks like you haven't added anything yet." action={<Link href="/" className="btn-primary">Start shopping</Link>} />;
   }
   const s = cart.summary;
-  const toFree = s.freeShippingThreshold - (s.subtotal - s.couponDiscount);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -138,15 +137,16 @@ function AccountCart() {
             <span>−{inr(s.productDiscount)}</span>
           </div>
         )}
-        <div className="flex justify-between">
-          <span>Shipping</span>
-          <span>{s.shippingFee ? inr(s.shippingFee) : <span className="text-emerald-700">FREE</span>}</span>
-        </div>
+        {s.shippingFee > 0 && (
+          <div className="flex justify-between">
+            <span>Express delivery</span>
+            <span>{inr(s.shippingFee)}</span>
+          </div>
+        )}
         <div className="flex justify-between border-t pt-2 text-base font-bold">
           <span>Total</span>
           <span>{inr(s.total)}</span>
         </div>
-        {toFree > 0 && <p className="rounded bg-amber-50 p-2 text-xs text-amber-800">Add {inr(toFree)} more for FREE delivery</p>}
         <button className="btn-buy mt-3 w-full py-3 text-base" disabled={cart.hasIssues} onClick={() => router.push('/checkout')}>
           Place Order
         </button>

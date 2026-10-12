@@ -10,7 +10,7 @@ export default async function FaqPage() {
   const s = await getStoreInfo();
   const faqs: [string, React.ReactNode][] = [
     ['How do I track my order?', <>Open <Link href="/account/orders" className="text-brand-700 underline">My Orders</Link> or use <Link href="/track" className="text-brand-700 underline">Track Order</Link> with your order ID and email / phone.</>],
-    ['Is delivery free?', <>Yes, on orders above {inr(s.freeShippingThreshold)}. Below that a {inr(s.standardShippingFee)} delivery fee applies.</>],
+    ['Is delivery free?', <>Standard delivery is included in the product price, so there is no separate shipping charge.</>],
     ['Do you offer cash on delivery?', s.codEnabled ? <>Yes, COD is available on most pincodes with a {inr(s.codFee)} handling fee.</> : <>Not at the moment — please pay online with UPI, card or net banking.</>],
     ['Can I pay online?', s.onlinePayments ? <>Yes — UPI, credit / debit cards, net banking and wallets.</> : <>Online payments are coming soon. For now please choose cash on delivery at checkout.</>],
     ['Why did my order split into several orders?', <>{s.storeName} is a marketplace. When your cart has products from different sellers, each seller gets their own order and ships it separately. You pay the same total.</>],

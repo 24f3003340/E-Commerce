@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { H2, InfoPage } from '@/components/InfoPage';
-import { inr } from '@/lib/format';
 import { getStoreInfo } from '@/lib/storeInfo';
 
 export const metadata: Metadata = { title: 'About us' };
@@ -16,7 +15,7 @@ export default async function AboutPage() {
       <H2>What we promise</H2>
       <ul className="list-disc space-y-1 pl-5">
         <li>Original products with clear size charts and real photos.</li>
-        <li>Free delivery on orders above {inr(s.freeShippingThreshold)}.</li>
+        <li>Delivery is included in the price you see — no hidden shipping charges.</li>
         <li>Easy {s.defaultReturnWindowDays}-day returns on eligible items.</li>
         {s.onlinePayments ? (
           <li>Secure payments by UPI, cards, net banking and wallets{s.codEnabled ? ', plus cash on delivery' : ''}.</li>

@@ -168,7 +168,7 @@ export class SellersService {
       this.prisma.order.findMany({
         where: { sellerId, payoutId: null, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.PENDING_PAYMENT] } },
         orderBy: { createdAt: 'desc' },
-        include: { items: { select: { unitPrice: true, quantity: true, returnedQuantity: true } }, returns: { select: { status: true } } },
+        include: { items: { select: { unitPrice: true, basePrice: true, quantity: true, returnedQuantity: true } }, returns: { select: { status: true } } },
       }),
       this.prisma.sellerPayout.aggregate({ where: { sellerId }, _sum: { amount: true }, _count: { _all: true } }),
     ]);
@@ -319,7 +319,7 @@ export class SellersService {
     const payout = await this.prisma.$transaction(async (tx) => {
       const orders = await tx.order.findMany({
         where: { sellerId, payoutId: null, status: OrderStatus.DELIVERED },
-        include: { items: { select: { unitPrice: true, quantity: true, returnedQuantity: true } }, returns: { select: { status: true } } },
+        include: { items: { select: { unitPrice: true, basePrice: true, quantity: true, returnedQuantity: true } }, returns: { select: { status: true } } },
       });
       const ready = orders.filter((o) => isPayoutEligible(o, sellerPayoutHoldDays));
       if (!ready.length) throw new BadRequestException('Nothing is ready for payout for this seller yet');

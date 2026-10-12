@@ -6,7 +6,8 @@ export const CLOSED_RETURN_STATUSES: ReturnStatus[] = [ReturnStatus.REJECTED, Re
 export interface SettlementOrder {
   status: OrderStatus;
   commissionPct: number;
-  items: { unitPrice: number; quantity: number; returnedQuantity: number }[];
+  /** basePrice = the seller's share of unitPrice (shipping built into the price stays with the marketplace); 0 = legacy row */
+  items: { unitPrice: number; basePrice?: number; quantity: number; returnedQuantity: number }[];
 }
 
 /**
@@ -18,7 +19,7 @@ export function orderSettlement(order: SettlementOrder) {
   if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.PENDING_PAYMENT) {
     return { itemValue: 0, commission: 0, payable: 0 };
   }
-  const itemValue = order.items.reduce((s, i) => s + i.unitPrice * Math.max(0, i.quantity - i.returnedQuantity), 0);
+  const itemValue = order.items.reduce((s, i) => s + (i.basePrice || i.unitPrice) * Math.max(0, i.quantity - i.returnedQuantity), 0);
   const commission = Math.round((itemValue * order.commissionPct) / 100);
   return { itemValue, commission, payable: itemValue - commission };
 }

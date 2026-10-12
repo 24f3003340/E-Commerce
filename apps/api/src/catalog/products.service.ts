@@ -6,6 +6,7 @@ import { csv, paginate, paginated, slugify } from '../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminProductQueryDto, ProductDto, ProductQueryDto } from './catalog.dto';
 import { CategoriesService } from './categories.service';
+import { customerPrice } from './pricing';
 import { LIVE_PRODUCT, liveProduct } from './visibility';
 
 const listingSelect = {
@@ -428,6 +429,7 @@ export class ProductsService {
    */
   async create(dto: ProductDto, actorId: string, owner?: SellerOwner) {
     this.validateVariants(dto);
+    const { standardShippingFee } = await this.settings.get();
     await this.assertSkusFree(dto);
     const slug = await this.uniqueSlug(dto.slug || dto.name);
     const product = await this.prisma.$transaction(async (tx) => {
@@ -444,7 +446,7 @@ export class ProductsService {
       });
       for (const v of dto.variants) {
         const variant = await tx.productVariant.create({
-          data: { ...this.variantFields(v), stock: v.stock ?? 0, productId: created.id },
+          data: { ...this.variantFields(v, standardShippingFee), stock: v.stock ?? 0, productId: created.id },
         });
         if (v.stock) {
           await tx.inventoryMovement.create({
@@ -461,6 +463,7 @@ export class ProductsService {
 
   async update(id: string, dto: ProductDto, actorId: string, owner?: SellerOwner) {
     this.validateVariants(dto);
+    const { standardShippingFee } = await this.settings.get();
     const existing = await this.adminGet(id);
     if (owner && existing.sellerId !== owner.sellerId) throw new NotFoundException('Product not found');
     await this.assertSkusFree(dto, id);
@@ -490,11 +493,11 @@ export class ProductsService {
         const match = existing.variants.find((ev) => (v.id && ev.id === v.id) || ev.sku === v.sku);
         if (match) {
           // Stock is managed via the inventory endpoints so it is never overwritten here.
-          await tx.productVariant.update({ where: { id: match.id }, data: this.variantFields(v) });
+          await tx.productVariant.update({ where: { id: match.id }, data: this.variantFields(v, standardShippingFee) });
           keepIds.add(match.id);
         } else {
           const created = await tx.productVariant.create({
-            data: { ...this.variantFields(v), stock: v.stock ?? 0, productId: id },
+            data: { ...this.variantFields(v, standardShippingFee), stock: v.stock ?? 0, productId: id },
           });
           keepIds.add(created.id);
           if (v.stock) {
@@ -633,15 +636,18 @@ export class ProductsService {
     };
   }
 
-  private variantFields(v: ProductDto['variants'][number]) {
+  /** `v.price` is what the seller typed; the customer-facing price has the shipping fee built in. */
+  private variantFields(v: ProductDto['variants'][number], shippingFee: number) {
+    const price = customerPrice(v.price, shippingFee);
     return {
       sku: v.sku.toUpperCase(),
       barcode: v.barcode || null,
       color: v.color?.trim() || null,
       colorHex: v.colorHex || null,
       size: v.size?.trim() || null,
-      price: v.price,
-      mrp: v.mrp,
+      price,
+      basePrice: v.price,
+      mrp: Math.max(v.mrp, price),
       isActive: v.isActive ?? true,
     };
   }

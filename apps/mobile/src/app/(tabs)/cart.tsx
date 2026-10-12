@@ -44,9 +44,6 @@ export default function CartScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 12, gap: 10, paddingBottom: 110 }}>
-        {s.freeShippingThreshold > 0 && s.subtotal < s.freeShippingThreshold && (
-          <Text style={st.note}>Add {inr(s.freeShippingThreshold - s.subtotal)} more for free delivery</Text>
-        )}
         {cart.items.map((item) => (
           <Card key={item.id} style={{ flexDirection: 'row', gap: 12, opacity: busy === item.id ? 0.6 : 1 }}>
             <Pressable onPress={() => router.push(`/p/${item.product.slug}`)}>
@@ -77,7 +74,7 @@ export default function CartScreen() {
           <Text style={ui.sectionTitle}>Price details</Text>
           <Row label={`Price (${s.itemCount} items)`} value={inr(s.mrpTotal)} />
           {s.productDiscount > 0 && <Row label="Discount" value={`− ${inr(s.productDiscount)}`} green />}
-          <Row label="Delivery" value={s.shippingFee ? inr(s.shippingFee) : 'FREE'} green={!s.shippingFee} />
+          {s.shippingFee > 0 && <Row label="Express delivery" value={inr(s.shippingFee)} />}
           <View style={st.divider} />
           <Row label="Total" value={inr(s.subtotal + s.shippingFee)} bold />
           {s.packageCount > 1 && <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>Items from {s.packageCount} sellers arrive in separate packages.</Text>}

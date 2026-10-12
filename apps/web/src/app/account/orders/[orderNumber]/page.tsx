@@ -310,10 +310,12 @@ function OrderDetail() {
                   <span>−{inr(order.discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Shipping</span>
-                <span>{order.shippingFee ? inr(order.shippingFee) : 'FREE'}</span>
-              </div>
+              {order.shippingFee > 0 && (
+                <div className="flex justify-between">
+                  <span>Express delivery</span>
+                  <span>{inr(order.shippingFee)}</span>
+                </div>
+              )}
               {order.codFee > 0 && (
                 <div className="flex justify-between">
                   <span>COD fee</span>

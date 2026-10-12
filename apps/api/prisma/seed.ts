@@ -2,6 +2,7 @@
 import { AdminRole, BannerPosition, CouponType, InventoryReason, PrismaClient, ProductStatus, SellerStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import 'dotenv/config';
+import { DEFAULT_SETTINGS } from '../src/common/settings.service';
 import { bannerSvg, productSvg, type Shape } from './artwork';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -183,6 +184,8 @@ async function main() {
     if (existing) continue;
     const prefix = def.brand.replace(/[^A-Z]/gi, '').slice(0, 3).toUpperCase() + String(count + 1).padStart(3, '0');
     const parent = await prisma.category.findUnique({ where: { id: catIds.get(def.category)! } });
+    const shelfPrice = def.price * 100 + DEFAULT_SETTINGS.standardShippingFee;
+    const shelfMrp = Math.max(def.mrp * 100, shelfPrice);
     const product = await prisma.product.create({
       data: {
         name: def.name,
@@ -196,9 +199,10 @@ async function main() {
         status: ProductStatus.ACTIVE,
         isFeatured: def.featured ?? false,
         soldCount: def.sold ?? 0,
-        minPrice: def.price * 100,
-        maxMrp: def.mrp * 100,
-        discountPct: Math.round(((def.mrp - def.price) / def.mrp) * 100),
+        // Shipping is built into the shelf price (see catalog/pricing.ts)
+        minPrice: shelfPrice,
+        maxMrp: shelfMrp,
+        discountPct: Math.round(((shelfMrp - shelfPrice) / shelfMrp) * 100),
         categories: {
           create: [
             { categoryId: catIds.get(def.category)!, isPrimary: true },
@@ -218,8 +222,9 @@ async function main() {
             color,
             colorHex: COLORS[color],
             size,
-            price: def.price * 100,
-            mrp: def.mrp * 100,
+            price: shelfPrice,
+            basePrice: def.price * 100,
+            mrp: shelfMrp,
             stock,
           },
         });

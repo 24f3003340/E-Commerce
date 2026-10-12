@@ -13,7 +13,7 @@ export default async function ShippingPolicyPage() {
       <p>We deliver across India through trusted courier partners. Enter your pincode on any product page to check delivery and the expected date.</p>
       <H2>Delivery charges</H2>
       <ul className="list-disc space-y-1 pl-5">
-        <li>Standard delivery: FREE on orders above {inr(s.freeShippingThreshold)}, otherwise {inr(s.standardShippingFee)}.</li>
+        <li>Standard delivery: included in the product price — there is no separate shipping charge.</li>
         <li>Express delivery: {inr(s.expressShippingFee)}.</li>
         {s.codEnabled && <li>Cash on delivery: an additional {inr(s.codFee)} handling fee.</li>}
       </ul>

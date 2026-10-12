@@ -49,7 +49,7 @@ export interface ProductRecord {
   isFeatured: boolean;
   categories: { categoryId: string; isPrimary: boolean }[];
   images: { url: string; alt: string | null; color: string | null }[];
-  variants: { id: string; sku: string; barcode: string | null; color: string | null; colorHex: string | null; size: string | null; price: number; mrp: number; stock: number; isActive: boolean }[];
+  variants: { id: string; sku: string; barcode: string | null; color: string | null; colorHex: string | null; size: string | null; price: number; basePrice: number; mrp: number; stock: number; isActive: boolean }[];
 }
 
 const toRupees = (p: number) => String(p / 100);
@@ -104,7 +104,7 @@ export function ProductForm({
       color: v.color ?? '',
       colorHex: v.colorHex ?? '#000000',
       size: v.size ?? '',
-      price: toRupees(v.price),
+      price: toRupees(v.basePrice || v.price),
       mrp: toRupees(v.mrp),
       stock: '',
       isActive: v.isActive,
@@ -315,6 +315,7 @@ export function ProductForm({
 
       <section className="card space-y-4 p-5">
         <h2 className="font-bold">Variants (colour × size)</h2>
+        <p className="text-xs text-gray-500">Enter your own price. The store's delivery charge is added automatically, so customers see the final price with shipping included.</p>
         <div className="grid gap-3 rounded-md bg-gray-50 p-4 md:grid-cols-6">
           <Field label="Colours" hint="Black:#111111, White:#ffffff"><input className="input" value={gen.colors} onChange={(e) => setGen((g) => ({ ...g, colors: e.target.value }))} /></Field>
           <Field label="Sizes"><input className="input" value={gen.sizes} onChange={(e) => setGen((g) => ({ ...g, sizes: e.target.value }))} /></Field>
@@ -326,7 +327,7 @@ export function ProductForm({
         <div className="overflow-x-auto">
           <table className="table">
             <thead>
-              <tr><th>SKU</th><th>Colour</th><th>Size</th><th>Price ₹</th><th>MRP ₹</th><th>Stock</th><th>Barcode</th><th>Active</th><th /></tr>
+              <tr><th>SKU</th><th>Colour</th><th>Size</th><th>Your price ₹</th><th>MRP ₹</th><th>Stock</th><th>Barcode</th><th>Active</th><th /></tr>
             </thead>
             <tbody>
               {variants.map((v, i) => (

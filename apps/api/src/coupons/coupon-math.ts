@@ -40,12 +40,15 @@ export function couponDiscount(coupon: CouponLike, lines: PricedLine[]): number 
 
 export type DeliveryMethod = 'STANDARD' | 'EXPRESS';
 
+/**
+ * Standard shipping is already built into every product's price, so it is never charged again.
+ * Only the optional express upgrade adds a separate fee.
+ */
 export function shippingFee(
   amountAfterDiscount: number,
   method: DeliveryMethod,
-  settings: Pick<StoreSettings, 'freeShippingThreshold' | 'standardShippingFee' | 'expressShippingFee'>,
+  settings: Pick<StoreSettings, 'expressShippingFee'>,
 ): number {
   if (amountAfterDiscount <= 0) return 0;
-  if (method === 'EXPRESS') return settings.expressShippingFee;
-  return amountAfterDiscount >= settings.freeShippingThreshold ? 0 : settings.standardShippingFee;
+  return method === 'EXPRESS' ? settings.expressShippingFee : 0;
 }

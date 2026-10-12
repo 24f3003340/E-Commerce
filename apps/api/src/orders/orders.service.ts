@@ -26,6 +26,7 @@ import { EmailService, escapeHtml } from '../common/email.service';
 import { SettingsService } from '../common/settings.service';
 import { nextSequenceNumber, paginate, paginated } from '../common/utils';
 import { shippingFee, subtotalOf } from '../coupons/coupon-math';
+import { sellerPrice } from '../catalog/pricing';
 import { CouponsService } from '../coupons/coupons.service';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { GatewayOrder, RazorpayGateway } from '../payments/razorpay.gateway';
@@ -211,6 +212,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
                   sku: i.variant.sku,
                   imageUrl: variantImage(i),
                   unitPrice: i.variant.price,
+                  basePrice: sellerPrice(i.variant),
                   mrp: i.variant.mrp,
                   quantity: i.quantity,
                   total: i.variant.price * i.quantity,
@@ -753,7 +755,7 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
       `<tr><td style="padding:4px 0;${bold ? 'font-weight:bold' : ''}">${label}</td><td style="padding:4px 0;text-align:right;${bold ? 'font-weight:bold' : ''}">${value}</td></tr>`;
     return `<table role="presentation" width="100%" style="border-collapse:collapse;font-size:14px;margin-top:12px">${rows}
 ${line('Subtotal', rupee(o.subtotal))}${o.discount ? line(`Discount${o.couponCode ? ` (${escapeHtml(o.couponCode)})` : ''}`, `-${rupee(o.discount)}`) : ''}
-${line('Shipping', o.shippingFee ? rupee(o.shippingFee) : 'FREE')}${o.codFee ? line('COD fee', rupee(o.codFee)) : ''}${line('Total', rupee(o.total), true)}</table>
+${o.shippingFee ? line('Express delivery', rupee(o.shippingFee)) : ''}${o.codFee ? line('COD fee', rupee(o.codFee)) : ''}${line('Total', rupee(o.total), true)}</table>
 <p style="margin-top:16px;font-size:13px;color:#555"><b>Delivering to:</b> ${escapeHtml(a.name)}, ${escapeHtml(a.line1)}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} – ${escapeHtml(a.pincode)}<br><b>Payment:</b> ${o.paymentMethod === PaymentMethod.COD ? 'Cash on delivery' : 'Paid online'}</p>`;
   }
 

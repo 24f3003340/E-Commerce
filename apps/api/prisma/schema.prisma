@@ -298,7 +298,10 @@ model ProductVariant {
   color      String?
   colorHex   String?
   size       String?
+  // What the customer pays: basePrice + the store's standard shipping fee (shipping is never shown separately)
   price      Int
+  // The price the seller / admin typed in; earnings are computed on this. 0 = legacy row (use price)
+  basePrice  Int                 @default(0)
   mrp        Int
   stock      Int                 @default(0)
   // Units held by orders awaiting payment confirmation
@@ -548,6 +551,8 @@ model OrderItem {
   sku              String
   imageUrl         String?
   unitPrice        Int
+  // Seller's share of unitPrice (price before the built-in shipping). 0 = legacy row (use unitPrice)
+  basePrice        Int            @default(0)
   mrp              Int
   quantity         Int
   total            Int

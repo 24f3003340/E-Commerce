@@ -140,7 +140,7 @@ export default function CheckoutPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  ['STANDARD', 'Standard delivery', '3–7 days', s.subtotal - s.couponDiscount >= s.freeShippingThreshold ? 'FREE' : null],
+                  ['STANDARD', 'Standard delivery', '3–7 days', 'Included in price'],
                   ['EXPRESS', 'Express delivery', '1–3 days', null],
                 ] as const
               ).map(([value, label, eta, free]) => (
@@ -255,10 +255,12 @@ export default function CheckoutPage() {
               <span>−{inr(s.couponDiscount)}</span>
             </div>
           )}
-          <div className="flex justify-between">
-            <span>Shipping</span>
-            <span>{s.shippingFee ? inr(s.shippingFee) : 'FREE'}</span>
-          </div>
+          {s.shippingFee > 0 && (
+            <div className="flex justify-between">
+              <span>Express delivery</span>
+              <span>{inr(s.shippingFee)}</span>
+            </div>
+          )}
           {s.codFee > 0 && (
             <div className="flex justify-between">
               <span>COD fee</span>

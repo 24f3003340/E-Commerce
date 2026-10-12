@@ -158,7 +158,7 @@ export default function Checkout() {
           <Row label={`Price (${s.itemCount} items)`} value={inr(s.mrpTotal)} />
           {s.productDiscount > 0 && <Row label="Discount" value={`− ${inr(s.productDiscount)}`} green />}
           {s.couponDiscount > 0 && <Row label="Coupon" value={`− ${inr(s.couponDiscount)}`} green />}
-          <Row label="Delivery" value={s.shippingFee ? inr(s.shippingFee) : 'FREE'} green={!s.shippingFee} />
+          {s.shippingFee > 0 && <Row label="Express delivery" value={inr(s.shippingFee)} />}
           {s.codFee > 0 && <Row label="COD fee" value={inr(s.codFee)} />}
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
           <Row label="Amount payable" value={inr(s.total)} bold />

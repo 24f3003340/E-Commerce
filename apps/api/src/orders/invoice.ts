@@ -32,6 +32,10 @@ interface InvoiceOrder {
   } | null;
 }
 
+/** Standard shipping is built into item prices, so only express delivery / COD charges can appear here. */
+const chargesLabel = (o: { shippingFee: number; codFee: number }) =>
+  o.shippingFee && o.codFee ? 'Express delivery & COD fee' : o.shippingFee ? 'Express delivery' : 'COD fee';
+
 /** Printable GST tax invoice — the browser's "Save as PDF" produces the PDF. */
 export function renderInvoice(order: InvoiceOrder, settings: StoreSettings): string {
   const a = order.shippingAddress as Record<string, string>;
@@ -81,7 +85,7 @@ th{background:#f6f6f6}.r{text-align:right}.muted{color:#666;font-size:13px}.grid
 <table class="totals" style="width:340px;margin-left:auto">
 <tr><td>Items (MRP-inclusive price)</td><td class="r">${inr(order.subtotal)}</td></tr>
 ${order.discount ? `<tr><td>Discount${order.couponCode ? ` (${esc(order.couponCode)})` : ''}</td><td class="r">-${inr(order.discount)}</td></tr>` : ''}
-${order.shippingFee + order.codFee ? `<tr><td>Shipping & handling</td><td class="r">${inr(order.shippingFee + order.codFee)}</td></tr>` : ''}
+${order.shippingFee + order.codFee ? `<tr><td>${esc(chargesLabel(order))}</td><td class="r">${inr(order.shippingFee + order.codFee)}</td></tr>` : ''}
 <tr><td>Taxable value</td><td class="r">${inr(g.taxable)}</td></tr>
 ${g.intraState ? `<tr><td>CGST</td><td class="r">${inr(g.cgst)}</td></tr><tr><td>SGST</td><td class="r">${inr(g.sgst)}</td></tr>` : `<tr><td>IGST</td><td class="r">${inr(g.igst)}</td></tr>`}
 <tr class="grand"><td>Invoice total</td><td class="r">${inr(order.total)}</td></tr></table>

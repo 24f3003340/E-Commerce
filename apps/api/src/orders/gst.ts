@@ -59,7 +59,7 @@ export function gstBreakdown(
   const maxRate = lines.reduce((m, l) => Math.max(m, l.rate), 0);
   const charges = order.shippingFee + order.codFee;
   if (charges > 0) {
-    lines.push({ label: 'Shipping & handling', hsn: '9965', quantity: 1, gross: charges, rate: maxRate, ...split(charges, maxRate) });
+    lines.push({ label: 'Delivery charges', hsn: '9965', quantity: 1, gross: charges, rate: maxRate, ...split(charges, maxRate) });
   }
   const taxable = lines.reduce((t, l) => t + l.taxable, 0);
   const tax = lines.reduce((t, l) => t + l.tax, 0);
