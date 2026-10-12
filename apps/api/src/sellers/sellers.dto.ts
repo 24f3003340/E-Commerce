@@ -1,6 +1,9 @@
 import { OrderStatus, SellerStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsEmail,
   IsIn,
@@ -15,6 +18,7 @@ import {
   Min,
   MinLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 
 const upper = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toUpperCase() : value);
@@ -109,6 +113,22 @@ export class SellerProfileDto extends SellerDetailsDto {
 
   @IsOptional() @Matches(/^[1-9]\d{5}$/, { message: 'pincode must be 6 digits' })
   pincode?: string;
+
+  // ── Automation: book the courier automatically for every new order ──
+  @IsOptional() @IsBoolean()
+  autoShip?: boolean;
+
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 3 }) @Min(0.05) @Max(50)
+  defaultWeightKg?: number;
+
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  defaultLengthCm?: number;
+
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  defaultBreadthCm?: number;
+
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 1 }) @Min(1) @Max(200)
+  defaultHeightCm?: number;
 }
 
 export class AdminSellerQueryDto {
@@ -168,4 +188,79 @@ export class SellerOrderStatusDto {
 
   @IsOptional() @IsString() @MaxLength(300)
   note?: string;
+}
+
+// ───────────── Seller shortcuts: quick add, bulk upload, bulk update ─────────────
+
+export class QuickProductDto {
+  @Transform(trim) @IsString() @Length(2, 160)
+  name: string;
+
+  @IsString() @MaxLength(60)
+  categoryId: string;
+
+  /** Selling price in paise */
+  @IsInt() @Min(100) @Max(100_000_000)
+  price: number;
+
+  /** MRP in paise; defaults to the price */
+  @IsOptional() @IsInt() @Min(100) @Max(100_000_000)
+  mrp?: number;
+
+  @IsArray() @ArrayMaxSize(20) @IsString({ each: true })
+  colors: string[];
+
+  @IsArray() @ArrayMaxSize(20) @IsString({ each: true })
+  sizes: string[];
+
+  /** Stock for every colour / size combination */
+  @IsInt() @Min(0) @Max(100_000)
+  stock: number;
+
+  @IsArray() @ArrayMaxSize(10) @IsString({ each: true })
+  images: string[];
+
+  @IsOptional() @IsString() @MaxLength(5000)
+  description?: string;
+
+  @IsOptional() @IsString() @MaxLength(80)
+  brand?: string;
+
+  @IsOptional() @IsString() @MaxLength(120)
+  material?: string;
+
+  /** true = go live (or into review); false = keep as a draft */
+  @IsBoolean()
+  publish: boolean;
+}
+
+export class BulkRowDto {
+  @IsOptional() @IsString() @MaxLength(200) name?: string;
+  @IsOptional() @IsString() @MaxLength(100) category?: string;
+  @IsOptional() @IsString() @MaxLength(20) price?: string;
+  @IsOptional() @IsString() @MaxLength(20) mrp?: string;
+  @IsOptional() @IsString() @MaxLength(400) colors?: string;
+  @IsOptional() @IsString() @MaxLength(400) sizes?: string;
+  @IsOptional() @IsString() @MaxLength(20) stock?: string;
+  @IsOptional() @IsString() @MaxLength(3000) images?: string;
+  @IsOptional() @IsString() @MaxLength(5000) description?: string;
+  @IsOptional() @IsString() @MaxLength(80) brand?: string;
+  @IsOptional() @IsString() @MaxLength(120) material?: string;
+}
+
+export class BulkCreateDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(200) @ValidateNested({ each: true }) @Type(() => BulkRowDto)
+  rows: BulkRowDto[];
+}
+
+export class VariantUpdateRowDto {
+  @IsOptional() @IsString() @MaxLength(64) sku?: string;
+  @IsOptional() @IsString() @MaxLength(20) price?: string;
+  @IsOptional() @IsString() @MaxLength(20) mrp?: string;
+  @IsOptional() @IsString() @MaxLength(20) stock?: string;
+}
+
+export class BulkUpdateDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(500) @ValidateNested({ each: true }) @Type(() => VariantUpdateRowDto)
+  rows: VariantUpdateRowDto[];
 }

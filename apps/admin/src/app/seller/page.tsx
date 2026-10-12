@@ -42,14 +42,14 @@ export default function SellerDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Hello, ${seller.name.split(' ')[0]} 👋`} subtitle={seller.storeName} actions={<Link href="/seller/products/new" className="btn-primary">+ Add product</Link>} />
+      <PageHeader title={`Hello, ${seller.name.split(' ')[0]} 👋`} subtitle={seller.storeName} actions={<Link href="/seller/products/quick" className="btn-primary">+ Quick add product</Link>} />
 
       {live + inReview + (data.products.DRAFT ?? 0) === 0 && (
         <section className="card p-5">
           <h2 className="font-bold">Get your store ready</h2>
           <ol className="mt-3 space-y-2 text-sm">
             <li>1. <Link href="/seller/profile" className="font-semibold text-brand-700">Check your GSTIN, pickup address and bank details</Link></li>
-            <li>2. <Link href="/seller/products/new" className="font-semibold text-brand-700">Add your first product</Link> with clear photos, sizes and stock, then choose “Publish”</li>
+            <li>2. <Link href="/seller/products/quick" className="font-semibold text-brand-700">Add your first product</Link> (photo, name, price, sizes — that is all) or <Link href="/seller/products/bulk" className="font-semibold text-brand-700">upload many from a sheet</Link></li>
             <li>3. Our team reviews your store and products — you get an email when they are live</li>
           </ol>
         </section>

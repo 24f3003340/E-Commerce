@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { config } from '../common/config';
 import { OrdersService } from '../orders/orders.service';
@@ -21,7 +21,7 @@ const STATUS_MAP: Record<string, OrderStatus | undefined> = {
 };
 
 @Injectable()
-export class ShippingService {
+export class ShippingService implements OnModuleInit {
   private readonly logger = new Logger(ShippingService.name);
 
   constructor(
@@ -29,6 +29,28 @@ export class ShippingService {
     private readonly orders: OrdersService,
     private readonly courier: ShiprocketClient,
   ) {}
+
+  onModuleInit() {
+    // Sellers who turned on automatic shipping get their courier booked as soon as an order is confirmed
+    this.orders.onConfirmed((orderId) => this.autoBook(orderId));
+  }
+
+  private async autoBook(orderId: string) {
+    if (!this.courier.enabled) return;
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { seller: true } });
+    const seller = order?.seller;
+    if (!order || !seller?.autoShip || order.status !== OrderStatus.CONFIRMED) return;
+    try {
+      await this.bookCourier(
+        orderId,
+        { weightKg: seller.defaultWeightKg, lengthCm: seller.defaultLengthCm, breadthCm: seller.defaultBreadthCm, heightCm: seller.defaultHeightCm },
+        'system:auto-ship',
+      );
+    } catch (err) {
+      // The order simply stays CONFIRMED so the seller can book it by hand
+      this.logger.warn(`Auto-ship failed for ${order.orderNumber}: ${(err as Error).message}`);
+    }
+  }
 
   get courierEnabled() {
     return this.courier.enabled;

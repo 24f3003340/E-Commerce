@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { AdminCatalogController, CatalogController } from './catalog.controller';
 import { CategoriesService } from './categories.service';
 import { InventoryService } from './inventory.service';
+import { ProductToolsService } from './product-tools.service';
 import { ProductsService } from './products.service';
 
 @Module({
   controllers: [CatalogController, AdminCatalogController],
-  providers: [CategoriesService, ProductsService, InventoryService],
-  exports: [CategoriesService, ProductsService, InventoryService],
+  providers: [CategoriesService, ProductsService, InventoryService, ProductToolsService],
+  exports: [CategoriesService, ProductsService, InventoryService, ProductToolsService],
 })
 export class CatalogModule {}

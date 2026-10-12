@@ -27,6 +27,7 @@ import { SettingsService } from '../common/settings.service';
 import { nextSequenceNumber, paginate, paginated } from '../common/utils';
 import { subtotalOf } from '../coupons/coupon-math';
 import { sellerPrice } from '../catalog/pricing';
+import { LOW_STOCK_THRESHOLD } from '../catalog/inventory.service';
 import { CouponsService } from '../coupons/coupons.service';
 import { NotificationsService, NotificationType } from '../notifications/notifications.service';
 import { GatewayOrder, RazorpayGateway } from '../payments/razorpay.gateway';
@@ -764,7 +765,15 @@ ${line('Total', rupee(o.total), true)}</table>
    * Emails the store team — and the marketplace seller, if the order is theirs — when an order is
    * confirmed (COD placed or online payment received).
    */
+  /** Listeners run after an order is confirmed (e.g. automatic courier booking for sellers). */
+  private readonly confirmedHooks: ((orderId: string) => Promise<void>)[] = [];
+
+  onConfirmed(hook: (orderId: string) => Promise<void>) {
+    this.confirmedHooks.push(hook);
+  }
+
   private async alertStore(orderId: string) {
+    for (const hook of this.confirmedHooks) await hook(orderId).catch((err) => this.logger.warn(`Post-confirm hook failed for ${orderId}: ${(err as Error).message}`));
     try {
       const settings = await this.settings.get();
       const o = await this.prisma.order.findUniqueOrThrow({
@@ -788,10 +797,30 @@ ${line('Total', rupee(o.total), true)}</table>
           { label: 'Open seller panel', url: `${config.sellerPanelUrl}/orders/${o.id}` },
         );
         await this.email.send(o.seller.email, subject, html, `New order ${o.orderNumber}: ${config.sellerPanelUrl}/orders/${o.id}`);
+        await this.alertLowStock(o.id, o.seller.email, o.seller.storeName);
       }
     } catch (err) {
       this.logger.warn(`Store alert failed for ${orderId}: ${(err as Error).message}`);
     }
+  }
+
+  /** Tells the seller which items of this order are now low or out of stock, so they can restock in time. */
+  private async alertLowStock(orderId: string, to: string, storeName: string) {
+    const items = await this.prisma.orderItem.findMany({
+      where: { orderId },
+      select: { productName: true, variantLabel: true, variant: { select: { stock: true } } },
+    });
+    const low = items.filter((i) => i.variant.stock <= LOW_STOCK_THRESHOLD);
+    if (!low.length) return;
+    const rows = low
+      .map((i) => `<li>${escapeHtml(i.productName)} (${escapeHtml(i.variantLabel)}) — <b>${i.variant.stock === 0 ? 'out of stock' : `${i.variant.stock} left`}</b></li>`)
+      .join('');
+    const html = await this.email.layout(
+      'Time to restock',
+      `<p>Hi ${escapeHtml(storeName)}, these items are running low after your latest order:</p><ul>${rows}</ul><p>Update stock from Inventory so customers can keep ordering.</p>`,
+      { label: 'Update stock', url: `${config.sellerPanelUrl}/inventory?lowStock=true` },
+    );
+    await this.email.send(to, 'Low stock alert', html, `Low stock: ${low.map((i) => `${i.productName} (${i.variantLabel})`).join(', ')}`);
   }
 
   private async notify(userId: string, type: NotificationType, title: string, body: string, orderNumber: string) {

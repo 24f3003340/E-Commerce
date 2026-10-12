@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { useSeller } from '@/components/SellerShell';
 import { Badge, Empty, PageHeader, Pager, Spinner } from '@/components/ui';
@@ -27,6 +27,7 @@ interface ProductRow {
 
 function Products() {
   const { toast } = useSeller();
+  const router = useRouter();
   const params = useSearchParams();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState(params.get('status') ?? '');
@@ -53,9 +54,25 @@ function Products() {
     }
   };
 
+  const duplicate = async (p: ProductRow) => {
+    try {
+      const copy = await sellerApi<{ id: string }>(`/seller/products/${p.id}/duplicate`, { method: 'POST' });
+      toast('Copied as a draft — update the details and publish');
+      router.push(`/seller/products/${copy.id}`);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Failed', true);
+    }
+  };
+
   return (
     <div>
-      <PageHeader title="Your products" subtitle={data ? `${data.total} products` : undefined} actions={<Link href="/seller/products/new" className="btn-primary">+ Add product</Link>} />
+      <PageHeader title="Your products" subtitle={data ? `${data.total} products` : undefined} actions={
+        <div className="flex flex-wrap gap-2">
+          <Link href="/seller/products/bulk" className="btn-outline">Bulk upload</Link>
+          <Link href="/seller/products/quick-edit" className="btn-outline">Quick edit prices &amp; stock</Link>
+          <Link href="/seller/products/quick" className="btn-primary">+ Quick add</Link>
+        </div>
+      } />
       <div className="card mb-4 flex flex-wrap gap-3 p-4">
         <input className="input max-w-sm" placeholder="Search name, brand or SKU" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} aria-label="Search products" />
         <select className="input max-w-[200px]" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} aria-label="Status">
@@ -91,6 +108,7 @@ function Products() {
                   <td className="whitespace-nowrap text-xs">{formatDate(p.updatedAt)}</td>
                   <td className="whitespace-nowrap text-right">
                     <Link href={`/seller/products/${p.id}`} className="mr-3 text-xs font-semibold text-brand-700">Edit</Link>
+                    <button className="mr-3 text-xs font-semibold text-gray-600" onClick={() => void duplicate(p)}>Copy</button>
                     <button className="text-xs font-semibold text-red-600" onClick={() => void remove(p)}>Delete</button>
                   </td>
                 </tr>

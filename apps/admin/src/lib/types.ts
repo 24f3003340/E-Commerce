@@ -57,6 +57,11 @@ export interface Seller {
   status: SellerStatus;
   statusNote: string | null;
   commissionPct: number | null;
+  autoShip: boolean;
+  defaultWeightKg: number;
+  defaultLengthCm: number;
+  defaultBreadthCm: number;
+  defaultHeightCm: number;
   approvedAt: string | null;
   createdAt: string;
 }

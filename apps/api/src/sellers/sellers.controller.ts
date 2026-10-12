@@ -20,6 +20,7 @@ import { ChangePasswordDto, LoginDto, RefreshDto } from '../auth/auth.dto';
 import { TokensService } from '../auth/tokens.service';
 import { AdjustStockDto, InventoryQueryDto } from '../catalog/catalog.controller';
 import { AdminProductQueryDto, ProductDto } from '../catalog/catalog.dto';
+import { ProductToolsService } from '../catalog/product-tools.service';
 import { CategoriesService } from '../catalog/categories.service';
 import { InventoryService } from '../catalog/inventory.service';
 import { ProductsService } from '../catalog/products.service';
@@ -37,8 +38,11 @@ import { ShippingService } from '../shipping/shipping.service';
 import { imageUpload, storeImage } from '../uploads/uploads.controller';
 import {
   AdminSellerQueryDto,
+  BulkCreateDto,
+  BulkUpdateDto,
   CreatePayoutDto,
   ProductReviewDto,
+  QuickProductDto,
   SELLER_ORDER_STATUSES,
   SellerOrderStatusDto,
   SellerProfileDto,
@@ -137,6 +141,7 @@ export class SellerCatalogController {
     private readonly categories: CategoriesService,
     private readonly inventory: InventoryService,
     private readonly prisma: PrismaService,
+    private readonly tools: ProductToolsService,
   ) {}
 
   @Get('categories')
@@ -157,6 +162,34 @@ export class SellerCatalogController {
   @Post('products')
   create(@CurrentSeller() seller: SellerPrincipal, @Body() dto: ProductDto) {
     return this.products.create(dto, actor(seller), { sellerId: seller.id });
+  }
+
+  /** Quick Add: a handful of inputs; SKUs, description, tags etc. are generated. */
+  @Post('products/quick')
+  quick(@CurrentSeller() seller: SellerPrincipal, @Body() dto: QuickProductDto) {
+    return this.tools.quickCreate(seller.id, dto);
+  }
+
+  /** Bulk upload: rows parsed from the seller's CSV sheet. */
+  @Post('products/bulk')
+  bulk(@CurrentSeller() seller: SellerPrincipal, @Body() dto: BulkCreateDto) {
+    return this.tools.bulkCreate(seller.id, dto.rows);
+  }
+
+  /** Bulk price / MRP / stock update by SKU. */
+  @Post('products/bulk-update')
+  bulkUpdate(@CurrentSeller() seller: SellerPrincipal, @Body() dto: BulkUpdateDto) {
+    return this.tools.bulkUpdate(seller.id, dto.rows);
+  }
+
+  @Get('products-export')
+  exportVariants(@CurrentSeller() seller: SellerPrincipal) {
+    return this.tools.exportVariants(seller.id);
+  }
+
+  @Post('products/:id/duplicate')
+  duplicate(@CurrentSeller() seller: SellerPrincipal, @Param('id') id: string) {
+    return this.tools.duplicate(seller.id, id);
   }
 
   @Put('products/:id')

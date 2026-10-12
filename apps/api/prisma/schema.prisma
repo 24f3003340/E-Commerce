@@ -168,6 +168,12 @@ model Seller {
   lastLoginAt       DateTime?
   // Pickup location nickname registered with the courier aggregator (Shiprocket)
   courierPickup     String?
+  // Automation: book the courier as soon as an order is confirmed, using this default package
+  autoShip          Boolean        @default(false)
+  defaultWeightKg   Float          @default(0.5)
+  defaultLengthCm   Float          @default(25)
+  defaultBreadthCm  Float          @default(20)
+  defaultHeightCm   Float          @default(5)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   products          Product[]
