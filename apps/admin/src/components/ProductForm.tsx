@@ -315,7 +315,7 @@ export function ProductForm({
 
       <section className="card space-y-4 p-5">
         <h2 className="font-bold">Variants (colour × size)</h2>
-        <p className="text-xs text-gray-500">Enter your own price. The store's delivery charge is added automatically, so customers see the final price with shipping included.</p>
+        <p className="text-xs text-gray-500">Enter your own price. The store's shipping and COD charges are added automatically, so customers see the final price with shipping and COD included.</p>
         <div className="grid gap-3 rounded-md bg-gray-50 p-4 md:grid-cols-6">
           <Field label="Colours" hint="Black:#111111, White:#ffffff"><input className="input" value={gen.colors} onChange={(e) => setGen((g) => ({ ...g, colors: e.target.value }))} /></Field>
           <Field label="Sizes"><input className="input" value={gen.sizes} onChange={(e) => setGen((g) => ({ ...g, sizes: e.target.value }))} /></Field>

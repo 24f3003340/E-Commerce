@@ -34,7 +34,7 @@ interface Settings {
   sellerPayoutHoldDays: number;
 }
 
-const MONEY: (keyof Settings)[] = ['freeShippingThreshold', 'standardShippingFee', 'expressShippingFee', 'codFee', 'codMaxOrderValue', 'gstHighRateAbove'];
+const MONEY: (keyof Settings)[] = ['freeShippingThreshold', 'standardShippingFee', 'codFee', 'codMaxOrderValue', 'gstHighRateAbove'];
 
 function TwoFactor() {
   const { admin, toast } = useAdmin();
@@ -167,8 +167,7 @@ export default function SettingsPage() {
 
         <h2 className="pt-2 font-bold md:col-span-2">Shipping & COD (₹)</h2>
         <Field label="Shipping charge added to every product price" hint="Customers never see shipping as a separate line. Saving a new amount re-prices all products (seller price + this charge)."><input className="input" type="number" min={0} value={s.standardShippingFee} onChange={num('standardShippingFee')} /></Field>
-        <Field label="Express delivery fee (optional upgrade)"><input className="input" type="number" min={0} value={s.expressShippingFee} onChange={num('expressShippingFee')} /></Field>
-        <Field label="COD fee"><input className="input" type="number" min={0} value={s.codFee} onChange={num('codFee')} /></Field>
+        <Field label="COD charge added to every product price" hint="Never shown to customers. Saving a new amount re-prices all products."><input className="input" type="number" min={0} value={s.codFee} onChange={num('codFee')} /></Field>
         <Field label="COD maximum order value"><input className="input" type="number" min={0} value={s.codMaxOrderValue} onChange={num('codMaxOrderValue')} /></Field>
         <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" checked={s.codEnabled} onChange={(e) => setS({ ...s, codEnabled: e.target.checked })} /> Cash on delivery enabled</label>
         <Field label="Blocked pincode prefixes" hint="Comma separated, e.g. 79, 744"><input className="input" value={s.blockedPincodePrefixes.join(', ')} onChange={(e) => setS({ ...s, blockedPincodePrefixes: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>

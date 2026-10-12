@@ -74,7 +74,6 @@ export default function CartScreen() {
           <Text style={ui.sectionTitle}>Price details</Text>
           <Row label={`Price (${s.itemCount} items)`} value={inr(s.mrpTotal)} />
           {s.productDiscount > 0 && <Row label="Discount" value={`− ${inr(s.productDiscount)}`} green />}
-          {s.shippingFee > 0 && <Row label="Express delivery" value={inr(s.shippingFee)} />}
           <View style={st.divider} />
           <Row label="Total" value={inr(s.subtotal + s.shippingFee)} bold />
           {s.packageCount > 1 && <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>Items from {s.packageCount} sellers arrive in separate packages.</Text>}

@@ -14,8 +14,7 @@ export default async function ShippingPolicyPage() {
       <H2>Delivery charges</H2>
       <ul className="list-disc space-y-1 pl-5">
         <li>Standard delivery: included in the product price — there is no separate shipping charge.</li>
-        <li>Express delivery: {inr(s.expressShippingFee)}.</li>
-        {s.codEnabled && <li>Cash on delivery: an additional {inr(s.codFee)} handling fee.</li>}
+        {s.codEnabled && <li>Cash on delivery: available with no extra handling fee.</li>}
       </ul>
       <H2>Delivery time</H2>
       <p>Orders are packed within 1–2 business days. Standard delivery usually takes 2–4 days to metro cities and 4–7 days elsewhere; express is faster. Remote areas may take longer.</p>

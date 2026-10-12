@@ -1,11 +1,10 @@
 import { CouponType } from '@prisma/client';
-import { couponDiscount, eligibleSubtotal, PricedLine, shippingFee } from './coupon-math';
+import { couponDiscount, eligibleSubtotal, PricedLine } from './coupon-math';
 
 const lines: PricedLine[] = [
   { productId: 'tee', categoryIds: ['men-tees'], unitPrice: 50000, quantity: 2 },
   { productId: 'shoe', categoryIds: ['shoes'], unitPrice: 200000, quantity: 1 },
 ];
-const settings = { expressShippingFee: 14900 };
 
 describe('coupon math', () => {
   it('applies percent discount with cap', () => {
@@ -24,10 +23,4 @@ describe('coupon math', () => {
     expect(couponDiscount({ type: CouponType.FLAT, value: 5000, maxDiscount: null, eligibleCategoryIds: ['none'] }, lines)).toBe(0);
   });
 
-  it('never charges standard shipping separately (it is built into product prices)', () => {
-    expect(shippingFee(50000, 'STANDARD', settings)).toBe(0);
-    expect(shippingFee(99900, 'STANDARD', settings)).toBe(0);
-    expect(shippingFee(150000, 'EXPRESS', settings)).toBe(14900);
-    expect(shippingFee(0, 'STANDARD', settings)).toBe(0);
-  });
 });

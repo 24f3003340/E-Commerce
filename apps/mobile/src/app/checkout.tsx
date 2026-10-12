@@ -102,7 +102,7 @@ export default function Checkout() {
 
         <Card>
           <Text style={ui.sectionTitle}>Delivery speed</Text>
-          {(['STANDARD', 'EXPRESS'] as const).map((d) => (
+          {(['STANDARD'] as const).map((d) => (
             <Pressable key={d} onPress={() => setDelivery(d)} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
               <Radio on={delivery === d} />
               <Text style={{ color: colors.text }}>{d === 'STANDARD' ? 'Standard delivery' : 'Express delivery'}</Text>
@@ -147,7 +147,6 @@ export default function Checkout() {
             <Radio on />
             <View>
               <Text style={{ color: colors.text, fontWeight: '600' }}>Cash on delivery</Text>
-              {s.codFee > 0 && <Text style={{ color: colors.muted, fontSize: 12 }}>COD fee {inr(s.codFee)}</Text>}
             </View>
           </View>
           {!s.codAvailable && <Text style={{ color: colors.danger, marginTop: 6 }}>Cash on delivery is not available for this order.</Text>}
@@ -158,8 +157,6 @@ export default function Checkout() {
           <Row label={`Price (${s.itemCount} items)`} value={inr(s.mrpTotal)} />
           {s.productDiscount > 0 && <Row label="Discount" value={`− ${inr(s.productDiscount)}`} green />}
           {s.couponDiscount > 0 && <Row label="Coupon" value={`− ${inr(s.couponDiscount)}`} green />}
-          {s.shippingFee > 0 && <Row label="Express delivery" value={inr(s.shippingFee)} />}
-          {s.codFee > 0 && <Row label="COD fee" value={inr(s.codFee)} />}
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
           <Row label="Amount payable" value={inr(s.total)} bold />
         </Card>

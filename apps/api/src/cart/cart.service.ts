@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { isLiveProduct } from '../catalog/visibility';
 import { config } from '../common/config';
 import { SettingsService } from '../common/settings.service';
-import { DeliveryMethod, PricedLine, shippingFee, subtotalOf } from '../coupons/coupon-math';
+import { DeliveryMethod, PricedLine, subtotalOf } from '../coupons/coupon-math';
 import { CouponsService } from '../coupons/coupons.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MAX_QTY_PER_ITEM, QuoteDto } from './cart.dto';
@@ -98,9 +98,9 @@ export class CartService {
         couponError = err instanceof HttpException ? err.message : 'Invalid coupon';
       }
     }
-    const deliveryMethod: DeliveryMethod = dto.deliveryMethod ?? 'STANDARD';
-    const shipping = shippingFee(subtotal - discount, deliveryMethod, settings);
-    const codFee = dto.paymentMethod === 'COD' ? settings.codFee : 0;
+    // Shipping and COD charges are built into product prices — nothing extra is charged here
+    const shipping = 0;
+    const codFee = 0;
     const total = subtotal - discount + shipping + codFee;
 
     return {

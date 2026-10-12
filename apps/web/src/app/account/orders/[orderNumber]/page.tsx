@@ -312,7 +312,7 @@ function OrderDetail() {
               )}
               {order.shippingFee > 0 && (
                 <div className="flex justify-between">
-                  <span>Express delivery</span>
+                  <span>Delivery</span>
                   <span>{inr(order.shippingFee)}</span>
                 </div>
               )}

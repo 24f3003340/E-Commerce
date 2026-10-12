@@ -184,7 +184,7 @@ async function main() {
     if (existing) continue;
     const prefix = def.brand.replace(/[^A-Z]/gi, '').slice(0, 3).toUpperCase() + String(count + 1).padStart(3, '0');
     const parent = await prisma.category.findUnique({ where: { id: catIds.get(def.category)! } });
-    const shelfPrice = def.price * 100 + DEFAULT_SETTINGS.standardShippingFee;
+    const shelfPrice = def.price * 100 + DEFAULT_SETTINGS.standardShippingFee + DEFAULT_SETTINGS.codFee;
     const shelfMrp = Math.max(def.mrp * 100, shelfPrice);
     const product = await prisma.product.create({
       data: {

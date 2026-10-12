@@ -141,7 +141,6 @@ export default function CheckoutPage() {
               {(
                 [
                   ['STANDARD', 'Standard delivery', '3–7 days', 'Included in price'],
-                  ['EXPRESS', 'Express delivery', '1–3 days', null],
                 ] as const
               ).map(([value, label, eta, free]) => (
                 <label key={value} className={cn('cursor-pointer rounded-md border p-3 text-sm', deliveryMethod === value ? 'border-brand-600 bg-brand-50' : 'border-gray-200')}>
@@ -253,18 +252,6 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-emerald-700">
               <span>Coupon discount</span>
               <span>−{inr(s.couponDiscount)}</span>
-            </div>
-          )}
-          {s.shippingFee > 0 && (
-            <div className="flex justify-between">
-              <span>Express delivery</span>
-              <span>{inr(s.shippingFee)}</span>
-            </div>
-          )}
-          {s.codFee > 0 && (
-            <div className="flex justify-between">
-              <span>COD fee</span>
-              <span>{inr(s.codFee)}</span>
             </div>
           )}
           <div className="flex justify-between border-t pt-2 text-base font-bold">

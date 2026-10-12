@@ -9,7 +9,7 @@ import { AdminRoles, CurrentAdmin } from '../common/decorators';
 import { AdminAuthGuard } from '../common/guards';
 import { SettingsService, StoreSettings } from '../common/settings.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { repriceCatalog } from '../catalog/pricing';
+import { builtInCharges, repriceCatalog } from '../catalog/pricing';
 
 class BannerDto {
   @IsString()
@@ -210,9 +210,9 @@ export class AdminContentController {
   async updateSettings(@Body() dto: SettingsDto, @CurrentAdmin() admin: AdminPrincipal) {
     const before = await this.settings.get();
     const result = await this.settings.update(dto);
-    // Shipping is part of every product price, so a new standard fee re-prices the catalogue
-    if (result.standardShippingFee !== before.standardShippingFee) {
-      await repriceCatalog(this.prisma, result.standardShippingFee);
+    // Shipping and COD charges are part of every product price, so changing them re-prices the catalogue
+    if (builtInCharges(result) !== builtInCharges(before)) {
+      await repriceCatalog(this.prisma, builtInCharges(result));
     }
     await this.cache.delByPrefix('catalog:');
     await this.audit.log(admin, 'update', 'settings', 'store', dto);

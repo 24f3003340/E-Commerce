@@ -54,7 +54,7 @@ function GuestCart() {
           <span>Subtotal</span>
           <span>{inr(subtotal)}</span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">Coupons are applied at checkout. Delivery is included in the price.</p>
+        <p className="mt-1 text-xs text-gray-500">Delivery is included in the price. Coupons are applied at checkout.</p>
         <button className="btn-buy mt-4 w-full py-3" onClick={() => router.push('/login?next=/checkout')}>
           Login to checkout
         </button>
@@ -135,12 +135,6 @@ function AccountCart() {
           <div className="flex justify-between text-emerald-700">
             <span>Discount on MRP</span>
             <span>−{inr(s.productDiscount)}</span>
-          </div>
-        )}
-        {s.shippingFee > 0 && (
-          <div className="flex justify-between">
-            <span>Express delivery</span>
-            <span>{inr(s.shippingFee)}</span>
           </div>
         )}
         <div className="flex justify-between border-t pt-2 text-base font-bold">
