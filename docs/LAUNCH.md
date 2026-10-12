@@ -9,6 +9,28 @@ hai ki kahan kya daalna hai.
 
 ---
 
+## 0. Hosting ka naksha (Vercel + Render)
+
+| Kya | Kahan | Project / root directory |
+|---|---|---|
+| Customer website | **Vercel** | `e-commerce-web` → Root Directory `apps/web` |
+| Admin + seller panel | **Vercel** | `e-commerce-admin` → Root Directory `apps/admin` |
+| Backend API + PostgreSQL + Redis | **Render** (`render.yaml`) | Vercel par API nahi chalta — NestJS ko hamesha chalne wala server chahiye |
+
+- Vercel Settings → General → **Root Directory** upar wali value par rakhiye aur *"Include files outside the root directory"* **on** (monorepo ke liye zaroori hai). Build/install commands `vercel.json` mein pehle se hain.
+- Pehle **Render** par API deploy kariye (Blueprint), phir uska URL Vercel ke `NEXT_PUBLIC_API_URL` / `API_URL` mein daaliye.
+
+### Prices mein shipping + COD fee judi hai
+Customer ko shipping ya COD fee alag se kahin nahi dikhti — Admin → Settings ka *Shipping charge* aur *COD charge*
+har product ki price mein apne aap jud jaata hai (seller ki daali price + dono). In dono ko badalte hi poori
+catalogue re-price ho jaati hai. Naye deploy par migration maujooda products mein ₹79 + ₹49 jod deta hai; agar aapka
+fee alag hai to deploy ke baad Admin → Settings → ek baar **Save** kariye.
+
+### Production par demo data
+Render `startCommand` har start par `prisma db seed` chalata hai (demo products/banners/coupons banata hai).
+Asli products aane ke baad `render.yaml` mein startCommand se `&& npx prisma db seed` hata dijiye, aur demo
+products Admin se archive kar dijiye.
+
 ## 1. Business aur legal (sabse pehle)
 
 - [ ] **GST registration** (online kapde bechne ke liye zaroori). GSTIN milte hi Admin → Settings → GSTIN mein daaliye.
@@ -164,6 +186,11 @@ bharte hain.
       dena hota hai. Ye abhi app mein automatic nahi hai — payout ke waqt CA ke hisaab se amount kaatiye.
 - [ ] Ek **seller agreement** (commission, returns, payout timing, fake product par penalty) lawyer se
       banwa kar sellers ke saath share kariye.
+
+### Seller ke liye shortcuts (ready)
+Seller panel mein **Quick add** (photo + naam + price + sizes), **Bulk upload** (CSV), **Quick edit** (price/stock table),
+**Copy product**, aur Profile mein **Automatic shipping** (naye order par courier apne aap book; Shiprocket chahiye)
+hain. Low-stock par seller ko email jaati hai.
 
 ## 9. Admin aur store ki safai
 
